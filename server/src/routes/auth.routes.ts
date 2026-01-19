@@ -4,6 +4,7 @@ import { registerSchema, loginSchema } from '../schemas/user'
 import { AuthService } from '../services/auth.service'
 import { successResponse, createdResponse } from '../lib/response'
 import { authMiddleware } from '../middleware/auth'
+import { loginRateLimiter } from '../middleware/rate-limit'
 import { env } from '../config/env'
 import { Role, type HonoContext } from '../types'
 
@@ -28,7 +29,7 @@ auth.post('/register', async (c) => {
   return createdResponse(c, result)
 })
 
-auth.post('/login', async (c) => {
+auth.post('/login', loginRateLimiter, async (c) => {
   const body = await c.req.json()
   const validated = loginSchema.parse(body)
 

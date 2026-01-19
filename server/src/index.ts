@@ -4,6 +4,7 @@ import { env } from './config/env'
 import { errorHandler } from './middleware/error-handler'
 import { requestLogger } from './middleware/logger'
 import { corsMiddleware } from './middleware/cors'
+import { generalApiRateLimiter } from './middleware/rate-limit'
 import authRoutes from './routes/auth.routes'
 import userRoutes from './routes/user.routes'
 import departmentRoutes from './routes/department.routes'
@@ -16,6 +17,7 @@ const app = new Hono()
 // Global middleware
 app.use('*', corsMiddleware)
 app.use('*', requestLogger)
+app.use('*', generalApiRateLimiter)
 
 // Error handler
 app.onError(errorHandler)
