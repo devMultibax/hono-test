@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs'
+import PDFDocument from 'pdfkit'
 import { PassThrough } from 'stream'
 import type { UserWithRelations } from '../types'
 import type { DepartmentResponse } from '../types'
@@ -365,5 +366,236 @@ export class ExportService {
    */
   static isStream(result: ExcelJS.Workbook | PassThrough): result is PassThrough {
     return result instanceof PassThrough
+  }
+
+  /**
+   * Export users to PDF
+   */
+  static async exportUsersToPDF(users: UserWithRelations[]): Promise<PassThrough> {
+    const stream = new PassThrough()
+    const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' })
+
+    doc.pipe(stream)
+
+    doc.fontSize(16).text('User Report', { align: 'center' })
+    doc.moveDown()
+    doc.fontSize(10).text(`Generated: ${new Date().toLocaleString('th-TH')}`, { align: 'center' })
+    doc.moveDown(2)
+
+    const tableTop = 120
+    const itemHeight = 20
+    const headers = [
+      { label: 'Username', x: 50, width: 70 },
+      { label: 'Name', x: 120, width: 120 },
+      { label: 'Department', x: 240, width: 100 },
+      { label: 'Section', x: 340, width: 100 },
+      { label: 'Email', x: 440, width: 140 },
+      { label: 'Role', x: 580, width: 60 },
+      { label: 'Status', x: 640, width: 60 }
+    ]
+
+    doc.fontSize(10).fillColor('#000000')
+    headers.forEach((header) => {
+      doc.rect(header.x, tableTop, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
+      doc.fillColor('#000000').text(header.label, header.x + 5, tableTop + 5, {
+        width: header.width - 10,
+        align: 'left'
+      })
+    })
+
+    let yPosition = tableTop + itemHeight
+
+    users.forEach((user, index) => {
+      if (yPosition > 500) {
+        doc.addPage({ margin: 50, size: 'A4', layout: 'landscape' })
+        yPosition = 50
+
+        headers.forEach((header) => {
+          doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
+          doc.fillColor('#000000').text(header.label, header.x + 5, yPosition + 5, {
+            width: header.width - 10,
+            align: 'left'
+          })
+        })
+        yPosition += itemHeight
+      }
+
+      const fillColor = index % 2 === 0 ? '#FFFFFF' : '#F5F5F5'
+      headers.forEach((header) => {
+        doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke(fillColor, '#CCCCCC')
+      })
+
+      doc.fillColor('#000000').fontSize(8)
+      doc.text(user.username, headers[0].x + 5, yPosition + 5, { width: headers[0].width - 10 })
+      doc.text(
+        `${user.firstName} ${user.lastName}`,
+        headers[1].x + 5,
+        yPosition + 5,
+        { width: headers[1].width - 10 }
+      )
+      doc.text(user.department?.name || '', headers[2].x + 5, yPosition + 5, {
+        width: headers[2].width - 10
+      })
+      doc.text(user.section?.name || '', headers[3].x + 5, yPosition + 5, {
+        width: headers[3].width - 10
+      })
+      doc.text(user.email || '', headers[4].x + 5, yPosition + 5, { width: headers[4].width - 10 })
+      doc.text(user.role, headers[5].x + 5, yPosition + 5, { width: headers[5].width - 10 })
+      doc.text(user.status, headers[6].x + 5, yPosition + 5, { width: headers[6].width - 10 })
+
+      yPosition += itemHeight
+    })
+
+    doc.end()
+    return stream
+  }
+
+  /**
+   * Export departments to PDF
+   */
+  static async exportDepartmentsToPDF(departments: DepartmentResponse[]): Promise<PassThrough> {
+    const stream = new PassThrough()
+    const doc = new PDFDocument({ margin: 50, size: 'A4' })
+
+    doc.pipe(stream)
+
+    doc.fontSize(16).text('Department Report', { align: 'center' })
+    doc.moveDown()
+    doc.fontSize(10).text(`Generated: ${new Date().toLocaleString('th-TH')}`, { align: 'center' })
+    doc.moveDown(2)
+
+    const tableTop = 120
+    const itemHeight = 20
+    const headers = [
+      { label: 'ID', x: 50, width: 50 },
+      { label: 'Name', x: 100, width: 200 },
+      { label: 'Status', x: 300, width: 80 },
+      { label: 'Created At', x: 380, width: 100 }
+    ]
+
+    doc.fontSize(10).fillColor('#000000')
+    headers.forEach((header) => {
+      doc.rect(header.x, tableTop, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
+      doc.fillColor('#000000').text(header.label, header.x + 5, tableTop + 5, {
+        width: header.width - 10,
+        align: 'left'
+      })
+    })
+
+    let yPosition = tableTop + itemHeight
+
+    departments.forEach((dept, index) => {
+      if (yPosition > 700) {
+        doc.addPage({ margin: 50, size: 'A4' })
+        yPosition = 50
+
+        headers.forEach((header) => {
+          doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
+          doc.fillColor('#000000').text(header.label, header.x + 5, yPosition + 5, {
+            width: header.width - 10,
+            align: 'left'
+          })
+        })
+        yPosition += itemHeight
+      }
+
+      const fillColor = index % 2 === 0 ? '#FFFFFF' : '#F5F5F5'
+      headers.forEach((header) => {
+        doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke(fillColor, '#CCCCCC')
+      })
+
+      doc.fillColor('#000000').fontSize(9)
+      doc.text(dept.id.toString(), headers[0].x + 5, yPosition + 5, {
+        width: headers[0].width - 10
+      })
+      doc.text(dept.name, headers[1].x + 5, yPosition + 5, { width: headers[1].width - 10 })
+      doc.text(dept.status, headers[2].x + 5, yPosition + 5, { width: headers[2].width - 10 })
+      doc.text(new Date(dept.createdAt).toLocaleString('th-TH'), headers[3].x + 5, yPosition + 5, {
+        width: headers[3].width - 10
+      })
+
+      yPosition += itemHeight
+    })
+
+    doc.end()
+    return stream
+  }
+
+  /**
+   * Export sections to PDF
+   */
+  static async exportSectionsToPDF(sections: SectionResponse[]): Promise<PassThrough> {
+    const stream = new PassThrough()
+    const doc = new PDFDocument({ margin: 50, size: 'A4' })
+
+    doc.pipe(stream)
+
+    doc.fontSize(16).text('Section Report', { align: 'center' })
+    doc.moveDown()
+    doc.fontSize(10).text(`Generated: ${new Date().toLocaleString('th-TH')}`, { align: 'center' })
+    doc.moveDown(2)
+
+    const tableTop = 120
+    const itemHeight = 20
+    const headers = [
+      { label: 'ID', x: 50, width: 50 },
+      { label: 'Dept ID', x: 100, width: 60 },
+      { label: 'Name', x: 160, width: 180 },
+      { label: 'Status', x: 340, width: 80 },
+      { label: 'Created At', x: 420, width: 100 }
+    ]
+
+    doc.fontSize(10).fillColor('#000000')
+    headers.forEach((header) => {
+      doc.rect(header.x, tableTop, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
+      doc.fillColor('#000000').text(header.label, header.x + 5, tableTop + 5, {
+        width: header.width - 10,
+        align: 'left'
+      })
+    })
+
+    let yPosition = tableTop + itemHeight
+
+    sections.forEach((section, index) => {
+      if (yPosition > 700) {
+        doc.addPage({ margin: 50, size: 'A4' })
+        yPosition = 50
+
+        headers.forEach((header) => {
+          doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
+          doc.fillColor('#000000').text(header.label, header.x + 5, yPosition + 5, {
+            width: header.width - 10,
+            align: 'left'
+          })
+        })
+        yPosition += itemHeight
+      }
+
+      const fillColor = index % 2 === 0 ? '#FFFFFF' : '#F5F5F5'
+      headers.forEach((header) => {
+        doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke(fillColor, '#CCCCCC')
+      })
+
+      doc.fillColor('#000000').fontSize(9)
+      doc.text(section.id.toString(), headers[0].x + 5, yPosition + 5, {
+        width: headers[0].width - 10
+      })
+      doc.text(section.departmentId.toString(), headers[1].x + 5, yPosition + 5, {
+        width: headers[1].width - 10
+      })
+      doc.text(section.name, headers[2].x + 5, yPosition + 5, { width: headers[2].width - 10 })
+      doc.text(section.status, headers[3].x + 5, yPosition + 5, { width: headers[3].width - 10 })
+      doc.text(
+        new Date(section.createdAt).toLocaleString('th-TH'),
+        headers[4].x + 5,
+        yPosition + 5,
+        { width: headers[4].width - 10 }
+      )
+
+      yPosition += itemHeight
+    })
+
+    doc.end()
+    return stream
   }
 }

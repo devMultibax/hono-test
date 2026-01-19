@@ -142,4 +142,49 @@ users.get('/export/excel', requireUser, async (c) => {
   }
 })
 
+users.get('/export/pdf', requireUser, async (c) => {
+  const queryParams = listUsersQuerySchema.parse({
+    page: c.req.query('page'),
+    limit: c.req.query('limit'),
+    sort: c.req.query('sort'),
+    order: c.req.query('order'),
+    search: c.req.query('search'),
+    departmentId: c.req.query('departmentId'),
+    sectionId: c.req.query('sectionId'),
+    role: c.req.query('role'),
+    status: c.req.query('status')
+  })
+
+  const filters = {
+    search: queryParams.search,
+    departmentId: queryParams.departmentId,
+    sectionId: queryParams.sectionId,
+    role: queryParams.role as Role | undefined,
+    status: queryParams.status
+  }
+
+  const userList = await UserService.getAll(true, undefined, filters)
+  const users = Array.isArray(userList) ? userList : []
+
+  const pdfStream = await ExportService.exportUsersToPDF(users as UserWithRelations[])
+  const filename = `users_${new Date().toISOString().split('T')[0]}.pdf`
+
+  return stream(c, async (stream) => {
+    c.header('Content-Type', 'application/pdf')
+    c.header('Content-Disposition', `attachment; filename="${filename}"`)
+
+    pdfStream.on('data', (chunk) => {
+      stream.write(chunk)
+    })
+
+    return new Promise((resolve, reject) => {
+      pdfStream.on('end', () => {
+        stream.close()
+        resolve()
+      })
+      pdfStream.on('error', reject)
+    })
+  })
+})
+
 export default users

@@ -147,4 +147,45 @@ sections.get('/export/excel', async (c) => {
   }
 })
 
+sections.get('/export/pdf', async (c) => {
+  const queryParams = listSectionsQuerySchema.parse({
+    page: c.req.query('page'),
+    limit: c.req.query('limit'),
+    sort: c.req.query('sort'),
+    order: c.req.query('order'),
+    search: c.req.query('search'),
+    departmentId: c.req.query('departmentId'),
+    status: c.req.query('status')
+  })
+
+  const filters = {
+    search: queryParams.search,
+    departmentId: queryParams.departmentId,
+    status: queryParams.status
+  }
+
+  const sectionList = await SectionService.getAll(false, undefined, filters)
+  const sections = Array.isArray(sectionList) ? sectionList : []
+
+  const pdfStream = await ExportService.exportSectionsToPDF(sections as SectionResponse[])
+  const filename = `sections_${new Date().toISOString().split('T')[0]}.pdf`
+
+  return stream(c, async (stream) => {
+    c.header('Content-Type', 'application/pdf')
+    c.header('Content-Disposition', `attachment; filename="${filename}"`)
+
+    pdfStream.on('data', (chunk) => {
+      stream.write(chunk)
+    })
+
+    return new Promise((resolve, reject) => {
+      pdfStream.on('end', () => {
+        stream.close()
+        resolve()
+      })
+      pdfStream.on('error', reject)
+    })
+  })
+})
+
 export default sections

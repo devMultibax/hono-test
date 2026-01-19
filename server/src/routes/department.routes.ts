@@ -139,4 +139,43 @@ departments.get('/export/excel', async (c) => {
   }
 })
 
+departments.get('/export/pdf', async (c) => {
+  const queryParams = listDepartmentsQuerySchema.parse({
+    page: c.req.query('page'),
+    limit: c.req.query('limit'),
+    sort: c.req.query('sort'),
+    order: c.req.query('order'),
+    search: c.req.query('search'),
+    status: c.req.query('status')
+  })
+
+  const filters = {
+    search: queryParams.search,
+    status: queryParams.status
+  }
+
+  const departmentList = await DepartmentService.getAll(false, undefined, filters)
+  const departments = Array.isArray(departmentList) ? departmentList : []
+
+  const pdfStream = await ExportService.exportDepartmentsToPDF(departments as DepartmentResponse[])
+  const filename = `departments_${new Date().toISOString().split('T')[0]}.pdf`
+
+  return stream(c, async (stream) => {
+    c.header('Content-Type', 'application/pdf')
+    c.header('Content-Disposition', `attachment; filename="${filename}"`)
+
+    pdfStream.on('data', (chunk) => {
+      stream.write(chunk)
+    })
+
+    return new Promise((resolve, reject) => {
+      pdfStream.on('end', () => {
+        stream.close()
+        resolve()
+      })
+      pdfStream.on('error', reject)
+    })
+  })
+})
+
 export default departments
