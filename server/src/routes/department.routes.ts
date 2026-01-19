@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
+import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin } from '../middleware/permission'
 import { DepartmentService } from '../services/department.service'
 import { createDepartmentSchema, updateDepartmentSchema } from '../schemas/department'
@@ -9,6 +10,7 @@ import type { HonoContext } from '../types'
 const departments = new Hono<HonoContext>()
 
 departments.use('/*', authMiddleware)
+departments.use('/*', csrfProtection)
 
 departments.get('/', async (c) => {
   const include = c.req.query('include') === 'true'

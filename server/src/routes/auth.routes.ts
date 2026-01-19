@@ -5,12 +5,18 @@ import { AuthService } from '../services/auth.service'
 import { successResponse, createdResponse } from '../lib/response'
 import { authMiddleware } from '../middleware/auth'
 import { loginRateLimiter } from '../middleware/rate-limit'
+import { generateCsrfToken, csrfProtection } from '../middleware/csrf'
 import { env } from '../config/env'
 import { Role, type HonoContext } from '../types'
 
 const auth = new Hono<HonoContext>()
 
-auth.post('/register', async (c) => {
+auth.get('/csrf-token', (c) => {
+  const token = generateCsrfToken(c)
+  return successResponse(c, { csrfToken: token })
+})
+
+auth.post('/register', csrfProtection, async (c) => {
   const body = await c.req.json()
   const validated = registerSchema.parse(body)
 
@@ -29,7 +35,7 @@ auth.post('/register', async (c) => {
   return createdResponse(c, result)
 })
 
-auth.post('/login', loginRateLimiter, async (c) => {
+auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
   const body = await c.req.json()
   const validated = loginSchema.parse(body)
 
