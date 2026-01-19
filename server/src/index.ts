@@ -6,6 +6,7 @@ import { requestLogger } from './middleware/logger'
 import { corsMiddleware } from './middleware/cors'
 import { generalApiRateLimiter } from './middleware/rate-limit'
 import { securityHeaders } from './middleware/security-headers'
+import { registerOpenAPIRoutes } from './lib/openapi'
 import authRoutes from './routes/auth.routes'
 import userRoutes from './routes/user.routes'
 import departmentRoutes from './routes/department.routes'
@@ -32,6 +33,9 @@ app.get('/', (c) => {
         status: 'running'
     })
 })
+
+// API Documentation
+registerOpenAPIRoutes(app)
 
 // Routes
 app.route('/health', healthRoutes)
@@ -75,6 +79,7 @@ console.log(`
 📦 Environment: ${env.NODE_ENV}
 🌐 Port: ${port}
 🔗 URL: http://localhost:${port}
+📚 API Docs: http://localhost:${port}/docs
 `)
 
 serve({

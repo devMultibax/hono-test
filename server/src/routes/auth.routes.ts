@@ -45,7 +45,7 @@ auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
     httpOnly: true,
     secure: env.COOKIE_SECURE,
     sameSite: env.COOKIE_SAME_SITE,
-    maxAge: parseInt(env.JWT_COOKIE_MAX_AGE, 10) / 1000,
+    maxAge: env.JWT_COOKIE_MAX_AGE / 1000, // Convert milliseconds to seconds
     path: '/'
   })
 
