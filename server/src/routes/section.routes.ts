@@ -5,7 +5,9 @@ import { requireAdmin } from '../middleware/permission'
 import { SectionService } from '../services/section.service'
 import { createSectionSchema, updateSectionSchema, listSectionsQuerySchema } from '../schemas/section'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
-import type { HonoContext } from '../types'
+import type { HonoContext, SectionResponse } from '../types'
+import { ExportService } from '../services/export.service'
+import { stream } from 'hono/streaming'
 
 const sections = new Hono<HonoContext>()
 
@@ -90,6 +92,59 @@ sections.delete('/:id', requireAdmin, async (c) => {
 
   await SectionService.delete(id)
   return noContentResponse(c)
+})
+
+sections.get('/export/excel', async (c) => {
+  const queryParams = listSectionsQuerySchema.parse({
+    page: c.req.query('page'),
+    limit: c.req.query('limit'),
+    sort: c.req.query('sort'),
+    order: c.req.query('order'),
+    search: c.req.query('search'),
+    departmentId: c.req.query('departmentId'),
+    status: c.req.query('status')
+  })
+
+  const filters = {
+    search: queryParams.search,
+    departmentId: queryParams.departmentId,
+    status: queryParams.status
+  }
+
+  const sectionList = await SectionService.getAll(false, undefined, filters)
+  const sections = Array.isArray(sectionList) ? sectionList : []
+  const totalCount = sections.length
+
+  const result = await ExportService.exportSectionsToExcel(
+    sections as SectionResponse[],
+    totalCount
+  )
+
+  const filename = `sections_${new Date().toISOString().split('T')[0]}.xlsx`
+
+  if (ExportService.isStream(result)) {
+    return stream(c, async (stream) => {
+      c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      c.header('Content-Disposition', `attachment; filename="${filename}"`)
+
+      result.on('data', (chunk) => {
+        stream.write(chunk)
+      })
+
+      return new Promise((resolve, reject) => {
+        result.on('end', () => {
+          stream.close()
+          resolve()
+        })
+        result.on('error', reject)
+      })
+    })
+  } else {
+    const buffer = await result.xlsx.writeBuffer()
+    c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    c.header('Content-Disposition', `attachment; filename="${filename}"`)
+    return c.body(buffer)
+  }
 })
 
 export default sections
