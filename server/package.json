@@ -1,0 +1,43 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "bcryptjs": "^3.0.3",
+    "exceljs": "^4.4.0",
+    "hono": "^4.11.4",
+    "hono-rate-limiter": "^0.5.3",
+    "jsonwebtoken": "^9.0.3",
+    "node-cron": "^4.2.1",
+    "pdfkit": "^0.17.2",
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.2.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.0.9",
+    "@types/pdfkit": "^0.17.4",
+    "@types/pg": "^8.16.0",
+    "dotenv": "^17.2.3",
+    "pg": "^8.17.1",
+    "prisma": "^7.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

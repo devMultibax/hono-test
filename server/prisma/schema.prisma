@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Status {
+  active
+  inactive
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+}
+
+model Department {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique @db.VarChar(100)
+  status    Status    @default(active)
+  createdAt DateTime  @default(now())
+  createdBy String    @db.VarChar(100)
+  updatedAt DateTime? @updatedAt
+  updatedBy String?   @db.VarChar(100)
+
+  sections Section[]
+  users    User[]
+
+  @@map("department")
+}
+
+model Section {
+  id           Int       @id @default(autoincrement())
+  departmentId Int
+  name         String    @db.VarChar(100)
+  status       Status    @default(active)
+  createdAt    DateTime  @default(now())
+  createdBy    String    @db.VarChar(100)
+  updatedAt    DateTime? @updatedAt
+  updatedBy    String?   @db.VarChar(100)
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  users      User[]
+
+  @@unique([departmentId, name])
+  @@map("section")
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  username          String    @unique @db.Char(6)
+  password          String    @db.VarChar(255)
+  firstName         String    @db.VarChar(100)
+  lastName          String    @db.VarChar(100)
+  departmentId      Int
+  sectionId         Int?
+  email             String?   @db.VarChar(255)
+  tel               String?   @db.Char(10)
+  role              Role      @default(USER)
+  status            Status    @default(active)
+  createdAt         DateTime  @default(now())
+  createdBy         String    @db.VarChar(100)
+  updatedAt         DateTime? @updatedAt
+  updatedBy         String?   @db.VarChar(100)
+  lastLoginAt       DateTime?
+  isDefaultPassword Boolean   @default(false)
+  tokenVersion      Int       @default(0)
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  section    Section?   @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@map("user")
+}
+
+model UserLog {
+  id         Int        @id @default(autoincrement())
+  username   String     @db.Char(6)
+  firstName  String     @db.VarChar(100)
+  lastName   String     @db.VarChar(100)
+  department String     @db.VarChar(100)
+  section    String     @db.VarChar(100)
+  email      String?    @db.VarChar(255)
+  tel        String?    @db.Char(10)
+  role       Role       @default(USER)
+  status     Status     @default(active)
+  createdAt  DateTime   @default(now())
+  createdBy  String     @db.VarChar(100)
+  updatedAt  DateTime?
+  updatedBy  String?    @db.VarChar(100)
+  actionType ActionType
+  actionAt   DateTime   @default(now())
+
+  @@map("user_log")
+}
