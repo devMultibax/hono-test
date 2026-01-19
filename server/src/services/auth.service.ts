@@ -155,7 +155,8 @@ export class AuthService {
     const payload: AuthPayload = {
       id: user.id,
       username: user.username,
-      role: user.role as Role
+      role: user.role as Role,
+      tokenVersion: user.tokenVersion
     }
 
     const token = jwt.sign(payload, env.JWT_SECRET, {
@@ -170,11 +171,46 @@ export class AuthService {
     }
   }
 
-  static verifyToken(token: string): AuthPayload {
+  static async verifyToken(token: string): Promise<AuthPayload> {
     try {
-      return jwt.verify(token, env.JWT_SECRET) as AuthPayload
-    } catch {
+      const decoded = jwt.verify(token, env.JWT_SECRET) as AuthPayload
+
+      if (decoded.tokenVersion !== undefined) {
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.id },
+          select: { tokenVersion: true }
+        })
+
+        if (!user || user.tokenVersion !== decoded.tokenVersion) {
+          throw new UnauthorizedError('Invalid token')
+        }
+      }
+
+      return decoded
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        throw error
+      }
       throw new UnauthorizedError('Invalid token')
+    }
+  }
+
+  static async logout(userId: number): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } }
+    })
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        department: true,
+        section: true
+      }
+    })
+
+    if (user) {
+      await this.logUserAction(user, ActionType.LOGOUT)
     }
   }
 

@@ -1,10 +1,13 @@
 import { Hono } from 'hono'
+import { setCookie, deleteCookie } from 'hono/cookie'
 import { registerSchema, loginSchema } from '../schemas/user'
 import { AuthService } from '../services/auth.service'
 import { successResponse, createdResponse } from '../lib/response'
-import { Role } from '../types'
+import { authMiddleware } from '../middleware/auth'
+import { env } from '../config/env'
+import { Role, type HonoContext } from '../types'
 
-const auth = new Hono()
+const auth = new Hono<HonoContext>()
 
 auth.post('/register', async (c) => {
   const body = await c.req.json()
@@ -31,7 +34,27 @@ auth.post('/login', async (c) => {
 
   const result = await AuthService.login(validated.username, validated.password)
 
-  return successResponse(c, result)
+  setCookie(c, env.JWT_COOKIE_NAME, result.token, {
+    httpOnly: true,
+    secure: env.COOKIE_SECURE,
+    sameSite: env.COOKIE_SAME_SITE,
+    maxAge: parseInt(env.JWT_COOKIE_MAX_AGE, 10) / 1000,
+    path: '/'
+  })
+
+  return successResponse(c, { user: result.user })
+})
+
+auth.post('/logout', authMiddleware, async (c) => {
+  const user = c.get('user')
+
+  await AuthService.logout(user.id)
+
+  deleteCookie(c, env.JWT_COOKIE_NAME, {
+    path: '/'
+  })
+
+  return successResponse(c, { message: 'Logged out successfully' })
 })
 
 export default auth

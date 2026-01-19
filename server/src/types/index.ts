@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 
 // Hono Context
-export interface HonoContext extends Context {
+export type HonoContext = {
   Variables: {
     user: AuthPayload
   }
@@ -121,6 +121,7 @@ export interface AuthPayload {
   id: number
   username: string
   role: Role
+  tokenVersion?: number
 }
 
 export interface LoginResponse {

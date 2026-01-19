@@ -4,9 +4,9 @@ import { requireAdmin } from '../middleware/permission'
 import { SectionService } from '../services/section.service'
 import { createSectionSchema, updateSectionSchema } from '../schemas/section'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
-import type { AuthPayload } from '../types'
+import type { HonoContext } from '../types'
 
-const sections = new Hono<{ Variables: { user: AuthPayload } }>()
+const sections = new Hono<HonoContext>()
 
 sections.use('/*', authMiddleware)
 
@@ -36,7 +36,7 @@ sections.get('/:id', async (c) => {
 })
 
 sections.post('/', requireAdmin, async (c) => {
-  const user = c.get('user') as AuthPayload
+  const user = c.get('user')
   const body = await c.req.json()
   const validated = createSectionSchema.parse(body)
 
@@ -49,7 +49,7 @@ sections.post('/', requireAdmin, async (c) => {
 })
 
 sections.put('/:id', requireAdmin, async (c) => {
-  const user = c.get('user') as AuthPayload
+  const user = c.get('user')
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {

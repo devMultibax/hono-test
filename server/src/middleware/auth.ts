@@ -1,20 +1,20 @@
 import type { Context, Next } from 'hono'
+import { getCookie } from 'hono/cookie'
 import { AuthService } from '../services/auth.service'
 import { UnauthorizedError } from '../lib/errors'
 import { errorResponse } from '../lib/response'
-import type { AuthPayload } from '../types'
+import { env } from '../config/env'
+import type { AuthPayload, HonoContext } from '../types'
 
-export const authMiddleware = async (c: Context, next: Next) => {
-  const authHeader = c.req.header('Authorization')
+export const authMiddleware = async (c: Context<HonoContext>, next: Next) => {
+  const token = getCookie(c, env.JWT_COOKIE_NAME)
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return errorResponse(c, { error: 'Missing or invalid authorization header' }, 401)
+  if (!token) {
+    return errorResponse(c, { error: 'Missing authentication token' }, 401)
   }
 
-  const token = authHeader.replace('Bearer ', '')
-
   try {
-    const decoded = AuthService.verifyToken(token)
+    const decoded = await AuthService.verifyToken(token)
     c.set('user', decoded as AuthPayload)
     await next()
   } catch (error) {

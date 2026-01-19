@@ -1,6 +1,6 @@
 import type { Context, Next, MiddlewareHandler } from 'hono'
 import { errorResponse } from '../lib/response'
-import { Role, type AuthPayload } from '../types'
+import { Role, type HonoContext } from '../types'
 
 /**
  * Middleware สำหรับตรวจสอบ role ของ user
@@ -15,8 +15,8 @@ import { Role, type AuthPayload } from '../types'
  * app.get('/data', requireRole(Role.ADMIN, Role.MANAGER), async (c) => {...})
  */
 export const requireRole = (...allowedRoles: Role[]): MiddlewareHandler => {
-  return async (c: Context, next: Next) => {
-    const user = c.get('user') as AuthPayload | undefined
+  return async (c: Context<HonoContext>, next: Next) => {
+    const user = c.get('user')
 
     if (!user) {
       return errorResponse(c, { error: 'Unauthorized' }, 401)

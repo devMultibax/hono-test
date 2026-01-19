@@ -4,9 +4,9 @@ import { requireAdmin, requireUser } from '../middleware/permission'
 import { UserService } from '../services/user.service'
 import { updateUserSchema } from '../schemas/user'
 import { successResponse, noContentResponse } from '../lib/response'
-import type { AuthPayload } from '../types'
+import type { HonoContext } from '../types'
 
-const users = new Hono<{ Variables: { user: AuthPayload } }>()
+const users = new Hono<HonoContext>()
 
 users.use('/*', authMiddleware)
 
@@ -29,7 +29,7 @@ users.get('/:id', requireUser, async (c) => {
 })
 
 users.put('/:id', requireAdmin, async (c) => {
-  const currentUser = c.get('user') as AuthPayload
+  const currentUser = c.get('user')
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {

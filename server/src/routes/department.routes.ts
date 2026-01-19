@@ -4,9 +4,9 @@ import { requireAdmin } from '../middleware/permission'
 import { DepartmentService } from '../services/department.service'
 import { createDepartmentSchema, updateDepartmentSchema } from '../schemas/department'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
-import type { AuthPayload } from '../types'
+import type { HonoContext } from '../types'
 
-const departments = new Hono<{ Variables: { user: AuthPayload } }>()
+const departments = new Hono<HonoContext>()
 
 departments.use('/*', authMiddleware)
 
