@@ -5,6 +5,7 @@ import { errorHandler } from './middleware/error-handler'
 import { requestLogger } from './middleware/logger'
 import { corsMiddleware } from './middleware/cors'
 import { generalApiRateLimiter } from './middleware/rate-limit'
+import { securityHeaders } from './middleware/security-headers'
 import authRoutes from './routes/auth.routes'
 import userRoutes from './routes/user.routes'
 import departmentRoutes from './routes/department.routes'
@@ -15,6 +16,7 @@ import { prisma } from './lib/prisma'
 const app = new Hono()
 
 // Global middleware
+app.use('*', securityHeaders)
 app.use('*', corsMiddleware)
 app.use('*', requestLogger)
 app.use('*', generalApiRateLimiter)
