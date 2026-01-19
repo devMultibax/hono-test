@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { Role } from '../types'
+import { paginationQuerySchema } from '../utils/pagination.utils'
 
 export const registerSchema = z.object({
   username: z.string({ message: 'Username is required' })
@@ -76,4 +77,12 @@ export const updateUserSchema = z.object({
     .nullable(),
   role: z.enum(['USER', 'ADMIN'] as const, { message: 'Invalid role' }).transform(val => val as Role).optional(),
   status: z.enum(['active', 'inactive'], { message: 'Invalid status' }).optional()
+})
+
+export const listUsersQuerySchema = paginationQuerySchema.extend({
+  search: z.string().optional(),
+  departmentId: z.coerce.number().int().positive().optional(),
+  sectionId: z.coerce.number().int().positive().optional(),
+  role: z.enum(['USER', 'ADMIN']).optional(),
+  status: z.enum(['active', 'inactive']).optional(),
 })

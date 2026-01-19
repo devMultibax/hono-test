@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { paginationQuerySchema } from '../utils/pagination.utils'
 
 export const createSectionSchema = z.object({
   departmentId: z.number({ message: 'Department ID is required' })
@@ -19,4 +20,10 @@ export const updateSectionSchema = z.object({
     .max(100, { message: 'Name is too long' })
     .optional(),
   status: z.enum(['active', 'inactive'], { message: 'Invalid status' }).optional()
+})
+
+export const listSectionsQuerySchema = paginationQuerySchema.extend({
+  search: z.string().optional(),
+  departmentId: z.coerce.number().int().positive().optional(),
+  status: z.enum(['active', 'inactive']).optional(),
 })

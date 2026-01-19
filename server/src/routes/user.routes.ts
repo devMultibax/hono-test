@@ -3,9 +3,9 @@ import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin, requireUser } from '../middleware/permission'
 import { UserService } from '../services/user.service'
-import { updateUserSchema } from '../schemas/user'
+import { updateUserSchema, listUsersQuerySchema } from '../schemas/user'
 import { successResponse, noContentResponse } from '../lib/response'
-import type { HonoContext } from '../types'
+import type { HonoContext, Role } from '../types'
 
 const users = new Hono<HonoContext>()
 
@@ -14,7 +14,34 @@ users.use('/*', csrfProtection)
 
 users.get('/', requireUser, async (c) => {
   const include = c.req.query('include') === 'true'
-  const userList = await UserService.getAll(include)
+  const queryParams = listUsersQuerySchema.parse({
+    page: c.req.query('page'),
+    limit: c.req.query('limit'),
+    sort: c.req.query('sort'),
+    order: c.req.query('order'),
+    search: c.req.query('search'),
+    departmentId: c.req.query('departmentId'),
+    sectionId: c.req.query('sectionId'),
+    role: c.req.query('role'),
+    status: c.req.query('status')
+  })
+
+  const pagination = {
+    page: queryParams.page,
+    limit: queryParams.limit,
+    sort: queryParams.sort,
+    order: queryParams.order
+  }
+
+  const filters = {
+    search: queryParams.search,
+    departmentId: queryParams.departmentId,
+    sectionId: queryParams.sectionId,
+    role: queryParams.role as Role | undefined,
+    status: queryParams.status
+  }
+
+  const userList = await UserService.getAll(include, pagination, filters)
   return successResponse(c, userList)
 })
 

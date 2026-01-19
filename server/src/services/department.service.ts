@@ -1,6 +1,13 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError } from '../lib/errors'
 import type { DepartmentResponse, DepartmentWithRelations, Status } from '../types'
+import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
+import type { Prisma } from '@prisma/client'
+
+export interface DepartmentFilters {
+  search?: string
+  status?: 'active' | 'inactive'
+}
 
 export class DepartmentService {
   private static formatDepartmentResponse(department: {
@@ -19,10 +26,25 @@ export class DepartmentService {
     }
   }
 
-  static async getAll(includeRelations = false): Promise<DepartmentResponse[] | DepartmentWithRelations[]> {
-    const departments = await prisma.department.findMany({
-      include: includeRelations
-        ? {
+  static async getAll(
+    includeRelations = false,
+    pagination?: PaginationParams,
+    filters?: DepartmentFilters
+  ): Promise<DepartmentResponse[] | DepartmentWithRelations[] | PaginationResult<DepartmentResponse> | PaginationResult<DepartmentWithRelations>> {
+    const where: Prisma.DepartmentWhereInput = {}
+
+    if (filters) {
+      if (filters.search) {
+        where.name = { contains: filters.search, mode: 'insensitive' }
+      }
+
+      if (filters.status !== undefined) {
+        where.status = filters.status
+      }
+    }
+
+    const includeConfig = includeRelations
+      ? {
           sections: {
             select: {
               id: true,
@@ -50,7 +72,38 @@ export class DepartmentService {
             }
           }
         }
-        : undefined,
+      : undefined
+
+    if (pagination) {
+      const paginationOptions = calculatePagination(pagination)
+
+      const [departments, total] = await Promise.all([
+        prisma.department.findMany({
+          where,
+          include: includeConfig,
+          ...paginationOptions
+        }),
+        prisma.department.count({ where })
+      ])
+
+      const formattedDepartments = departments.map((dept) => {
+        const base = this.formatDepartmentResponse(dept)
+        if (includeRelations && 'sections' in dept && 'users' in dept) {
+          return {
+            ...base,
+            sections: dept.sections,
+            users: dept.users
+          } as DepartmentWithRelations
+        }
+        return base
+      })
+
+      return formatPaginationResponse(formattedDepartments, total, pagination)
+    }
+
+    const departments = await prisma.department.findMany({
+      where,
+      include: includeConfig,
       orderBy: {
         createdAt: 'desc'
       }

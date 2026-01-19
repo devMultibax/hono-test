@@ -3,7 +3,7 @@ import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin } from '../middleware/permission'
 import { SectionService } from '../services/section.service'
-import { createSectionSchema, updateSectionSchema } from '../schemas/section'
+import { createSectionSchema, updateSectionSchema, listSectionsQuerySchema } from '../schemas/section'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
 import type { HonoContext } from '../types'
 
@@ -14,14 +14,30 @@ sections.use('/*', csrfProtection)
 
 sections.get('/', async (c) => {
   const include = c.req.query('include') === 'true'
-  const departmentId = c.req.query('departmentId')
+  const queryParams = listSectionsQuerySchema.parse({
+    page: c.req.query('page'),
+    limit: c.req.query('limit'),
+    sort: c.req.query('sort'),
+    order: c.req.query('order'),
+    search: c.req.query('search'),
+    departmentId: c.req.query('departmentId'),
+    status: c.req.query('status')
+  })
 
-  if (departmentId) {
-    const sectionList = await SectionService.getByDepartment(Number(departmentId))
-    return successResponse(c, sectionList)
+  const pagination = {
+    page: queryParams.page,
+    limit: queryParams.limit,
+    sort: queryParams.sort,
+    order: queryParams.order
   }
 
-  const sectionList = await SectionService.getAll(include)
+  const filters = {
+    search: queryParams.search,
+    departmentId: queryParams.departmentId,
+    status: queryParams.status
+  }
+
+  const sectionList = await SectionService.getAll(include, pagination, filters)
   return successResponse(c, sectionList)
 })
 

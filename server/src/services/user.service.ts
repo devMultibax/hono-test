@@ -2,8 +2,18 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma'
 import { NotFoundError } from '../lib/errors'
 import { ActionType, Role, type UserResponse, type UserWithRelations, Status } from '../types'
+import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
+import type { Prisma } from '@prisma/client'
 
 const SALT_ROUNDS = 10
+
+export interface UserFilters {
+  search?: string
+  departmentId?: number
+  sectionId?: number
+  role?: Role
+  status?: 'active' | 'inactive'
+}
 
 export class UserService {
   private static formatUserResponse(user: any): UserResponse {
@@ -23,10 +33,42 @@ export class UserService {
     }
   }
 
-  static async getAll(includeRelations = false): Promise<UserResponse[] | UserWithRelations[]> {
-    const users = await prisma.user.findMany({
-      include: includeRelations
-        ? {
+  static async getAll(
+    includeRelations = false,
+    pagination?: PaginationParams,
+    filters?: UserFilters
+  ): Promise<UserResponse[] | UserWithRelations[] | PaginationResult<UserResponse> | PaginationResult<UserWithRelations>> {
+    const where: Prisma.UserWhereInput = {}
+
+    if (filters) {
+      if (filters.search) {
+        where.OR = [
+          { username: { contains: filters.search, mode: 'insensitive' } },
+          { firstName: { contains: filters.search, mode: 'insensitive' } },
+          { lastName: { contains: filters.search, mode: 'insensitive' } },
+          { email: { contains: filters.search, mode: 'insensitive' } }
+        ]
+      }
+
+      if (filters.departmentId !== undefined) {
+        where.departmentId = filters.departmentId
+      }
+
+      if (filters.sectionId !== undefined) {
+        where.sectionId = filters.sectionId
+      }
+
+      if (filters.role !== undefined) {
+        where.role = filters.role
+      }
+
+      if (filters.status !== undefined) {
+        where.status = filters.status
+      }
+    }
+
+    const includeConfig = includeRelations
+      ? {
           department: {
             select: {
               id: true,
@@ -47,7 +89,38 @@ export class UserService {
             }
           }
         }
-        : undefined,
+      : undefined
+
+    if (pagination) {
+      const paginationOptions = calculatePagination(pagination)
+
+      const [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where,
+          include: includeConfig,
+          ...paginationOptions
+        }),
+        prisma.user.count({ where })
+      ])
+
+      const formattedUsers = users.map((user: any) => {
+        const base = this.formatUserResponse(user)
+        if (includeRelations) {
+          return {
+            ...base,
+            department: user.department,
+            section: user.section
+          } as UserWithRelations
+        }
+        return base
+      })
+
+      return formatPaginationResponse(formattedUsers, total, pagination)
+    }
+
+    const users = await prisma.user.findMany({
+      where,
+      include: includeConfig,
       orderBy: {
         createdAt: 'desc'
       }

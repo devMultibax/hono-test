@@ -1,6 +1,14 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError } from '../lib/errors'
 import type { SectionResponse, SectionWithRelations, Status } from '../types'
+import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
+import type { Prisma } from '@prisma/client'
+
+export interface SectionFilters {
+  search?: string
+  departmentId?: number
+  status?: 'active' | 'inactive'
+}
 
 export class SectionService {
   private static formatSectionResponse(section: {
@@ -21,10 +29,29 @@ export class SectionService {
     }
   }
 
-  static async getAll(includeRelations = false): Promise<SectionResponse[] | SectionWithRelations[]> {
-    const sections = await prisma.section.findMany({
-      include: includeRelations
-        ? {
+  static async getAll(
+    includeRelations = false,
+    pagination?: PaginationParams,
+    filters?: SectionFilters
+  ): Promise<SectionResponse[] | SectionWithRelations[] | PaginationResult<SectionResponse> | PaginationResult<SectionWithRelations>> {
+    const where: Prisma.SectionWhereInput = {}
+
+    if (filters) {
+      if (filters.search) {
+        where.name = { contains: filters.search, mode: 'insensitive' }
+      }
+
+      if (filters.departmentId !== undefined) {
+        where.departmentId = filters.departmentId
+      }
+
+      if (filters.status !== undefined) {
+        where.status = filters.status
+      }
+    }
+
+    const includeConfig = includeRelations
+      ? {
           department: {
             select: {
               id: true,
@@ -51,7 +78,38 @@ export class SectionService {
             }
           }
         }
-        : undefined,
+      : undefined
+
+    if (pagination) {
+      const paginationOptions = calculatePagination(pagination)
+
+      const [sections, total] = await Promise.all([
+        prisma.section.findMany({
+          where,
+          include: includeConfig,
+          ...paginationOptions
+        }),
+        prisma.section.count({ where })
+      ])
+
+      const formattedSections = sections.map((section) => {
+        const base = this.formatSectionResponse(section)
+        if (includeRelations && 'department' in section && 'users' in section) {
+          return {
+            ...base,
+            department: section.department,
+            users: section.users
+          } as SectionWithRelations
+        }
+        return base
+      })
+
+      return formatPaginationResponse(formattedSections, total, pagination)
+    }
+
+    const sections = await prisma.section.findMany({
+      where,
+      include: includeConfig,
       orderBy: {
         createdAt: 'desc'
       }

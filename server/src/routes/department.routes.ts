@@ -3,7 +3,7 @@ import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin } from '../middleware/permission'
 import { DepartmentService } from '../services/department.service'
-import { createDepartmentSchema, updateDepartmentSchema } from '../schemas/department'
+import { createDepartmentSchema, updateDepartmentSchema, listDepartmentsQuerySchema } from '../schemas/department'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
 import type { HonoContext } from '../types'
 
@@ -14,7 +14,28 @@ departments.use('/*', csrfProtection)
 
 departments.get('/', async (c) => {
   const include = c.req.query('include') === 'true'
-  const departmentList = await DepartmentService.getAll(include)
+  const queryParams = listDepartmentsQuerySchema.parse({
+    page: c.req.query('page'),
+    limit: c.req.query('limit'),
+    sort: c.req.query('sort'),
+    order: c.req.query('order'),
+    search: c.req.query('search'),
+    status: c.req.query('status')
+  })
+
+  const pagination = {
+    page: queryParams.page,
+    limit: queryParams.limit,
+    sort: queryParams.sort,
+    order: queryParams.order
+  }
+
+  const filters = {
+    search: queryParams.search,
+    status: queryParams.status
+  }
+
+  const departmentList = await DepartmentService.getAll(include, pagination, filters)
   return successResponse(c, departmentList)
 })
 

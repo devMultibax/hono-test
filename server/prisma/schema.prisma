@@ -36,6 +36,8 @@ model Department {
   sections Section[]
   users    User[]
 
+  @@index([status])
+  @@index([createdAt])
   @@map("department")
 }
 
@@ -53,6 +55,9 @@ model Section {
   users      User[]
 
   @@unique([departmentId, name])
+  @@index([departmentId])
+  @@index([status])
+  @@index([createdAt])
   @@map("section")
 }
 
@@ -79,6 +84,12 @@ model User {
   department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   section    Section?   @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
+  @@index([username])
+  @@index([email])
+  @@index([departmentId])
+  @@index([sectionId])
+  @@index([status])
+  @@index([createdAt])
   @@map("user")
 }
 
