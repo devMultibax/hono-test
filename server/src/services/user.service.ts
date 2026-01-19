@@ -69,26 +69,26 @@ export class UserService {
 
     const includeConfig = includeRelations
       ? {
-          department: {
-            select: {
-              id: true,
-              name: true,
-              status: true,
-              createdAt: true,
-              updatedAt: true
-            }
-          },
-          section: {
-            select: {
-              id: true,
-              departmentId: true,
-              name: true,
-              status: true,
-              createdAt: true,
-              updatedAt: true
-            }
+        department: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        },
+        section: {
+          select: {
+            id: true,
+            departmentId: true,
+            name: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true
           }
         }
+      }
       : undefined
 
     if (pagination) {
@@ -137,6 +137,75 @@ export class UserService {
       }
       return base
     })
+  }
+
+  static async create(
+    username: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    departmentId: number,
+    sectionId: number | null,
+    email: string | null,
+    tel: string | null,
+    role: Role,
+    createdBy: string
+  ): Promise<UserResponse> {
+    // Check if username already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { username }
+    })
+
+    if (existingUser) {
+      throw new Error('Username already exists')
+    }
+
+    // Verify department exists
+    const department = await prisma.department.findUnique({
+      where: { id: departmentId }
+    })
+
+    if (!department) {
+      throw new NotFoundError('Department not found')
+    }
+
+    // Verify section exists if provided
+    if (sectionId) {
+      const section = await prisma.section.findUnique({
+        where: { id: sectionId }
+      })
+
+      if (!section) {
+        throw new NotFoundError('Section not found')
+      }
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        departmentId,
+        sectionId,
+        email,
+        tel,
+        role,
+        createdBy
+      },
+      include: {
+        department: true,
+        section: true
+      }
+    })
+
+    await this.logUserAction(user, ActionType.CREATE)
+
+    return this.formatUserResponse(user)
   }
 
   static async getById(id: number, includeRelations = false): Promise<UserResponse | UserWithRelations> {

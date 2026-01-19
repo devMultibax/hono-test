@@ -7,6 +7,8 @@ import { createDepartmentSchema, updateDepartmentSchema, listDepartmentsQuerySch
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
 import type { HonoContext, DepartmentResponse } from '../types'
 import { ExportService } from '../services/export.service'
+import { ImportService } from '../services/import.service'
+import { parseUpload, validateFile, type UploadedFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
 
 const departments = new Hono<HonoContext>()
@@ -176,6 +178,38 @@ departments.get('/export/pdf', async (c) => {
       pdfStream.on('error', reject)
     })
   })
+})
+
+departments.post('/import', requireAdmin, async (c) => {
+  const user = c.get('user')
+  const file = await parseUpload(c)
+
+  if (!file) {
+    return c.json({ error: 'No file uploaded' }, 400)
+  }
+
+  const validation = validateFile(file)
+
+  if (!validation.valid) {
+    return c.json({ error: validation.error }, 400)
+  }
+
+  const fileValidation = ImportService.validateDepartmentFile(file.buffer)
+
+  if (!fileValidation.valid) {
+    return c.json({ error: 'Invalid file structure', details: fileValidation.errors }, 400)
+  }
+
+  const result = await ImportService.importDepartments(file.buffer, user.username)
+
+  return c.json({
+    message: 'Import completed',
+    result: {
+      success: result.success,
+      failed: result.failed,
+      errors: result.errors
+    }
+  }, 200)
 })
 
 export default departments

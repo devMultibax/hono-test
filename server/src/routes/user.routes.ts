@@ -7,6 +7,8 @@ import { updateUserSchema, listUsersQuerySchema } from '../schemas/user'
 import { successResponse, noContentResponse } from '../lib/response'
 import type { HonoContext, Role, UserWithRelations } from '../types'
 import { ExportService } from '../services/export.service'
+import { ImportService } from '../services/import.service'
+import { parseUpload, validateFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
 
 const users = new Hono<HonoContext>()
@@ -185,6 +187,38 @@ users.get('/export/pdf', requireUser, async (c) => {
       pdfStream.on('error', reject)
     })
   })
+})
+
+users.post('/import', requireAdmin, async (c) => {
+  const user = c.get('user')
+  const file = await parseUpload(c)
+
+  if (!file) {
+    return c.json({ error: 'No file uploaded' }, 400)
+  }
+
+  const validation = validateFile(file)
+
+  if (!validation.valid) {
+    return c.json({ error: validation.error }, 400)
+  }
+
+  const fileValidation = ImportService.validateUserFile(file.buffer)
+
+  if (!fileValidation.valid) {
+    return c.json({ error: 'Invalid file structure', details: fileValidation.errors }, 400)
+  }
+
+  const result = await ImportService.importUsers(file.buffer, user.username)
+
+  return c.json({
+    message: 'Import completed',
+    result: {
+      success: result.success,
+      failed: result.failed,
+      errors: result.errors
+    }
+  }, 200)
 })
 
 export default users
