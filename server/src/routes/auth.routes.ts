@@ -1,38 +1,19 @@
 import { Hono } from 'hono'
 import { setCookie, deleteCookie } from 'hono/cookie'
-import { registerSchema, loginSchema } from '../schemas/user'
+import { loginSchema } from '../schemas/user'
 import { AuthService } from '../services/auth.service'
-import { successResponse, createdResponse } from '../lib/response'
+import { successResponse } from '../lib/response'
 import { authMiddleware } from '../middleware/auth'
 import { loginRateLimiter } from '../middleware/rate-limit'
 import { generateCsrfToken, csrfProtection } from '../middleware/csrf'
 import { env } from '../config/env'
-import { Role, type HonoContext } from '../types'
+import type { HonoContext } from '../types'
 
 const auth = new Hono<HonoContext>()
 
 auth.get('/csrf-token', (c) => {
   const token = generateCsrfToken(c)
   return successResponse(c, { csrfToken: token })
-})
-
-auth.post('/register', csrfProtection, async (c) => {
-  const body = await c.req.json()
-  const validated = registerSchema.parse(body)
-
-  const result = await AuthService.register({
-    username: validated.username,
-    password: validated.password,
-    firstName: validated.firstName,
-    lastName: validated.lastName,
-    departmentId: validated.departmentId,
-    sectionId: validated.sectionId,
-    email: validated.email,
-    tel: validated.tel,
-    role: validated.role as Role | undefined
-  })
-
-  return createdResponse(c, result)
 })
 
 auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {

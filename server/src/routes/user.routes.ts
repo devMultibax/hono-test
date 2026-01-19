@@ -3,9 +3,9 @@ import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin, requireUser } from '../middleware/permission'
 import { UserService } from '../services/user.service'
-import { updateUserSchema, listUsersQuerySchema } from '../schemas/user'
-import { successResponse, noContentResponse } from '../lib/response'
-import type { HonoContext, Role, UserWithRelations } from '../types'
+import { registerSchema, updateUserSchema, listUsersQuerySchema } from '../schemas/user'
+import { successResponse, createdResponse, noContentResponse } from '../lib/response'
+import { Role, type HonoContext, type UserWithRelations } from '../types'
 import { ExportService } from '../services/export.service'
 import { ImportService } from '../services/import.service'
 import { parseUpload, validateFile } from '../middleware/upload'
@@ -15,6 +15,27 @@ const users = new Hono<HonoContext>()
 
 users.use('/*', authMiddleware)
 users.use('/*', csrfProtection)
+
+users.post('/', requireAdmin, async (c) => {
+  const currentUser = c.get('user')
+  const body = await c.req.json()
+  const validated = registerSchema.parse(body)
+
+  const user = await UserService.create(
+    validated.username,
+    validated.password,
+    validated.firstName,
+    validated.lastName,
+    validated.departmentId,
+    validated.sectionId ?? null,
+    validated.email ?? null,
+    validated.tel ?? null,
+    validated.role ?? Role.USER,
+    currentUser.username
+  )
+
+  return createdResponse(c, { user })
+})
 
 users.get('/', requireUser, async (c) => {
   const include = c.req.query('include') === 'true'
