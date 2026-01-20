@@ -214,6 +214,87 @@ export class AuthService {
     }
   }
 
+  // Profile Management Methods
+  static async getCurrentUser(userId: number): Promise<UserResponse> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        departmentId: true,
+        sectionId: true,
+        email: true,
+        tel: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        lastLoginAt: true
+      }
+    })
+
+    if (!user) {
+      throw new NotFoundError('User not found')
+    }
+
+    return this.formatUserResponse(user)
+  }
+
+  static async updateProfile(
+    userId: number,
+    data: {
+      firstName?: string
+      lastName?: string
+      email?: string | null
+      tel?: string | null
+    }
+  ): Promise<UserResponse> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user) {
+      throw new NotFoundError('User not found')
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...data,
+        updatedBy: user.username
+      },
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        departmentId: true,
+        sectionId: true,
+        email: true,
+        tel: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        lastLoginAt: true
+      }
+    })
+
+    const userWithRelations = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        department: true,
+        section: true
+      }
+    })
+
+    if (userWithRelations) {
+      await this.logUserAction(userWithRelations, ActionType.UPDATE)
+    }
+
+    return this.formatUserResponse(updatedUser)
+  }
+
   private static async logUserAction(
     user: {
       username: string

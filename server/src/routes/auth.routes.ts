@@ -45,6 +45,24 @@ auth.post('/logout', authMiddleware, async (c) => {
   return successResponse(c, { message: 'Logged out successfully' })
 })
 
+// Profile Management Endpoints
+auth.get('/me', authMiddleware, async (c) => {
+  const currentUser = c.get('user')
+  const user = await AuthService.getCurrentUser(currentUser.id)
+  return successResponse(c, { user })
+})
+
+auth.put('/me', authMiddleware, csrfProtection, async (c) => {
+  const currentUser = c.get('user')
+  const body = await c.req.json()
+
+  const { updateProfileSchema } = await import('../schemas/auth.schema')
+  const validated = updateProfileSchema.parse(body)
+
+  const user = await AuthService.updateProfile(currentUser.id, validated)
+  return successResponse(c, { message: 'Profile updated successfully', user })
+})
+
 auth.put('/me/password', authMiddleware, csrfProtection, async (c) => {
   const currentUser = c.get('user')
   const body = await c.req.json()
