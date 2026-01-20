@@ -1,0 +1,150 @@
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { MasterDataService } from '../services/master-data.service';
+import { sectionSearchSchema } from '../schemas/master-data.schema';
+import { authMiddleware } from '../middleware/auth';
+
+const masterDataRoutes = new Hono();
+const masterDataService = new MasterDataService();
+
+// Apply authentication middleware to all routes
+masterDataRoutes.use('*', authMiddleware);
+
+/**
+ * GET /master-data/departments
+ * Get all departments (simplified)
+ */
+masterDataRoutes.get('/departments', async (c) => {
+    try {
+        const departments = await masterDataService.getAllDepartments();
+
+        return c.json({
+            success: true,
+            data: departments,
+        });
+    } catch (error) {
+        console.error('Error fetching departments:', error);
+        return c.json(
+            {
+                success: false,
+                message: 'Failed to fetch departments',
+            },
+            500
+        );
+    }
+});
+
+/**
+ * GET /master-data/departments/:id/sections
+ * Get sections by department ID
+ */
+masterDataRoutes.get('/departments/:id/sections', async (c) => {
+    try {
+        const departmentId = parseInt(c.req.param('id'));
+
+        if (isNaN(departmentId)) {
+            return c.json(
+                {
+                    success: false,
+                    message: 'Invalid department ID',
+                },
+                400
+            );
+        }
+
+        const sections = await masterDataService.getSectionsByDepartment(departmentId);
+
+        return c.json({
+            success: true,
+            data: sections,
+        });
+    } catch (error) {
+        console.error('Error fetching sections:', error);
+        return c.json(
+            {
+                success: false,
+                message: 'Failed to fetch sections',
+            },
+            500
+        );
+    }
+});
+
+/**
+ * POST /master-data/departments/sections/search
+ * Search sections by name
+ */
+masterDataRoutes.post(
+    '/departments/sections/search',
+    zValidator('json', sectionSearchSchema),
+    async (c) => {
+        try {
+            const searchData = c.req.valid('json');
+            const sections = await masterDataService.searchSections(searchData);
+
+            return c.json({
+                success: true,
+                data: sections,
+            });
+        } catch (error) {
+            console.error('Error searching sections:', error);
+            return c.json(
+                {
+                    success: false,
+                    message: 'Failed to search sections',
+                },
+                500
+            );
+        }
+    }
+);
+
+/**
+ * GET /master-data/users
+ * Get all users (simplified)
+ */
+masterDataRoutes.get('/users', async (c) => {
+    try {
+        const users = await masterDataService.getAllUsers();
+
+        return c.json({
+            success: true,
+            data: users,
+        });
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        return c.json(
+            {
+                success: false,
+                message: 'Failed to fetch users',
+            },
+            500
+        );
+    }
+});
+
+/**
+ * GET /master-data/users/from-logs
+ * Get unique users from user logs
+ */
+masterDataRoutes.get('/users/from-logs', async (c) => {
+    try {
+        const users = await masterDataService.getUsersFromLogs();
+
+        return c.json({
+            success: true,
+            data: users,
+        });
+    } catch (error) {
+        console.error('Error fetching users from logs:', error);
+        return c.json(
+            {
+                success: false,
+                message: 'Failed to fetch users from logs',
+            },
+            500
+        );
+    }
+});
+
+export default masterDataRoutes;

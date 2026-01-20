@@ -12,6 +12,7 @@ import userRoutes from './routes/user.routes'
 import departmentRoutes from './routes/department.routes'
 import sectionRoutes from './routes/section.routes'
 import healthRoutes from './routes/health.routes'
+import masterDataRoutes from './routes/master-data.routes'
 import { prisma } from './lib/prisma'
 
 const app = new Hono()
@@ -43,6 +44,7 @@ app.route('/auth', authRoutes)
 app.route('/users', userRoutes)
 app.route('/departments', departmentRoutes)
 app.route('/sections', sectionRoutes)
+app.route('/master-data', masterDataRoutes)
 
 // 404 handler
 app.notFound((c) => {
