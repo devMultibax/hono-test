@@ -108,6 +108,36 @@ users.delete('/:id', requireAdmin, async (c) => {
   return noContentResponse(c)
 })
 
+// Password Management Endpoints
+users.post('/password/verify', requireUser, async (c) => {
+  const currentUser = c.get('user')
+  const body = await c.req.json()
+
+  const { verifyPasswordSchema } = await import('../schemas/user')
+  const validated = verifyPasswordSchema.parse(body)
+
+  const isValid = await UserService.verifyPassword(currentUser.id, validated.password)
+  return successResponse(c, { valid: isValid })
+})
+
+users.patch('/:id/password/reset', requireAdmin, async (c) => {
+  const currentUser = c.get('user')
+  const id = Number(c.req.param('id'))
+
+  if (isNaN(id)) {
+    return c.json({ error: 'Invalid user ID' }, 400)
+  }
+
+  const body = await c.req.json()
+
+  const { resetPasswordSchema } = await import('../schemas/user')
+  const validated = resetPasswordSchema.parse(body)
+
+  const user = await UserService.resetPassword(id, validated.newPassword, currentUser.username)
+  return successResponse(c, { user })
+})
+
+
 users.get('/export/excel', requireUser, async (c) => {
   const queryParams = listUsersQuerySchema.parse({
     page: c.req.query('page'),

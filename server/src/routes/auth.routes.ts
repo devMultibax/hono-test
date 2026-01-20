@@ -45,4 +45,21 @@ auth.post('/logout', authMiddleware, async (c) => {
   return successResponse(c, { message: 'Logged out successfully' })
 })
 
+auth.put('/me/password', authMiddleware, csrfProtection, async (c) => {
+  const currentUser = c.get('user')
+  const body = await c.req.json()
+
+  const { changePasswordSchema } = await import('../schemas/user')
+  const validated = changePasswordSchema.parse(body)
+
+  const { UserService } = await import('../services/user.service')
+  const user = await UserService.changePassword(
+    currentUser.id,
+    validated.currentPassword,
+    validated.newPassword
+  )
+
+  return successResponse(c, { message: 'Password changed successfully', user })
+})
+
 export default auth

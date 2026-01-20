@@ -345,6 +345,92 @@ export class UserService {
     }
   }
 
+  // Password Management Methods
+  static async verifyPassword(id: number, password: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { password: true }
+    })
+
+    if (!user) {
+      throw new NotFoundError('User not found')
+    }
+
+    return await bcrypt.compare(password, user.password)
+  }
+
+  static async resetPassword(id: number, newPassword: string, updatedBy: string): Promise<UserResponse> {
+    const user = await prisma.user.findUnique({
+      where: { id }
+    })
+
+    if (!user) {
+      throw new NotFoundError('User not found')
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS)
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
+        isDefaultPassword: true,
+        tokenVersion: { increment: 1 },
+        updatedBy
+      },
+      include: {
+        department: true,
+        section: true
+      }
+    })
+
+    await this.logUserAction(updatedUser as any, ActionType.UPDATE)
+
+    return this.formatUserResponse(updatedUser)
+  }
+
+  static async changePassword(
+    id: number,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<UserResponse> {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        department: true,
+        section: true
+      }
+    })
+
+    if (!user) {
+      throw new NotFoundError('User not found')
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
+    if (!isPasswordValid) {
+      throw new Error('Current password is incorrect')
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS)
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
+        isDefaultPassword: false,
+        updatedBy: user.username
+      },
+      include: {
+        department: true,
+        section: true
+      }
+    })
+
+    await this.logUserAction(updatedUser as any, ActionType.UPDATE)
+
+    return this.formatUserResponse(updatedUser)
+  }
+
   private static async logUserAction(user: any, actionType: ActionType): Promise<void> {
     await prisma.userLog.create({
       data: {

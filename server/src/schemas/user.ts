@@ -86,3 +86,23 @@ export const listUsersQuerySchema = paginationQuerySchema.extend({
   role: z.enum(['USER', 'ADMIN']).optional(),
   status: z.enum(['active', 'inactive']).optional(),
 })
+
+// Password Management Schemas
+export const verifyPasswordSchema = z.object({
+  password: z.string({ message: 'Password is required' })
+    .min(1, { message: 'Password cannot be empty' })
+})
+
+export const resetPasswordSchema = z.object({
+  newPassword: z.string({ message: 'New password is required' })
+    .min(6, { message: 'Password must be at least 6 characters' })
+    .max(255, { message: 'Password is too long' })
+})
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string({ message: 'Current password is required' })
+    .min(1, { message: 'Current password cannot be empty' }),
+  newPassword: z.string({ message: 'New password is required' })
+    .min(6, { message: 'Password must be at least 6 characters' })
+    .max(255, { message: 'Password is too long' })
+})
