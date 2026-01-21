@@ -9,6 +9,7 @@ import { securityHeaders } from './middleware/security-headers'
 import { registerOpenAPIRoutes } from './lib/openapi'
 import { prisma } from './lib/prisma'
 import { ScheduledBackupService } from './services/scheduled-backup.service'
+import { ScheduledLogService } from './services/scheduled-log.service'
 import authRoutes from './routes/auth.routes'
 import userRoutes from './routes/user.routes'
 import departmentRoutes from './routes/department.routes'
@@ -82,6 +83,7 @@ process.on('SIGINT', shutdown)
 
 // Initialize services
 ScheduledBackupService.init()
+ScheduledLogService.init()
 
 // Start server
 const port = Number(env.PORT)

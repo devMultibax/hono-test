@@ -9,19 +9,40 @@ if (!fs.existsSync(LOG_DIR)) {
   fs.mkdirSync(LOG_DIR, { recursive: true })
 }
 
-function getLogFilePath(): string {
-  const date = new Date().toISOString().split('T')[0]
-  return path.join(LOG_DIR, `app-${date}.log`)
+class DailyRotateStream {
+  private currentStream: fs.WriteStream | null = null
+  private currentDate: string = ''
+
+  constructor(private logDir: string) {
+    this.rotate()
+  }
+
+  write(string: string) {
+    const now = new Date().toISOString().split('T')[0]
+    if (now !== this.currentDate) {
+      this.rotate()
+    }
+    this.currentStream?.write(string)
+  }
+
+  private rotate() {
+    this.currentDate = new Date().toISOString().split('T')[0]
+    const filename = `app-${this.currentDate}.log`
+    const filePath = path.join(this.logDir, filename)
+
+    if (this.currentStream) {
+      this.currentStream.end()
+    }
+
+    this.currentStream = fs.createWriteStream(filePath, { flags: 'a' })
+  }
 }
 
 function createStreams(): pino.StreamEntry[] {
   const streams: pino.StreamEntry[] = [
     {
       level: 'info',
-      stream: pino.destination({
-        dest: getLogFilePath(),
-        sync: false
-      })
+      stream: new DailyRotateStream(LOG_DIR)
     }
   ]
 
