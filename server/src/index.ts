@@ -19,6 +19,7 @@ import masterDataRoutes from './routes/master-data.routes'
 import databaseRoutes from './routes/database.routes'
 import systemLogRoutes from './routes/system-log.routes'
 import backupRoutes from './routes/backup.routes'
+import userLogRoutes from './routes/user-log.routes'
 
 const app = new Hono()
 
@@ -53,6 +54,7 @@ app.route('/master-data', masterDataRoutes)
 app.route('/database', databaseRoutes)
 app.route('/system-log', systemLogRoutes)
 app.route('/backup', backupRoutes)
+app.route('/user-logs', userLogRoutes)
 
 // 404 handler
 app.notFound((c) => {
