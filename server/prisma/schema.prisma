@@ -111,5 +111,8 @@ model UserLog {
   actionType ActionType
   actionAt   DateTime   @default(now())
 
+  @@index([username])
+  @@index([actionType])
+  @@index([actionAt])
   @@map("user_log")
 }
