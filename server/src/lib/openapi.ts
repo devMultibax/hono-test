@@ -41,6 +41,14 @@ const OPENAPI_INFO = {
     {
       name: 'Sections',
       description: 'Section management endpoints (requires authentication)'
+    },
+    {
+      name: 'Master Data',
+      description: 'Master data lookup endpoints'
+    },
+    {
+      name: 'System Logs',
+      description: 'System log management endpoints'
     }
   ],
   components: {

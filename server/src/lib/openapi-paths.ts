@@ -641,5 +641,383 @@ export const OPENAPI_PATHS = {
         '404': { description: 'Section not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     }
+  },
+  '/master-data/departments': {
+    get: {
+      tags: ['Master Data'],
+      summary: 'Get all departments (simplified)',
+      security: [{ cookieAuth: [] }],
+      responses: {
+        '200': {
+          description: 'List of departments',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'integer' },
+                        name: { type: 'string' },
+                        status: { type: 'string' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' }
+      }
+    }
+  },
+  '/master-data/departments/{id}/sections': {
+    get: {
+      tags: ['Master Data'],
+      summary: 'Get sections by department ID',
+      security: [{ cookieAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer' },
+          description: 'Department ID'
+        }
+      ],
+      responses: {
+        '200': {
+          description: 'List of sections',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'integer' },
+                        name: { type: 'string' },
+                        departmentId: { type: 'integer' },
+                        status: { type: 'string' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' }
+      }
+    }
+  },
+  '/master-data/departments/sections/search': {
+    post: {
+      tags: ['Master Data'],
+      summary: 'Search sections',
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/SectionSearch' }
+          }
+        }
+      },
+      responses: {
+        '200': {
+          description: 'Search results',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'integer' },
+                        name: { type: 'string' },
+                        departmentId: { type: 'integer' },
+                        status: { type: 'string' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' }
+      }
+    }
+  },
+  '/master-data/users': {
+    get: {
+      tags: ['Master Data'],
+      summary: 'Get all users (simplified)',
+      security: [{ cookieAuth: [] }],
+      responses: {
+        '200': {
+          description: 'List of users',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'integer' },
+                        username: { type: 'string' },
+                        firstName: { type: 'string' },
+                        lastName: { type: 'string' },
+                        departmentId: { type: 'integer' },
+                        role: { type: 'string' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' }
+      }
+    }
+  },
+  '/master-data/users/from-logs': {
+    get: {
+      tags: ['Master Data'],
+      summary: 'Get users from logs',
+      security: [{ cookieAuth: [] }],
+      responses: {
+        '200': {
+          description: 'List of users from logs',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: {
+                    type: 'array',
+                    items: { $ref: '#/components/schemas/UserFromLog' }
+                  }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' }
+      }
+    }
+  },
+  '/system-log': {
+    get: {
+      tags: ['System Logs'],
+      summary: 'Get system logs',
+      security: [{ cookieAuth: [] }],
+      parameters: [
+        { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date' } },
+        { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date' } },
+        { name: 'level', in: 'query', schema: { type: 'string' } },
+        { name: 'search', in: 'query', schema: { type: 'string' } },
+        { name: 'limit', in: 'query', schema: { type: 'integer' } }
+      ],
+      responses: {
+        '200': {
+          description: 'System logs',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  logs: { type: 'array', items: { $ref: '#/components/schemas/SystemLog' } },
+                  total: { type: 'integer' }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' },
+        '403': { description: 'Forbidden' }
+      }
+    }
+  },
+  '/system-log/files': {
+    get: {
+      tags: ['System Logs'],
+      summary: 'Get log files',
+      security: [{ cookieAuth: [] }],
+      responses: {
+        '200': {
+          description: 'List of log files',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  files: { type: 'array', items: { type: 'string' } },
+                  total: { type: 'integer' }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' },
+        '403': { description: 'Forbidden' }
+      }
+    }
+  },
+  '/system-log/cleanup': {
+    delete: {
+      tags: ['System Logs'],
+      summary: 'Cleanup old logs',
+      security: [{ cookieAuth: [] }],
+      responses: {
+        '200': {
+          description: 'Cleanup result',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  deletedCount: { type: 'integer' }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' },
+        '403': { description: 'Forbidden' }
+      }
+    }
+  },
+  '/users/import': {
+    post: {
+      tags: ['Users'],
+      summary: 'Import users from Excel',
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            schema: {
+              type: 'object',
+              properties: {
+                file: { type: 'string', format: 'binary' }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        '200': {
+          description: 'Import result',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ImportResult' }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' },
+        '403': { description: 'Forbidden' }
+      }
+    }
+  },
+  '/users/password/verify': {
+    post: {
+      tags: ['Users'],
+      summary: 'Verify password',
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: { password: { type: 'string' } },
+              required: ['password']
+            }
+          }
+        }
+      },
+      responses: {
+        '200': {
+          description: 'Verification result',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: {
+                    type: 'object',
+                    properties: { valid: { type: 'boolean' } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' }
+      }
+    }
+  },
+  '/users/{id}/password/reset': {
+    patch: {
+      tags: ['Users'],
+      summary: 'Reset user password',
+      security: [{ cookieAuth: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: { newPassword: { type: 'string' } },
+              required: ['newPassword']
+            }
+          }
+        }
+      },
+      responses: {
+        '200': {
+          description: 'Password reset successful',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: {
+                    type: 'object',
+                    properties: { user: { $ref: '#/components/schemas/User' } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'Unauthorized' },
+        '403': { description: 'Forbidden' }
+      }
+    }
   }
 }

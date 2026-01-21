@@ -139,5 +139,55 @@ export const OPENAPI_SCHEMAS = {
       }
     },
     required: ['id', 'departmentId', 'name', 'status', 'createdAt']
+  },
+  SystemLog: {
+    type: 'object',
+    properties: {
+      level: { type: 'string', example: 'info' },
+      time: { type: 'string', format: 'date-time', example: '2025-01-21T10:00:00.000Z' },
+      pid: { type: 'integer', example: 1234 },
+      hostname: { type: 'string', example: 'server-01' },
+      msg: { type: 'string', example: 'Request completed' },
+      reqId: { type: 'string', example: 'req-123' },
+      req: { type: 'object' },
+      res: { type: 'object' },
+      responseTime: { type: 'number', example: 45.2 }
+    }
+  },
+  ImportResult: {
+    type: 'object',
+    properties: {
+      message: { type: 'string', example: 'Import completed' },
+      result: {
+        type: 'object',
+        properties: {
+          success: { type: 'integer', example: 10 },
+          failed: { type: 'integer', example: 2 },
+          errors: {
+            type: 'array',
+            items: { type: 'string' },
+            example: ['Row 3: Invalid email', 'Row 5: Username exists']
+          }
+        }
+      }
+    }
+  },
+  SectionSearch: {
+    type: 'object',
+    properties: {
+      name: { type: 'string', minLength: 1, example: 'Dev' },
+      departmentId: { type: 'integer', minimum: 1, nullable: true, example: 1 }
+    },
+    required: ['name']
+  },
+  UserFromLog: {
+    type: 'object',
+    properties: {
+      username: { type: 'string', example: 'user01' },
+      firstName: { type: 'string', example: 'John' },
+      lastName: { type: 'string', example: 'Doe' },
+      department: { type: 'string', example: 'IT' },
+      section: { type: 'string', example: 'Development' }
+    }
   }
 }
