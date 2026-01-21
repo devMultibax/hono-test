@@ -7,6 +7,8 @@ import { corsMiddleware } from './middleware/cors'
 import { generalApiRateLimiter } from './middleware/rate-limit'
 import { securityHeaders } from './middleware/security-headers'
 import { registerOpenAPIRoutes } from './lib/openapi'
+import { prisma } from './lib/prisma'
+import { ScheduledBackupService } from './services/scheduled-backup.service'
 import authRoutes from './routes/auth.routes'
 import userRoutes from './routes/user.routes'
 import departmentRoutes from './routes/department.routes'
@@ -16,7 +18,6 @@ import masterDataRoutes from './routes/master-data.routes'
 import databaseRoutes from './routes/database.routes'
 import systemLogRoutes from './routes/system-log.routes'
 import backupRoutes from './routes/backup.routes'
-import { prisma } from './lib/prisma'
 
 const app = new Hono()
 
@@ -31,11 +32,11 @@ app.onError(errorHandler)
 
 // Root endpoint
 app.get('/', (c) => {
-    return c.json({
-        message: 'Hono API Server',
-        version: '1.0.0',
-        status: 'running'
-    })
+  return c.json({
+    message: 'Hono API Server',
+    version: '1.0.0',
+    status: 'running'
+  })
 })
 
 // API Documentation
@@ -54,30 +55,33 @@ app.route('/backup', backupRoutes)
 
 // 404 handler
 app.notFound((c) => {
-    return c.json(
-        {
-            error: 'Not Found',
-            message: 'The requested resource was not found'
-        },
-        404
-    )
+  return c.json(
+    {
+      error: 'Not Found',
+      message: 'The requested resource was not found'
+    },
+    404
+  )
 })
 
 // Graceful shutdown
 const shutdown = async () => {
-    console.log('\nShutting down gracefully...')
-    try {
-        await prisma.$disconnect()
-        console.log('Database disconnected')
-        process.exit(0)
-    } catch (error) {
-        console.error('Error during shutdown:', error)
-        process.exit(1)
-    }
+  console.log('\nShutting down gracefully...')
+  try {
+    await prisma.$disconnect()
+    console.log('Database disconnected')
+    process.exit(0)
+  } catch (error) {
+    console.error('Error during shutdown:', error)
+    process.exit(1)
+  }
 }
 
 process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
+
+// Initialize services
+ScheduledBackupService.init()
 
 // Start server
 const port = Number(env.PORT)
@@ -91,8 +95,8 @@ console.log(`
 `)
 
 serve({
-    fetch: app.fetch,
-    port
+  fetch: app.fetch,
+  port
 })
 
 export default app
