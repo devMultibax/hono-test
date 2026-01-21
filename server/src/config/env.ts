@@ -55,7 +55,12 @@ const envSchema = z.object({
 
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
-    .default('development')
+    .default('development'),
+
+  PG_BIN_PATH: z
+    .string()
+    .optional()
+    .describe('Path to PostgreSQL bin directory (e.g., C:\\Program Files\\PostgreSQL\\16\\bin)')
 });
 
 function validateEnv() {
