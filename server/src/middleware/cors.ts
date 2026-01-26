@@ -3,7 +3,7 @@ import { env } from '../config/env'
 
 export const corsMiddleware = honoCors({
   origin: env.NODE_ENV === 'production'
-    ? ['https://yourdomain.com'] // แก้ไข URL ให้ตรงกับ production domain
+    ? (env.ALLOW_ORIGINS.length > 0 ? env.ALLOW_ORIGINS : ['https://yourdomain.com'])
     : '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],

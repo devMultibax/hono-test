@@ -57,6 +57,15 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
 
+  ALLOW_ORIGINS: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val.trim() === '') return [];
+      return val.split(',').map(origin => origin.trim());
+    })
+    .describe('Comma-separated list of allowed origins for CORS (e.g., https://example.com,https://app.example.com)'),
+
   PG_BIN_PATH: z
     .string()
     .optional()
