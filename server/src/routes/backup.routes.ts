@@ -14,11 +14,13 @@ const backupRoutes = new Hono<HonoContext>()
 backupRoutes.use('/*', authMiddleware)
 backupRoutes.use('/*', requireAdmin)
 
+// Get all backups
 backupRoutes.get('/', async (c) => {
   const backups = await BackupService.getBackups()
   return successResponse(c, { backups, total: backups.length })
 })
 
+// Create backup
 backupRoutes.post('/', zValidator('json', createBackupSchema), async (c) => {
   const { prefix } = c.req.valid('json')
   const result = await BackupService.createBackup(prefix)
@@ -28,6 +30,7 @@ backupRoutes.post('/', zValidator('json', createBackupSchema), async (c) => {
   })
 })
 
+// Download backup
 backupRoutes.get('/:filename', async (c) => {
   const filename = c.req.param('filename')
   const { filePath, size } = await BackupService.getBackupInfo(filename)
@@ -44,12 +47,14 @@ backupRoutes.get('/:filename', async (c) => {
   })
 })
 
+// Restore backup
 backupRoutes.post('/:filename/restore', async (c) => {
   const filename = c.req.param('filename')
   await BackupService.restoreBackup(filename)
   return successResponse(c, { message: 'Database restored successfully' })
 })
 
+// Delete backup
 backupRoutes.delete('/:filename', async (c) => {
   const filename = c.req.param('filename')
   await BackupService.deleteBackup(filename)

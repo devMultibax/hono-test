@@ -1,23 +1,30 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
+import { spawn } from 'child_process'
 import fs from 'fs/promises'
-import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync, statSync, readdirSync } from 'fs'
 import path from 'path'
 import { env } from '../config/env'
 import { NotFoundError } from '../lib/errors'
 import type { BackupFile } from '../schemas/backup.schema'
 
-const execAsync = promisify(exec)
-
 const BACKUP_DIR = path.resolve(process.cwd(), 'storage/backups')
-const BACKUP_FILE_PATTERN = /^backup-(?:.+-)?(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\.sql$/
-const BACKUP_EXTENSIONS = ['.sql', '.dump']
+const BACKUP_EXTENSIONS = ['.backup', '.sql', '.dump']
 
 function getPgCommand(command: string): string {
   if (env.PG_BIN_PATH) {
-    return `"${path.join(env.PG_BIN_PATH, command)}"`
+    return path.join(env.PG_BIN_PATH, command)
   }
   return command
+}
+
+function getDbConnectionArgs(): { host: string; port: string; user: string; database: string; password: string } {
+  const url = new URL(env.DATABASE_URL)
+  return {
+    host: url.hostname,
+    port: url.port || '5432',
+    user: url.username,
+    database: url.pathname.slice(1),
+    password: decodeURIComponent(url.password)
+  }
 }
 
 if (!existsSync(BACKUP_DIR)) {
@@ -30,7 +37,7 @@ export class BackupService {
       return []
     }
 
-    const entries = await fs.readdir(BACKUP_DIR)
+    const entries = readdirSync(BACKUP_DIR)
     const backupFiles = entries.filter(file =>
       BACKUP_EXTENSIONS.some(ext => file.endsWith(ext))
     )
@@ -38,12 +45,11 @@ export class BackupService {
     const files = await Promise.all(
       backupFiles.map(async (filename) => {
         const filePath = path.join(BACKUP_DIR, filename)
-        const stats = await fs.stat(filePath)
-        const date = this.extractDateFromFilename(filename, stats.birthtime)
+        const stats = statSync(filePath)
 
         return {
           filename,
-          date,
+          date: stats.birthtime.toISOString(),
           size: stats.size,
           sizeFormatted: this.formatBytes(stats.size)
         }
@@ -54,34 +60,145 @@ export class BackupService {
   }
 
   static async createBackup(prefix?: string): Promise<{ filename: string; path: string }> {
-    const timestamp = this.generateTimestamp()
+    const db = getDbConnectionArgs()
+    const currentYear = new Date().getFullYear()
     const filename = prefix
-      ? `backup-${prefix}-${timestamp}.sql`
-      : `backup-${timestamp}.sql`
+      ? `${prefix}_backup_${currentYear}.backup`
+      : `${db.database}_backup_${currentYear}.backup`
     const filePath = path.join(BACKUP_DIR, filename)
 
-    const password = this.extractPassword()
-
-    try {
+    return new Promise((resolve, reject) => {
       const pgDump = getPgCommand('pg_dump')
-      await execAsync(`${pgDump} "${env.DATABASE_URL}" -f "${filePath}"`, {
-        env: { ...process.env, PGPASSWORD: password }
+
+      const args = [
+        '-h', db.host,
+        '-p', db.port,
+        '-U', db.user,
+        '-d', db.database,
+        '-Fc', '-b', '-v',
+        '-f', filePath
+      ]
+
+      console.log(`Creating backup: ${filename}`)
+
+      const process_spawn = spawn(pgDump, args, {
+        env: { ...process.env, PGPASSWORD: db.password }
       })
 
-      return { filename, path: filePath }
-    } catch (error) {
-      await this.cleanupEmptyFile(filePath)
-      throw error
-    }
+      let stderr = ''
+
+      process_spawn.stderr.on('data', (data) => {
+        stderr += data.toString()
+      })
+
+      process_spawn.on('close', async (code) => {
+        if (code === 0 && existsSync(filePath)) {
+          console.log(`Backup created successfully: ${filename}`)
+          resolve({ filename, path: filePath })
+        } else {
+          console.error('Backup failed:', stderr)
+          await this.cleanupEmptyFile(filePath)
+          reject(new Error(`Backup failed: ${stderr}`))
+        }
+      })
+
+      process_spawn.on('error', async (err) => {
+        console.error('Failed to start pg_dump:', err)
+        await this.cleanupEmptyFile(filePath)
+        reject(new Error(`Failed to start pg_dump: ${err.message}`))
+      })
+    })
   }
 
   static async restoreBackup(filename: string): Promise<void> {
     const filePath = await this.validateBackupExists(filename)
-    const password = this.extractPassword()
+    const db = getDbConnectionArgs()
 
-    const psql = getPgCommand('psql')
-    await execAsync(`${psql} "${env.DATABASE_URL}" -f "${filePath}"`, {
-      env: { ...process.env, PGPASSWORD: password }
+    // Get target database name from filename (e.g., "hono_backup_2026.backup" -> "hono_backup_2026")
+    const targetDbName = this.getDatabaseNameFromFileName(filename)
+
+    return new Promise((resolve, reject) => {
+      const psql = getPgCommand('psql')
+      const pgRestore = getPgCommand('pg_restore')
+      const execEnv = { ...process.env, PGPASSWORD: db.password }
+
+      // Step 1: Create database if not exists
+      const createDbArgs = [
+        '-h', db.host,
+        '-p', db.port,
+        '-U', db.user,
+        '-d', 'postgres',
+        '-c', `CREATE DATABASE "${targetDbName}";`
+      ]
+
+      console.log(`Creating database: ${targetDbName}`)
+
+      const psqlCreate = spawn(psql, createDbArgs, { env: execEnv })
+
+      let createStderr = ''
+
+      psqlCreate.stderr.on('data', (data) => {
+        createStderr += data.toString()
+      })
+
+      psqlCreate.on('close', (createCode) => {
+        // Ignore "already exists" error
+        if (createCode !== 0 && !createStderr.includes('already exists')) {
+          console.error('Create database error:', createStderr)
+          reject(new Error(`Failed to create database: ${createStderr}`))
+          return
+        }
+
+        console.log(`Database "${targetDbName}" is ready`)
+
+        // Step 2: Restore backup to target database
+        const restoreArgs = [
+          '-h', db.host,
+          '-p', db.port,
+          '-U', db.user,
+          '-d', targetDbName,
+          '--clean',
+          '--if-exists',
+          '-v',
+          filePath
+        ]
+
+        console.log(`Restoring backup to database: ${targetDbName}`)
+
+        const pgRestoreProcess = spawn(pgRestore, restoreArgs, { env: execEnv })
+
+        let restoreStderr = ''
+
+        pgRestoreProcess.stderr.on('data', (data) => {
+          restoreStderr += data.toString()
+        })
+
+        pgRestoreProcess.on('close', (restoreCode) => {
+          // pg_restore returns 0 for success, 1 for warnings (which is OK)
+          if (restoreCode !== 0 && restoreCode !== 1) {
+            console.error('Restore error:', restoreStderr)
+            reject(new Error(`Restore failed: ${restoreStderr}`))
+            return
+          }
+
+          if (restoreStderr) {
+            console.log('Restore warnings:', restoreStderr)
+          }
+
+          console.log(`Database restored successfully to "${targetDbName}"`)
+          resolve()
+        })
+
+        pgRestoreProcess.on('error', (err) => {
+          console.error('Failed to start pg_restore:', err)
+          reject(new Error(`Failed to start pg_restore: ${err.message}`))
+        })
+      })
+
+      psqlCreate.on('error', (err) => {
+        console.error('Failed to start psql:', err)
+        reject(new Error(`Failed to start psql: ${err.message}`))
+      })
     })
   }
 
@@ -92,8 +209,33 @@ export class BackupService {
 
   static async getBackupInfo(filename: string): Promise<{ filePath: string; size: number }> {
     const filePath = await this.validateBackupExists(filename)
-    const stats = await fs.stat(filePath)
+    const stats = statSync(filePath)
     return { filePath, size: stats.size }
+  }
+
+  private static getDatabaseNameFromFileName(fileName: string): string {
+    // Remove extension (.backup, .sql, .dump)
+    const dbName = fileName.replace(/\.(backup|sql|dump)$/, '')
+    return this.validateDatabaseName(dbName)
+  }
+
+  private static validateDatabaseName(dbName: string): string {
+    const validNameRegex = /^[a-zA-Z_][a-zA-Z0-9_]{0,62}$/
+
+    if (!validNameRegex.test(dbName)) {
+      throw new Error(
+        `Invalid database name: "${dbName}". ` +
+        'Database name must start with a letter or underscore, ' +
+        'contain only alphanumeric characters and underscores.'
+      )
+    }
+
+    const reservedNames = ['postgres', 'template0', 'template1']
+    if (reservedNames.includes(dbName.toLowerCase())) {
+      throw new Error(`Cannot use reserved database name: "${dbName}"`)
+    }
+
+    return dbName
   }
 
   private static async validateBackupExists(filename: string): Promise<string> {
@@ -106,35 +248,11 @@ export class BackupService {
     return filePath
   }
 
-  private static extractDateFromFilename(filename: string, fallbackDate: Date): string {
-    const dateMatch = filename.match(BACKUP_FILE_PATTERN)
-
-    if (dateMatch) {
-      const [y, m, d, h, min, s] = dateMatch[1].split('-')
-      return `${y}-${m}-${d} ${h}:${min}:${s}`
-    }
-
-    return fallbackDate.toISOString().split('T')[0]
-  }
-
-  private static generateTimestamp(): string {
-    return new Date()
-      .toISOString()
-      .replace(/T/, '-')
-      .replace(/\..+/, '')
-      .replace(/:/g, '-')
-  }
-
-  private static extractPassword(): string {
-    const connectionUrl = new URL(env.DATABASE_URL)
-    return connectionUrl.password
-  }
-
   private static async cleanupEmptyFile(filePath: string): Promise<void> {
     if (!existsSync(filePath)) return
 
     try {
-      const stats = await fs.stat(filePath)
+      const stats = statSync(filePath)
       if (stats.size === 0) {
         await fs.unlink(filePath)
       }
