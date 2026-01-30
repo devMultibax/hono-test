@@ -7,6 +7,7 @@ import { authMiddleware } from '../middleware/auth'
 import { loginRateLimiter } from '../middleware/rate-limit'
 import { generateCsrfToken, csrfProtection } from '../middleware/csrf'
 import { env } from '../config/env'
+import { MESSAGES } from '../constants/message'
 import type { HonoContext } from '../types'
 
 const auth = new Hono<HonoContext>()
@@ -30,7 +31,7 @@ auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
     path: '/'
   })
 
-  return successResponse(c, { user: result.user })
+  return successResponse(c, { user: result.user, message: MESSAGES.AUTH.LOGIN_SUCCESS })
 })
 
 auth.post('/logout', authMiddleware, async (c) => {
@@ -42,7 +43,7 @@ auth.post('/logout', authMiddleware, async (c) => {
     path: '/'
   })
 
-  return successResponse(c, { message: 'Logged out successfully' })
+  return successResponse(c, { message: MESSAGES.AUTH.LOGOUT_SUCCESS })
 })
 
 // Profile Management Endpoints
@@ -60,7 +61,7 @@ auth.put('/me', authMiddleware, csrfProtection, async (c) => {
   const validated = updateProfileSchema.parse(body)
 
   const user = await AuthService.updateProfile(currentUser.id, validated)
-  return successResponse(c, { message: 'Profile updated successfully', user })
+  return successResponse(c, { message: MESSAGES.AUTH.PROFILE_UPDATE_SUCCESS, user })
 })
 
 auth.put('/me/password', authMiddleware, csrfProtection, async (c) => {
@@ -77,7 +78,7 @@ auth.put('/me/password', authMiddleware, csrfProtection, async (c) => {
     validated.newPassword
   )
 
-  return successResponse(c, { message: 'Password changed successfully', user })
+  return successResponse(c, { message: MESSAGES.AUTH.PASSWORD_CHANGE_SUCCESS, user })
 })
 
 export default auth

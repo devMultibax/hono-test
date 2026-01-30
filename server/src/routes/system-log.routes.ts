@@ -5,6 +5,7 @@ import { requireAdmin } from '../middleware/permission'
 import { SystemLogService } from '../services/system-log.service'
 import { logQuerySchema } from '../schemas/system-log.schema'
 import { successResponse } from '../lib/response'
+import { MESSAGES } from '../constants/message'
 import type { HonoContext } from '../types'
 
 const systemLogRoutes = new Hono<HonoContext>()
@@ -26,7 +27,7 @@ systemLogRoutes.get('/files', async (c) => {
 systemLogRoutes.delete('/cleanup', async (c) => {
     const deletedCount = await SystemLogService.cleanupOldLogs()
     return successResponse(c, {
-        message: 'Old logs cleaned up successfully',
+        message: MESSAGES.SYSTEM_LOG.CLEANUP_SUCCESS,
         deletedCount
     })
 })

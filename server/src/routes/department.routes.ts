@@ -10,6 +10,7 @@ import { ExportService } from '../services/export.service'
 import { ImportService } from '../services/import.service'
 import { parseUpload, validateFile, type UploadedFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
+import { MESSAGES } from '../constants/message'
 
 const departments = new Hono<HonoContext>()
 
@@ -47,7 +48,7 @@ departments.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: 'Invalid department ID' }, 400)
+    return c.json({ error: MESSAGES.DEPARTMENT.INVALID_ID }, 400)
   }
 
   const include = c.req.query('include') === 'true'
@@ -69,7 +70,7 @@ departments.put('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: 'Invalid department ID' }, 400)
+    return c.json({ error: MESSAGES.DEPARTMENT.INVALID_ID }, 400)
   }
 
   const body = await c.req.json()
@@ -83,7 +84,7 @@ departments.delete('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: 'Invalid department ID' }, 400)
+    return c.json({ error: MESSAGES.DEPARTMENT.INVALID_ID }, 400)
   }
 
   await DepartmentService.delete(id)
@@ -185,7 +186,7 @@ departments.post('/import', requireAdmin, async (c) => {
   const file = await parseUpload(c)
 
   if (!file) {
-    return c.json({ error: 'No file uploaded' }, 400)
+    return c.json({ error: MESSAGES.USER.NO_FILE_UPLOADED }, 400)
   }
 
   const validation = validateFile(file)
@@ -197,13 +198,13 @@ departments.post('/import', requireAdmin, async (c) => {
   const fileValidation = ImportService.validateDepartmentFile(file.buffer)
 
   if (!fileValidation.valid) {
-    return c.json({ error: 'Invalid file structure', details: fileValidation.errors }, 400)
+    return c.json({ error: MESSAGES.USER.INVALID_FILE_STRUCTURE, details: fileValidation.errors }, 400)
   }
 
   const result = await ImportService.importDepartments(file.buffer, user.username)
 
   return c.json({
-    message: 'Import completed',
+    message: MESSAGES.DEPARTMENT.IMPORT_SUCCESS,
     result: {
       success: result.success,
       failed: result.failed,

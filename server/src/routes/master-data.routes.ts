@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { MasterDataService } from '../services/master-data.service';
 import { sectionSearchSchema } from '../schemas/master-data.schema';
 import { authMiddleware } from '../middleware/auth';
+import { MESSAGES } from '../constants/message';
 
 const masterDataRoutes = new Hono();
 const masterDataService = new MasterDataService();
@@ -27,7 +28,7 @@ masterDataRoutes.get('/departments', async (c) => {
         return c.json(
             {
                 success: false,
-                message: 'Failed to fetch departments',
+                message: MESSAGES.MASTER_DATA.FETCH_DEPARTMENTS_FAILED,
             },
             500
         );
@@ -46,7 +47,7 @@ masterDataRoutes.get('/departments/:id/sections', async (c) => {
             return c.json(
                 {
                     success: false,
-                    message: 'Invalid department ID',
+                    message: MESSAGES.MASTER_DATA.INVALID_DEPARTMENT_ID,
                 },
                 400
             );
@@ -63,7 +64,7 @@ masterDataRoutes.get('/departments/:id/sections', async (c) => {
         return c.json(
             {
                 success: false,
-                message: 'Failed to fetch sections',
+                message: MESSAGES.MASTER_DATA.FETCH_SECTIONS_FAILED,
             },
             500
         );
@@ -91,7 +92,7 @@ masterDataRoutes.post(
             return c.json(
                 {
                     success: false,
-                    message: 'Failed to search sections',
+                    message: MESSAGES.MASTER_DATA.SEARCH_SECTIONS_FAILED,
                 },
                 500
             );
@@ -116,7 +117,7 @@ masterDataRoutes.get('/users', async (c) => {
         return c.json(
             {
                 success: false,
-                message: 'Failed to fetch users',
+                message: MESSAGES.MASTER_DATA.FETCH_USERS_FAILED,
             },
             500
         );
@@ -140,7 +141,7 @@ masterDataRoutes.get('/users/from-logs', async (c) => {
         return c.json(
             {
                 success: false,
-                message: 'Failed to fetch users from logs',
+                message: MESSAGES.MASTER_DATA.FETCH_USER_LOGS_FAILED,
             },
             500
         );
