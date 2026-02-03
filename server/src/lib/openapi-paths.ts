@@ -35,7 +35,7 @@ export const OPENAPI_PATHS = {
       description: 'Generate and return a CSRF token for form submissions',
       responses: {
         '200': {
-          description: 'CSRF token generated successfully',
+          description: 'สร้าง Token สำเร็จ',
           content: {
             'application/json': {
               schema: {
@@ -50,52 +50,7 @@ export const OPENAPI_PATHS = {
       }
     }
   },
-  '/auth/register': {
-    post: {
-      tags: ['Authentication'],
-      summary: 'Register new user',
-      description: 'Create a new user account (requires CSRF token)',
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['username', 'password', 'firstName', 'lastName', 'departmentId'],
-              properties: {
-                username: { type: 'string', minLength: 6, maxLength: 6, pattern: '^[a-zA-Z0-9]+$', example: 'user01' },
-                password: { type: 'string', minLength: 6, maxLength: 255, example: 'password123' },
-                firstName: { type: 'string', minLength: 1, maxLength: 100, example: 'John' },
-                lastName: { type: 'string', minLength: 1, maxLength: 100, example: 'Doe' },
-                departmentId: { type: 'integer', minimum: 1, example: 1 },
-                sectionId: { type: 'integer', minimum: 1, nullable: true, example: 1 },
-                email: { type: 'string', format: 'email', maxLength: 255, nullable: true, example: 'john@example.com' },
-                tel: { type: 'string', minLength: 10, maxLength: 10, pattern: '^[0-9]+$', nullable: true, example: '0812345678' },
-                role: { type: 'string', enum: ['USER', 'ADMIN'], example: 'USER' }
-              }
-            }
-          }
-        }
-      },
-      responses: {
-        '201': {
-          description: 'User registered successfully',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  user: { $ref: '#/components/schemas/User' }
-                }
-              }
-            }
-          }
-        },
-        '400': { description: 'Validation error', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '409': { description: 'Username already exists', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
-      }
-    }
-  },
+
   '/auth/login': {
     post: {
       tags: ['Authentication'],
@@ -118,7 +73,7 @@ export const OPENAPI_PATHS = {
       },
       responses: {
         '200': {
-          description: 'Login successful',
+          description: 'เข้าสู่ระบบสำเร็จ',
           content: {
             'application/json': {
               schema: {
@@ -130,52 +85,158 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Invalid credentials', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '429': { description: 'Too many login attempts', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { description: 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '429': { description: 'พยายามเข้าสู่ระบบมากเกินกำหนด', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     }
   },
   '/auth/logout': {
     post: {
       tags: ['Authentication'],
-      summary: 'User logout',
-      description: 'Logout user and clear session',
+      summary: 'ออกจากระบบ',
+      description: 'ออกจากระบบและลบ Session, Cookie',
       security: [{ cookieAuth: [] }],
       responses: {
         '200': {
-          description: 'Logout successful',
+          description: 'ออกจากระบบสำเร็จ',
           content: {
             'application/json': {
               schema: {
                 type: 'object',
                 properties: {
-                  message: { type: 'string', example: 'Logged out successfully' }
+                  message: { type: 'string', example: 'ออกจากระบบสำเร็จ' }
                 }
               }
             }
           }
         },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    }
+  },
+  '/auth/me': {
+    get: {
+      tags: ['Authentication'],
+      summary: 'ดูข้อมูลโปรไฟล์',
+      description: 'ดูข้อมูลผู้ใช้งานปัจจุบัน (ต้องการสิทธิ์การใช้งาน)',
+      security: [{ cookieAuth: [] }],
+      responses: {
+        '200': {
+          description: 'ข้อมูลผู้ใช้งาน',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  user: { $ref: '#/components/schemas/User' }
+                }
+              }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    },
+    put: {
+      tags: ['Authentication'],
+      summary: 'แก้ไขข้อมูลโปรไฟล์',
+      description: 'แก้ไขข้อมูลสวนตัว (ชื่อ, นามสกุล, อีเมล, เบอร์โทร)',
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                firstName: { type: 'string', minLength: 1, maxLength: 100 },
+                lastName: { type: 'string', minLength: 1, maxLength: 100 },
+                email: { type: 'string', format: 'email', maxLength: 255, nullable: true },
+                tel: { type: 'string', minLength: 10, maxLength: 10, nullable: true }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        '200': {
+          description: 'แก้ไขข้อมูลสำเร็จ',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'บันทึกข้อมูลสำเร็จ' },
+                  user: { $ref: '#/components/schemas/User' }
+                }
+              }
+            }
+          }
+        },
+        '400': { description: 'ข้อมูลไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    }
+  },
+  '/auth/me/password': {
+    put: {
+      tags: ['Authentication'],
+      summary: 'เปลี่ยนรหัสผ่าน',
+      description: 'เปลี่ยนรหัสผ่านผู้ใช้งานปัจจุบัน',
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['currentPassword', 'newPassword', 'confirmNewPassword'],
+              properties: {
+                currentPassword: { type: 'string' },
+                newPassword: { type: 'string', minLength: 6 },
+                confirmNewPassword: { type: 'string', minLength: 6 }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        '200': {
+          description: 'เปลี่ยนรหัสผ่านสำเร็จ',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'เปลี่ยนรหัสผ่านสำเร็จ' },
+                  user: { $ref: '#/components/schemas/User' }
+                }
+              }
+            }
+          }
+        },
+        '400': { description: 'รหัสผ่านไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     }
   },
   '/users': {
     get: {
       tags: ['Users'],
-      summary: 'Get all users',
-      description: 'Retrieve list of all users (requires authentication)',
+      summary: 'ดึงข้อมูลผู้ใช้งานทั้งหมด',
+      description: 'ดึงข้อมูลรายการผู้ใช้งานทั้งหมด (ต้องการสิทธิ์การใช้งาน)',
       security: [{ cookieAuth: [] }],
       parameters: [
         {
           name: 'include',
           in: 'query',
           schema: { type: 'boolean' },
-          description: 'Include related department and section data'
+          description: 'รวมข้อมูลแผนกและฝ่าย'
         }
       ],
       responses: {
         '200': {
-          description: 'List of users',
+          description: 'รายการผู้ใช้งาน',
           content: {
             'application/json': {
               schema: {
@@ -185,7 +246,104 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    },
+    post: {
+      tags: ['Users'],
+      summary: 'สร้างผู้ใช้งานใหม่',
+      description: 'สร้างบัญชีผู้ใช้งานใหม่ (ต้องการสิทธิ์ผู้ดูแลระบบ)',
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['username', 'password', 'firstName', 'lastName', 'departmentId'],
+              properties: {
+                username: { type: 'string', minLength: 6, maxLength: 6, pattern: '^[a-zA-Z0-9]+$', example: 'user01' },
+                password: { type: 'string', minLength: 6, maxLength: 255, example: 'password123' },
+                firstName: { type: 'string', minLength: 1, maxLength: 100, example: 'สมชาย' },
+                lastName: { type: 'string', minLength: 1, maxLength: 100, example: 'ใจดี' },
+                departmentId: { type: 'integer', minimum: 1, example: 1 },
+                sectionId: { type: 'integer', minimum: 1, nullable: true, example: 1 },
+                email: { type: 'string', format: 'email', maxLength: 255, nullable: true, example: 'somchai@example.com' },
+                tel: { type: 'string', minLength: 10, maxLength: 10, pattern: '^[0-9]+$', nullable: true, example: '0812345678' },
+                role: { type: 'string', enum: ['USER', 'ADMIN'], example: 'USER' }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        '201': {
+          description: 'สร้างผู้ใช้งานสำเร็จ',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  user: { $ref: '#/components/schemas/User' }
+                }
+              }
+            }
+          }
+        },
+        '400': { description: 'ข้อมูลไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '409': { description: 'ชื่อผู้ใช้งานซ้ำ', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    }
+  },
+  '/users/export/excel': {
+    get: {
+      tags: ['Users'],
+      summary: 'ส่งออกข้อมูลผู้ใช้งานเป็น Excel',
+      security: [{ cookieAuth: [] }],
+      parameters: [
+        { name: 'search', in: 'query', schema: { type: 'string' }, description: 'ค้นหา' },
+        { name: 'departmentId', in: 'query', schema: { type: 'integer' }, description: 'รหัสแผนก' },
+        { name: 'sectionId', in: 'query', schema: { type: 'integer' }, description: 'รหัสฝ่าย' },
+        { name: 'role', in: 'query', schema: { type: 'string' }, description: 'บทบาท' },
+        { name: 'status', in: 'query', schema: { type: 'string' }, description: 'สถานะ' }
+      ],
+      responses: {
+        '200': {
+          description: 'ไฟล์ Excel',
+          content: {
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+              schema: { type: 'string', format: 'binary' }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
+      }
+    }
+  },
+  '/users/export/pdf': {
+    get: {
+      tags: ['Users'],
+      summary: 'ส่งออกข้อมูลผู้ใช้งานเป็น PDF',
+      security: [{ cookieAuth: [] }],
+      parameters: [
+        { name: 'search', in: 'query', schema: { type: 'string' }, description: 'ค้นหา' },
+        { name: 'departmentId', in: 'query', schema: { type: 'integer' }, description: 'รหัสแผนก' },
+        { name: 'sectionId', in: 'query', schema: { type: 'integer' }, description: 'รหัสฝ่าย' },
+        { name: 'role', in: 'query', schema: { type: 'string' }, description: 'บทบาท' },
+        { name: 'status', in: 'query', schema: { type: 'string' }, description: 'สถานะ' }
+      ],
+      responses: {
+        '200': {
+          description: 'ไฟล์ PDF',
+          content: {
+            'application/pdf': {
+              schema: { type: 'string', format: 'binary' }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
       }
     }
   },
@@ -213,16 +371,16 @@ export const OPENAPI_PATHS = {
       ],
       responses: {
         '200': {
-          description: 'User details',
+          description: 'ข้อมูลผู้ใช้งาน',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/User' }
             }
           }
         },
-        '400': { description: 'Invalid user ID', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '404': { description: 'User not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: 'รหัสผู้ใช้งานไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '404': { description: 'ไม่พบผู้ใช้งาน', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     },
     put: {
@@ -363,6 +521,81 @@ export const OPENAPI_PATHS = {
       }
     }
   },
+  '/departments/import': {
+    post: {
+      tags: ['Departments'],
+      summary: 'นำเข้าข้อมูลแผนกจาก Excel',
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            schema: {
+              type: 'object',
+              properties: {
+                file: { type: 'string', format: 'binary' }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        '200': {
+          description: 'นำเข้าข้อมูลสำเร็จ',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ImportResult' }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)' }
+      }
+    }
+  },
+  '/departments/export/excel': {
+    get: {
+      tags: ['Departments'],
+      summary: 'ส่งออกข้อมูลแผนกเป็น Excel',
+      security: [{ cookieAuth: [] }],
+      parameters: [
+        { name: 'search', in: 'query', schema: { type: 'string' }, description: 'ค้นหา' },
+        { name: 'status', in: 'query', schema: { type: 'string' }, description: 'สถานะ' }
+      ],
+      responses: {
+        '200': {
+          description: 'ไฟล์ Excel',
+          content: {
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+              schema: { type: 'string', format: 'binary' }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
+      }
+    }
+  },
+  '/departments/export/pdf': {
+    get: {
+      tags: ['Departments'],
+      summary: 'ส่งออกข้อมูลแผนกเป็น PDF',
+      security: [{ cookieAuth: [] }],
+      parameters: [
+        { name: 'search', in: 'query', schema: { type: 'string' }, description: 'ค้นหา' },
+        { name: 'status', in: 'query', schema: { type: 'string' }, description: 'สถานะ' }
+      ],
+      responses: {
+        '200': {
+          description: 'ไฟล์ PDF',
+          content: {
+            'application/pdf': {
+              schema: { type: 'string', format: 'binary' }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
+      }
+    }
+  },
   '/departments/{id}': {
     get: {
       tags: ['Departments'],
@@ -387,16 +620,16 @@ export const OPENAPI_PATHS = {
       ],
       responses: {
         '200': {
-          description: 'Department details',
+          description: 'ข้อมูลแผนก',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/Department' }
             }
           }
         },
-        '400': { description: 'Invalid department ID', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '404': { description: 'Department not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: 'รหัสแผนกไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '404': { description: 'ไม่พบแผนก', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     },
     put: {
@@ -430,17 +663,17 @@ export const OPENAPI_PATHS = {
       },
       responses: {
         '200': {
-          description: 'Department updated successfully',
+          description: 'อัปเดตข้อมูลแผนกสำเร็จ',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/Department' }
             }
           }
         },
-        '400': { description: 'Validation error', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '403': { description: 'Forbidden - Admin role required', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '404': { description: 'Department not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: 'ข้อมูลไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '404': { description: 'ไม่พบแผนก', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     },
     delete: {
@@ -459,37 +692,37 @@ export const OPENAPI_PATHS = {
         }
       ],
       responses: {
-        '204': { description: 'Department deleted successfully' },
-        '400': { description: 'Invalid department ID', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '403': { description: 'Forbidden - Admin role required', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '404': { description: 'Department not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '204': { description: 'ลบแผนกสำเร็จ' },
+        '400': { description: 'รหัสแผนกไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '404': { description: 'ไม่พบแผนก', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     }
   },
   '/sections': {
     get: {
       tags: ['Sections'],
-      summary: 'Get all sections',
-      description: 'Retrieve list of all sections or filter by department (requires authentication)',
+      summary: 'ดึงข้อมูลฝ่ายทั้งหมด',
+      description: 'ดึงข้อมูลรายการฝ่ายทั้งหมด หรือกรองตามแผนก (ต้องการสิทธิ์การใช้งาน)',
       security: [{ cookieAuth: [] }],
       parameters: [
         {
           name: 'include',
           in: 'query',
           schema: { type: 'boolean' },
-          description: 'Include related department data'
+          description: 'รวมข้อมูลแผนก'
         },
         {
           name: 'departmentId',
           in: 'query',
           schema: { type: 'integer' },
-          description: 'Filter sections by department ID'
+          description: 'กรองตามรหัสแผนก'
         }
       ],
       responses: {
         '200': {
-          description: 'List of sections',
+          description: 'รายการฝ่าย',
           content: {
             'application/json': {
               schema: {
@@ -499,13 +732,13 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     },
     post: {
       tags: ['Sections'],
-      summary: 'Create section',
-      description: 'Create a new section (requires admin role)',
+      summary: 'สร้างฝ่ายใหม่',
+      description: 'สร้างข้อมูลฝ่ายใหม่ (ต้องการสิทธิ์ผู้ดูแลระบบ)',
       security: [{ cookieAuth: [] }],
       requestBody: {
         required: true,
@@ -524,24 +757,24 @@ export const OPENAPI_PATHS = {
       },
       responses: {
         '201': {
-          description: 'Section created successfully',
+          description: 'สร้างฝ่ายสำเร็จ',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/Section' }
             }
           }
         },
-        '400': { description: 'Validation error', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '403': { description: 'Forbidden - Admin role required', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: 'ข้อมูลไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     }
   },
   '/sections/{id}': {
     get: {
       tags: ['Sections'],
-      summary: 'Get section by ID',
-      description: 'Retrieve a specific section (requires authentication)',
+      summary: 'ดึงข้อมูลฝ่ายตามรหัส',
+      description: 'ดึงข้อมูลฝ่ายที่ระบุ (ต้องการสิทธิ์การใช้งาน)',
       security: [{ cookieAuth: [] }],
       parameters: [
         {
@@ -549,34 +782,34 @@ export const OPENAPI_PATHS = {
           in: 'path',
           required: true,
           schema: { type: 'integer' },
-          description: 'Section ID',
+          description: 'รหัสฝ่าย',
           example: 1
         },
         {
           name: 'include',
           in: 'query',
           schema: { type: 'boolean' },
-          description: 'Include related department data'
+          description: 'รวมข้อมูลแผนก'
         }
       ],
       responses: {
         '200': {
-          description: 'Section details',
+          description: 'ข้อมูลฝ่าย',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/Section' }
             }
           }
         },
-        '400': { description: 'Invalid section ID', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '404': { description: 'Section not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: 'รหัสฝ่ายไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '404': { description: 'ไม่พบฝ่าย', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     },
     put: {
       tags: ['Sections'],
-      summary: 'Update section',
-      description: 'Update section information (requires admin role)',
+      summary: 'อัปเดตข้อมูลฝ่าย',
+      description: 'แก้ไขข้อมูลฝ่าย (ต้องการสิทธิ์ผู้ดูแลระบบ)',
       security: [{ cookieAuth: [] }],
       parameters: [
         {
@@ -584,7 +817,7 @@ export const OPENAPI_PATHS = {
           in: 'path',
           required: true,
           schema: { type: 'integer' },
-          description: 'Section ID',
+          description: 'รหัสฝ่าย',
           example: 1
         }
       ],
@@ -605,23 +838,23 @@ export const OPENAPI_PATHS = {
       },
       responses: {
         '200': {
-          description: 'Section updated successfully',
+          description: 'อัปเดตข้อมูลฝ่ายสำเร็จ',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/Section' }
             }
           }
         },
-        '400': { description: 'Validation error', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '403': { description: 'Forbidden - Admin role required', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '404': { description: 'Section not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '400': { description: 'ข้อมูลไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '404': { description: 'ไม่พบฝ่าย', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
       }
     },
     delete: {
       tags: ['Sections'],
-      summary: 'Delete section',
-      description: 'Delete a section (requires admin role)',
+      summary: 'ลบฝ่าย',
+      description: 'ลบข้อมูลฝ่าย (ต้องการสิทธิ์ผู้ดูแลระบบ)',
       security: [{ cookieAuth: [] }],
       parameters: [
         {
@@ -629,27 +862,104 @@ export const OPENAPI_PATHS = {
           in: 'path',
           required: true,
           schema: { type: 'integer' },
-          description: 'Section ID',
+          description: 'รหัสฝ่าย',
           example: 1
         }
       ],
       responses: {
-        '204': { description: 'Section deleted successfully' },
-        '400': { description: 'Invalid section ID', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '403': { description: 'Forbidden - Admin role required', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        '404': { description: 'Section not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        '204': { description: 'ลบฝ่ายสำเร็จ' },
+        '400': { description: 'รหัสฝ่ายไม่ถูกต้อง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        '404': { description: 'ไม่พบฝ่าย', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    }
+  },
+  '/sections/export/excel': {
+    get: {
+      tags: ['Sections'],
+      summary: 'ส่งออกข้อมูลฝ่ายเป็น Excel',
+      security: [{ cookieAuth: [] }],
+      parameters: [
+        { name: 'search', in: 'query', schema: { type: 'string' }, description: 'ค้นหา' },
+        { name: 'departmentId', in: 'query', schema: { type: 'integer' }, description: 'รหัสแผนก' },
+        { name: 'status', in: 'query', schema: { type: 'string' }, description: 'สถานะ' }
+      ],
+      responses: {
+        '200': {
+          description: 'ไฟล์ Excel',
+          content: {
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+              schema: { type: 'string', format: 'binary' }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
+      }
+    }
+  },
+  '/sections/export/pdf': {
+    get: {
+      tags: ['Sections'],
+      summary: 'ส่งออกข้อมูลฝ่ายเป็น PDF',
+      security: [{ cookieAuth: [] }],
+      parameters: [
+        { name: 'search', in: 'query', schema: { type: 'string' }, description: 'ค้นหา' },
+        { name: 'departmentId', in: 'query', schema: { type: 'integer' }, description: 'รหัสแผนก' },
+        { name: 'status', in: 'query', schema: { type: 'string' }, description: 'สถานะ' }
+      ],
+      responses: {
+        '200': {
+          description: 'ไฟล์ PDF',
+          content: {
+            'application/pdf': {
+              schema: { type: 'string', format: 'binary' }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
+      }
+    }
+  },
+  '/sections/import': {
+    post: {
+      tags: ['Sections'],
+      summary: 'นำเข้าข้อมูลฝ่ายจาก Excel',
+      security: [{ cookieAuth: [] }],
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            schema: {
+              type: 'object',
+              properties: {
+                file: { type: 'string', format: 'binary' }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        '200': {
+          description: 'นำเข้าข้อมูลสำเร็จ',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ImportResult' }
+            }
+          }
+        },
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)' }
       }
     }
   },
   '/master-data/departments': {
     get: {
       tags: ['Master Data'],
-      summary: 'Get all departments (simplified)',
+      summary: 'ดึงข้อมูลแผนกทั้งหมด (แบบย่อ)',
       security: [{ cookieAuth: [] }],
       responses: {
         '200': {
-          description: 'List of departments',
+          description: 'รายการแผนก',
           content: {
             'application/json': {
               schema: {
@@ -672,7 +982,7 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
       }
     }
   },
@@ -687,12 +997,12 @@ export const OPENAPI_PATHS = {
           in: 'path',
           required: true,
           schema: { type: 'integer' },
-          description: 'Department ID'
+          description: 'รหัสแผนก'
         }
       ],
       responses: {
         '200': {
-          description: 'List of sections',
+          description: 'รายการฝ่าย',
           content: {
             'application/json': {
               schema: {
@@ -716,14 +1026,14 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
       }
     }
   },
   '/master-data/departments/sections/search': {
     post: {
       tags: ['Master Data'],
-      summary: 'Search sections',
+      summary: 'ค้นหาฝ่าย',
       security: [{ cookieAuth: [] }],
       requestBody: {
         required: true,
@@ -735,7 +1045,7 @@ export const OPENAPI_PATHS = {
       },
       responses: {
         '200': {
-          description: 'Search results',
+          description: 'ผลการค้นหา',
           content: {
             'application/json': {
               schema: {
@@ -759,18 +1069,18 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
       }
     }
   },
   '/master-data/users': {
     get: {
       tags: ['Master Data'],
-      summary: 'Get all users (simplified)',
+      summary: 'ดึงข้อมูลผู้ใช้งานทั้งหมด (แบบย่อ)',
       security: [{ cookieAuth: [] }],
       responses: {
         '200': {
-          description: 'List of users',
+          description: 'รายการผู้ใช้งาน',
           content: {
             'application/json': {
               schema: {
@@ -796,18 +1106,18 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
       }
     }
   },
   '/master-data/users/from-logs': {
     get: {
       tags: ['Master Data'],
-      summary: 'Get users from logs',
+      summary: 'ดึงข้อมูลผู้ใช้งานจาก Logs',
       security: [{ cookieAuth: [] }],
       responses: {
         '200': {
-          description: 'List of users from logs',
+          description: 'รายการผู้ใช้งานจาก Logs',
           content: {
             'application/json': {
               schema: {
@@ -823,14 +1133,14 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
       }
     }
   },
   '/system-log': {
     get: {
       tags: ['System Logs'],
-      summary: 'Get system logs',
+      summary: 'ดึงข้อมูลประวัติการใช้งาน',
       security: [{ cookieAuth: [] }],
       parameters: [
         { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date' } },
@@ -841,7 +1151,7 @@ export const OPENAPI_PATHS = {
       ],
       responses: {
         '200': {
-          description: 'System logs',
+          description: 'ประวัติการใช้งาน',
           content: {
             'application/json': {
               schema: {
@@ -854,19 +1164,19 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' },
-        '403': { description: 'Forbidden' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)' }
       }
     }
   },
   '/system-log/files': {
     get: {
       tags: ['System Logs'],
-      summary: 'Get log files',
+      summary: 'ดึงรายชื่อไฟล์ log',
       security: [{ cookieAuth: [] }],
       responses: {
         '200': {
-          description: 'List of log files',
+          description: 'รายชื่อไฟล์ log',
           content: {
             'application/json': {
               schema: {
@@ -879,19 +1189,19 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' },
-        '403': { description: 'Forbidden' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)' }
       }
     }
   },
   '/system-log/cleanup': {
     delete: {
       tags: ['System Logs'],
-      summary: 'Cleanup old logs',
+      summary: 'ล้างประวัติการใช้งานเก่า',
       security: [{ cookieAuth: [] }],
       responses: {
         '200': {
-          description: 'Cleanup result',
+          description: 'ผลการล้างข้อมูล',
           content: {
             'application/json': {
               schema: {
@@ -904,15 +1214,15 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' },
-        '403': { description: 'Forbidden' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)' }
       }
     }
   },
   '/users/import': {
     post: {
       tags: ['Users'],
-      summary: 'Import users from Excel',
+      summary: 'นำเข้าข้อมูลผู้ใช้งานจาก Excel',
       security: [{ cookieAuth: [] }],
       requestBody: {
         content: {
@@ -928,22 +1238,22 @@ export const OPENAPI_PATHS = {
       },
       responses: {
         '200': {
-          description: 'Import result',
+          description: 'นำเข้าข้อมูลสำเร็จ',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/ImportResult' }
             }
           }
         },
-        '401': { description: 'Unauthorized' },
-        '403': { description: 'Forbidden' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)' }
       }
     }
   },
   '/users/password/verify': {
     post: {
       tags: ['Users'],
-      summary: 'Verify password',
+      summary: 'ตรวจสอบรหัสผ่านปัจจุบัน',
       security: [{ cookieAuth: [] }],
       requestBody: {
         required: true,
@@ -959,7 +1269,7 @@ export const OPENAPI_PATHS = {
       },
       responses: {
         '200': {
-          description: 'Verification result',
+          description: 'ผลการตรวจสอบ',
           content: {
             'application/json': {
               schema: {
@@ -975,14 +1285,14 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' }
       }
     }
   },
   '/users/{id}/password/reset': {
     patch: {
       tags: ['Users'],
-      summary: 'Reset user password',
+      summary: 'รีเซ็ตรหัสผ่านผู้ใช้งาน (Admin)',
       security: [{ cookieAuth: [] }],
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       requestBody: {
@@ -999,7 +1309,7 @@ export const OPENAPI_PATHS = {
       },
       responses: {
         '200': {
-          description: 'Password reset successful',
+          description: 'รีเซ็ตรหัสผ่านสำเร็จ',
           content: {
             'application/json': {
               schema: {
@@ -1015,8 +1325,8 @@ export const OPENAPI_PATHS = {
             }
           }
         },
-        '401': { description: 'Unauthorized' },
-        '403': { description: 'Forbidden' }
+        '401': { description: 'ไม่มีสิทธิ์เข้าถึง' },
+        '403': { description: 'ไม่มีสิทธิ์ (ต้องการสิทธิ์ผู้ดูแลระบบ)' }
       }
     }
   }
