@@ -29,6 +29,9 @@ export class UserService {
       role: user.role as Role,
       status: user.status as Status,
       createdAt: user.createdAt,
+      createdBy: user.createdBy,
+      updatedAt: user.updatedAt,
+      updatedBy: user.updatedBy,
       lastLoginAt: user.lastLoginAt
     }
   }
@@ -195,7 +198,9 @@ export class UserService {
         email,
         tel,
         role,
-        createdBy
+        createdBy,
+        updatedAt: null,
+        updatedBy: null
       },
       include: {
         department: true,
@@ -300,6 +305,7 @@ export class UserService {
 
     const updateData: any = {
       ...data,
+      updatedAt: new Date(),
       updatedBy
     }
 
@@ -376,6 +382,7 @@ export class UserService {
         password: hashedPassword,
         isDefaultPassword: true,
         tokenVersion: { increment: 1 },
+        updatedAt: new Date(),
         updatedBy
       },
       include: {
@@ -418,6 +425,7 @@ export class UserService {
       data: {
         password: hashedPassword,
         isDefaultPassword: false,
+        updatedAt: new Date(),
         updatedBy: user.username
       },
       include: {

@@ -17,7 +17,9 @@ export class SectionService {
     name: string
     status: string
     createdAt: Date
+    createdBy: string
     updatedAt: Date | null
+    updatedBy: string | null
   }): SectionResponse {
     return {
       id: section.id,
@@ -25,7 +27,9 @@ export class SectionService {
       name: section.name,
       status: section.status as Status,
       createdAt: section.createdAt,
-      updatedAt: section.updatedAt
+      createdBy: section.createdBy,
+      updatedAt: section.updatedAt,
+      updatedBy: section.updatedBy
     }
   }
 
@@ -214,7 +218,9 @@ export class SectionService {
       data: {
         departmentId,
         name,
-        createdBy
+        createdBy,
+        updatedAt: null,
+        updatedBy: null
       }
     })
 
@@ -255,6 +261,7 @@ export class SectionService {
         where: { id },
         data: {
           ...data,
+          updatedAt: new Date(),
           updatedBy
         }
       })

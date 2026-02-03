@@ -30,7 +30,7 @@ model Department {
   status    Status    @default(active)
   createdAt DateTime  @default(now())
   createdBy String    @db.VarChar(100)
-  updatedAt DateTime? @updatedAt
+  updatedAt DateTime?
   updatedBy String?   @db.VarChar(100)
 
   sections Section[]
@@ -48,7 +48,7 @@ model Section {
   status       Status    @default(active)
   createdAt    DateTime  @default(now())
   createdBy    String    @db.VarChar(100)
-  updatedAt    DateTime? @updatedAt
+  updatedAt    DateTime?
   updatedBy    String?   @db.VarChar(100)
 
   department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
@@ -75,7 +75,7 @@ model User {
   status            Status    @default(active)
   createdAt         DateTime  @default(now())
   createdBy         String    @db.VarChar(100)
-  updatedAt         DateTime? @updatedAt
+  updatedAt         DateTime?
   updatedBy         String?   @db.VarChar(100)
   lastLoginAt       DateTime?
   isDefaultPassword Boolean   @default(false)

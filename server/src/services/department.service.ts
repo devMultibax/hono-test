@@ -15,14 +15,18 @@ export class DepartmentService {
     name: string
     status: string
     createdAt: Date
+    createdBy: string
     updatedAt: Date | null
+    updatedBy: string | null
   }): DepartmentResponse {
     return {
       id: department.id,
       name: department.name,
       status: department.status as Status,
       createdAt: department.createdAt,
-      updatedAt: department.updatedAt
+      createdBy: department.createdBy,
+      updatedAt: department.updatedAt,
+      updatedBy: department.updatedBy
     }
   }
 
@@ -184,7 +188,9 @@ export class DepartmentService {
     const department = await prisma.department.create({
       data: {
         name,
-        createdBy
+        createdBy,
+        updatedAt: null,
+        updatedBy: null
       }
     })
 
@@ -214,6 +220,7 @@ export class DepartmentService {
         where: { id },
         data: {
           ...data,
+          updatedAt: new Date(),
           updatedBy
         }
       })

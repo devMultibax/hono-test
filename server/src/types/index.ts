@@ -42,7 +42,9 @@ export interface DepartmentResponse {
   name: string
   status: Status
   createdAt: Date
+  createdBy: string
   updatedAt: Date | null
+  updatedBy: string | null
 }
 
 export interface DepartmentWithRelations extends DepartmentResponse {
@@ -68,7 +70,9 @@ export interface SectionResponse {
   name: string
   status: Status
   createdAt: Date
+  createdBy: string
   updatedAt: Date | null
+  updatedBy: string | null
 }
 
 export interface SectionWithRelations extends SectionResponse {
@@ -108,6 +112,9 @@ export interface UserResponse {
   role: Role
   status: Status
   createdAt: Date
+  createdBy: string
+  updatedAt: Date | null
+  updatedBy: string | null
   lastLoginAt: Date | null
 }
 
