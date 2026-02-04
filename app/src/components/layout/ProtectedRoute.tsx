@@ -6,6 +6,7 @@ export function ProtectedRoute() {
   const location = useLocation();
   const { isAuthenticated, isHydrated } = useAuthStore();
 
+  // Wait for auth state to be hydrated from storage
   if (!isHydrated) {
     return <LoadingOverlay visible />;
   }

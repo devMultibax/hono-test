@@ -1,6 +1,6 @@
 import { TextInput, PasswordInput, Button, Stack } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { User, Lock } from 'lucide-react';
+import { IconUser, IconLock } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface FormValues {
@@ -42,7 +42,7 @@ export function LoginForm() {
         <TextInput
           label="Username"
           placeholder="กรอก username 6 หลัก"
-          leftSection={<User size={16} />}
+          leftSection={<IconUser size={16} />}
           maxLength={6}
           {...form.getInputProps('username')}
         />
@@ -50,7 +50,7 @@ export function LoginForm() {
         <PasswordInput
           label="รหัสผ่าน"
           placeholder="กรอกรหัสผ่าน"
-          leftSection={<Lock size={16} />}
+          leftSection={<IconLock size={16} />}
           {...form.getInputProps('password')}
         />
 

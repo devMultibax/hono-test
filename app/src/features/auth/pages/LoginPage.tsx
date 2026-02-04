@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Paper, Title, Stack, Alert, Center, Box } from '@mantine/core';
-import { AlertCircle } from 'lucide-react';
+import { IconAlertCircle } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginForm } from '../components/LoginForm';
+import type { AxiosError } from 'axios';
 
 export function LoginPage() {
   const { isAuthenticated, loginError, fetchCsrfToken } = useAuth();
@@ -26,11 +27,11 @@ export function LoginPage() {
 
           {loginError && (
             <Alert
-              icon={<AlertCircle size={16} />}
+              icon={<IconAlertCircle size={16} />}
               color="red"
               variant="light"
             >
-              {(loginError as any)?.response?.data?.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่'}
+              {(loginError as AxiosError<{ message?: string }>)?.response?.data?.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่'}
             </Alert>
           )}
 

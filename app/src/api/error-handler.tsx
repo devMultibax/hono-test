@@ -1,6 +1,6 @@
 import type { AxiosError } from 'axios';
 import { notifications } from '@mantine/notifications';
-import { X } from 'lucide-react';
+import { IconX } from '@tabler/icons-react';
 
 interface ApiErrorResponse {
   message: string;
@@ -31,7 +31,7 @@ export function handleApiError(error: AxiosError<unknown>): string {
     title: 'เกิดข้อผิดพลาด',
     message: displayMessage,
     color: 'red',
-    icon: <X size={16} />,
+    icon: <IconX size={16} />,
   });
 
   return displayMessage;
