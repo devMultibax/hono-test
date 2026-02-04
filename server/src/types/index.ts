@@ -136,10 +136,6 @@ export interface LoginResponse {
   user: UserResponse
 }
 
-export interface RegisterResponse {
-  user: UserResponse
-}
-
 // User Log Types
 export interface UserLog {
   id: number

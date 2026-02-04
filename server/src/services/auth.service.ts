@@ -2,10 +2,9 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../lib/prisma'
 import { env } from '../config/env'
-import { ConflictError, UnauthorizedError, NotFoundError } from '../lib/errors'
-import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type RegisterResponse, type UserResponse } from '../types'
+import { UnauthorizedError, NotFoundError } from '../lib/errors'
+import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserResponse } from '../types'
 
-const SALT_ROUNDS = 10
 const TOKEN_EXPIRY = '24h'
 
 export class AuthService {
@@ -21,6 +20,9 @@ export class AuthService {
     role: string
     status: string
     createdAt: Date
+    createdBy: string
+    updatedAt: Date | null
+    updatedBy: string | null
     lastLoginAt: Date | null
   }): UserResponse {
     return {
@@ -35,92 +37,10 @@ export class AuthService {
       role: user.role as Role,
       status: user.status as Status,
       createdAt: user.createdAt,
+      createdBy: user.createdBy,
+      updatedAt: user.updatedAt,
+      updatedBy: user.updatedBy,
       lastLoginAt: user.lastLoginAt
-    }
-  }
-
-  static async register(data: {
-    username: string
-    password: string
-    firstName: string
-    lastName: string
-    departmentId: number
-    sectionId?: number | null
-    email?: string | null
-    tel?: string | null
-    role?: Role
-  }): Promise<RegisterResponse> {
-    const existingUser = await prisma.user.findUnique({
-      where: { username: data.username }
-    })
-
-    if (existingUser) {
-      throw new ConflictError('Username already exists')
-    }
-
-    const department = await prisma.department.findUnique({
-      where: { id: data.departmentId }
-    })
-
-    if (!department) {
-      throw new NotFoundError('Department not found')
-    }
-
-    if (data.sectionId) {
-      const section = await prisma.section.findUnique({
-        where: { id: data.sectionId }
-      })
-
-      if (!section) {
-        throw new NotFoundError('Section not found')
-      }
-    }
-
-    const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS)
-
-    const user = await prisma.user.create({
-      data: {
-        username: data.username,
-        password: hashedPassword,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        departmentId: data.departmentId,
-        sectionId: data.sectionId || null,
-        email: data.email || null,
-        tel: data.tel || null,
-        role: data.role || Role.USER,
-        createdBy: data.username
-      },
-      select: {
-        id: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        departmentId: true,
-        sectionId: true,
-        email: true,
-        tel: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        lastLoginAt: true
-      }
-    })
-
-    const userWithRelations = await prisma.user.findUnique({
-      where: { id: user.id },
-      include: {
-        department: true,
-        section: true
-      }
-    })
-
-    if (userWithRelations) {
-      await this.logUserAction(userWithRelations, ActionType.CREATE)
-    }
-
-    return {
-      user: this.formatUserResponse(user)
     }
   }
 
@@ -230,6 +150,9 @@ export class AuthService {
         role: true,
         status: true,
         createdAt: true,
+        createdBy: true,
+        updatedAt: true,
+        updatedBy: true,
         lastLoginAt: true
       }
     })
@@ -276,6 +199,9 @@ export class AuthService {
         role: true,
         status: true,
         createdAt: true,
+        createdBy: true,
+        updatedAt: true,
+        updatedBy: true,
         lastLoginAt: true
       }
     })
