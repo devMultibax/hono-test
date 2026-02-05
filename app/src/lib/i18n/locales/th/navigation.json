@@ -1,0 +1,23 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "users": "ผู้ใช้งาน",
+    "departments": "แผนก",
+    "sections": "หน่วยงาน",
+    "admin": {
+      "title": "ผู้ดูแลระบบ",
+      "userLogs": "ประวัติการใช้งาน",
+      "systemLogs": "System Logs",
+      "backups": "Backup",
+      "database": "Database"
+    }
+  },
+  "breadcrumb": {
+    "home": "หน้าหลัก",
+    "users": "ผู้ใช้งาน",
+    "createUser": "เพิ่มผู้ใช้",
+    "editUser": "แก้ไขผู้ใช้",
+    "userDetail": "ข้อมูลผู้ใช้",
+    "detail": "ดูรายละเอียด"
+  }
+}

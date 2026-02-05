@@ -3,6 +3,7 @@ import { Button, Modal, Text, List, Progress, Stack, Alert } from '@mantine/core
 import { Upload, Check, X } from 'lucide-react';
 import { apiClient } from '@/api/client';
 import { showSuccess } from '@/api/error-handler';
+import { useTranslation } from '@/lib/i18n';
 import type { AxiosError } from 'axios';
 
 interface ImportResult {
@@ -25,6 +26,7 @@ export function ImportButton({
   accept = '.xlsx,.xls',
   maxSize = 5
 }: Props) {
+  const { t } = useTranslation(['users', 'common']);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -39,7 +41,7 @@ export function ImportButton({
         success: 0,
         failed: 1,
         total: 1,
-        errors: [`ไฟล์มีขนาดใหญ่เกิน ${maxSize} MB`],
+        errors: [t('users:import.fileSizeError', { size: maxSize })],
       });
       return;
     }
@@ -56,7 +58,7 @@ export function ImportButton({
       setResult(response.data);
 
       if (response.data.success > 0) {
-        showSuccess(`นำเข้าข้อมูลสำเร็จ ${response.data.success} รายการ`);
+        showSuccess(t('users:import.successMessage', { count: response.data.success }));
         onSuccess?.();
       }
     } catch (error) {
@@ -65,7 +67,7 @@ export function ImportButton({
         success: 0,
         failed: 1,
         total: 1,
-        errors: [axiosError.response?.data?.message || 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล'],
+        errors: [axiosError.response?.data?.message || t('users:import.importError')],
       });
     } finally {
       setLoading(false);
@@ -83,7 +85,7 @@ export function ImportButton({
         onClick={() => fileRef.current?.click()}
         loading={loading}
       >
-        นำเข้าจาก Excel
+        {t('users:import.button')}
       </Button>
 
       <input
@@ -97,7 +99,7 @@ export function ImportButton({
       <Modal
         opened={!!result}
         onClose={() => setResult(null)}
-        title="ผลการนำเข้าข้อมูล"
+        title={t('users:import.resultTitle')}
       >
         {result && (
           <Stack>
@@ -109,18 +111,18 @@ export function ImportButton({
 
             <div className="flex gap-4">
               <Alert icon={<Check size={16} />} color="green" className="flex-1">
-                <Text fw={500}>สำเร็จ: {result.success} รายการ</Text>
+                <Text fw={500}>{t('users:import.success', { count: result.success })}</Text>
               </Alert>
               {result.failed > 0 && (
                 <Alert icon={<X size={16} />} color="red" className="flex-1">
-                  <Text fw={500}>ล้มเหลว: {result.failed} รายการ</Text>
+                  <Text fw={500}>{t('users:import.failed', { count: result.failed })}</Text>
                 </Alert>
               )}
             </div>
 
             {result.errors && result.errors.length > 0 && (
               <>
-                <Text fw={500} size="sm">รายละเอียดข้อผิดพลาด:</Text>
+                <Text fw={500} size="sm">{t('users:import.errorDetails')}</Text>
                 <List size="sm" className="max-h-48 overflow-auto">
                   {result.errors.map((err, i) => (
                     <List.Item key={i} c="red">{err}</List.Item>
@@ -129,7 +131,7 @@ export function ImportButton({
               </>
             )}
 
-            <Button onClick={() => setResult(null)}>ปิด</Button>
+            <Button onClick={() => setResult(null)}>{t('common:button.close')}</Button>
           </Stack>
         )}
       </Modal>

@@ -8,6 +8,8 @@ import './index.css'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
 
+import '@/lib/i18n'
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryProvider>

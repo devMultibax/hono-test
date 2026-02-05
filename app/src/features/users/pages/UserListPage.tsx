@@ -4,6 +4,7 @@ import { Button } from '@mantine/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Plus } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -32,6 +33,7 @@ export function UserListPage() {
   const queryClient = useQueryClient();
   const isAdmin = useIsAdmin();
   const { confirmDelete } = useConfirm();
+  const { t } = useTranslation(['users', 'common']);
 
   const [params, setParams] = useState<UserQueryParams>(DEFAULT_PARAMS);
   const { data, isLoading } = useUsers(params);
@@ -49,27 +51,27 @@ export function UserListPage() {
       columnHelper.accessor('username', { header: 'Username', enableSorting: true }),
       columnHelper.display({
         id: 'fullName',
-        header: 'ชื่อ-นามสกุล',
+        header: t('users:table.column.fullName'),
         cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
       }),
       columnHelper.display({
         id: 'department',
-        header: 'แผนก',
+        header: t('users:table.column.department'),
         cell: ({ row }) => row.original.department?.name ?? '-',
       }),
       columnHelper.display({
         id: 'section',
-        header: 'หน่วยงาน',
+        header: t('users:table.column.section'),
         cell: ({ row }) => row.original.section?.name ?? '-',
       }),
       columnHelper.display({
         id: 'role',
-        header: 'Role',
+        header: t('users:table.column.role'),
         cell: ({ row }) => <RoleBadge role={row.original.role} />,
       }),
       columnHelper.display({
         id: 'status',
-        header: 'สถานะ',
+        header: t('users:table.column.status'),
         cell: ({ row }) => <StatusBadge status={row.original.status} />,
       }),
       columnHelper.display({
@@ -88,7 +90,7 @@ export function UserListPage() {
       }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ] as any,
-    [navigate, handleDelete, isAdmin]
+    [navigate, handleDelete, isAdmin, t]
   );
 
   const handleFilterChange = (newParams: UserQueryParams) => setParams({ ...newParams, page: 1 });
@@ -98,15 +100,15 @@ export function UserListPage() {
   return (
     <div>
       <PageHeader
-        title="จัดการผู้ใช้"
-        breadcrumbs={[{ label: 'หน้าหลัก', path: '/dashboard' }, { label: 'ผู้ใช้งาน' }]}
+        title={t('users:page.title')}
+        breadcrumbs={[{ label: t('common:breadcrumb.home'), path: '/dashboard' }, { label: t('users:breadcrumb.users') }]}
       >
         <ExportMenu onExportExcel={() => userApi.exportExcel(params)} onExportPdf={() => userApi.exportPdf(params)} />
         {isAdmin && (
           <>
             <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} />
             <Button leftSection={<Plus size={16} />} onClick={() => navigate('/users/create')}>
-              เพิ่มผู้ใช้
+              {t('users:action.addUser')}
             </Button>
           </>
         )}
@@ -119,7 +121,7 @@ export function UserListPage() {
         columns={columns}
         pagination={data?.pagination}
         isLoading={isLoading}
-        emptyMessage="ไม่พบผู้ใช้งาน"
+        emptyMessage={t('users:message.empty')}
         onPaginationChange={handlePageChange}
       />
     </div>

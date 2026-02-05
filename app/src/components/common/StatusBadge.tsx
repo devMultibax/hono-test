@@ -1,20 +1,22 @@
 import { Badge, type MantineColor } from '@mantine/core';
+import { useTranslation } from '@/lib/i18n';
 import type { Status } from '@/types';
 
 interface Props {
   status: Status;
 }
 
-const statusConfig: Record<Status, { label: string; color: MantineColor }> = {
-  active: { label: 'ใช้งาน', color: 'green' },
-  inactive: { label: 'ไม่ใช้งาน', color: 'gray' },
+const statusColorMap: Record<Status, MantineColor> = {
+  active: 'green',
+  inactive: 'gray',
 };
 
 export function StatusBadge({ status }: Props) {
-  const config = statusConfig[status];
+  const { t } = useTranslation('common');
+
   return (
-    <Badge color={config.color} variant="light">
-      {config.label}
+    <Badge color={statusColorMap[status]} variant="light">
+      {t(`status.${status}`)}
     </Badge>
   );
 }

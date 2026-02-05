@@ -2,22 +2,24 @@ import { TextInput, PasswordInput, Button, Stack } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { User, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n';
 
 export function LoginForm() {
   const { login, isLoggingIn } = useAuth();
+  const { t } = useTranslation(['auth', 'validation']);
 
   const form = useForm({
     initialValues: { username: '', password: '' },
     validate: {
       username: (v) => {
-        if (!v) return 'กรุณากรอก Username';
-        if (v.length !== 6) return 'Username ต้องมี 6 ตัวอักษร';
-        if (!/^[a-zA-Z0-9]+$/.test(v)) return 'ต้องเป็นตัวอักษรหรือตัวเลขเท่านั้น';
+        if (!v) return t('validation:required.username');
+        if (v.length !== 6) return t('validation:format.usernameLength');
+        if (!/^[a-zA-Z0-9]+$/.test(v)) return t('validation:format.usernamePattern');
         return null;
       },
       password: (v) => {
-        if (!v) return 'กรุณากรอกรหัสผ่าน';
-        if (v.length < 6) return 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+        if (!v) return t('validation:required.password');
+        if (v.length < 6) return t('validation:format.passwordMinLength');
         return null;
       },
     },
@@ -28,22 +30,22 @@ export function LoginForm() {
     <form onSubmit={form.onSubmit(login)}>
       <Stack gap="md">
         <TextInput
-          label="Username"
-          placeholder="กรอก username 6 หลัก"
+          label={t('auth:login.username.label')}
+          placeholder={t('auth:login.username.placeholder')}
           leftSection={<User size={16} />}
           maxLength={6}
           {...form.getInputProps('username')}
         />
 
         <PasswordInput
-          label="รหัสผ่าน"
-          placeholder="กรอกรหัสผ่าน"
+          label={t('auth:login.password.label')}
+          placeholder={t('auth:login.password.placeholder')}
           leftSection={<Lock size={16} />}
           {...form.getInputProps('password')}
         />
 
         <Button type="submit" fullWidth loading={isLoggingIn} mt="sm">
-          เข้าสู่ระบบ
+          {t('auth:login.button')}
         </Button>
       </Stack>
     </form>

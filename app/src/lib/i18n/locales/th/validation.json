@@ -1,0 +1,18 @@
+{
+  "required": {
+    "username": "กรุณากรอก Username",
+    "password": "กรุณากรอกรหัสผ่าน",
+    "firstName": "กรุณากรอกชื่อ",
+    "lastName": "กรุณากรอกนามสกุล",
+    "department": "กรุณาเลือกแผนก",
+    "email": "กรุณากรอกอีเมล"
+  },
+  "format": {
+    "usernameLength": "Username ต้องมี 6 ตัวอักษร",
+    "usernamePattern": "ต้องเป็นตัวอักษรหรือตัวเลขเท่านั้น",
+    "usernameDigits": "Username ต้องเป็นตัวเลข 6 หลัก",
+    "passwordMinLength": "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+    "emailInvalid": "รูปแบบอีเมลไม่ถูกต้อง",
+    "telInvalid": "เบอร์โทรต้องเป็นตัวเลข 10 หลัก"
+  }
+}

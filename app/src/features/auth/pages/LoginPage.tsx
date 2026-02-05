@@ -4,10 +4,12 @@ import { Paper, Title, Stack, Alert, Center, Box } from '@mantine/core';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginForm } from '../components/LoginForm';
+import { useTranslation } from '@/lib/i18n';
 import type { AxiosError } from 'axios';
 
 export function LoginPage() {
   const { isAuthenticated, loginError, fetchCsrfToken } = useAuth();
+  const { t } = useTranslation(['auth', 'errors']);
 
   useEffect(() => {
     fetchCsrfToken();
@@ -22,7 +24,7 @@ export function LoginPage() {
       <Paper shadow="md" p="xl" radius="md" className="w-full max-w-md">
         <Stack gap="lg">
           <Center>
-            <Title order={2}>เข้าสู่ระบบ</Title>
+            <Title order={2}>{t('auth:login.title')}</Title>
           </Center>
 
           {loginError && (
@@ -31,7 +33,7 @@ export function LoginPage() {
               color="red"
               variant="light"
             >
-              {(loginError as AxiosError<{ message?: string }>)?.response?.data?.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่'}
+              {(loginError as AxiosError<{ message?: string }>)?.response?.data?.message || t('errors:http.default')}
             </Alert>
           )}
 

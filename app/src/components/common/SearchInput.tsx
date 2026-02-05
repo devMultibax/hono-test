@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TextInput, CloseButton } from '@mantine/core';
 import { Search } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   value: string;
@@ -10,7 +11,8 @@ interface Props {
   debounce?: number;
 }
 
-export function SearchInput({ value, onChange, placeholder = 'ค้นหา...', debounce = 400 }: Props) {
+export function SearchInput({ value, onChange, placeholder, debounce = 400 }: Props) {
+  const { t } = useTranslation('common');
   const [localValue, setLocalValue] = useState(value);
   const [debouncedValue] = useDebouncedValue(localValue, debounce);
 
@@ -25,7 +27,7 @@ export function SearchInput({ value, onChange, placeholder = 'ค้นหา...
 
   return (
     <TextInput
-      placeholder={placeholder}
+      placeholder={placeholder || t('placeholder.search')}
       leftSection={<Search size={16} />}
       rightSection={localValue && <CloseButton size="sm" onClick={() => setLocalValue('')} />}
       value={localValue}

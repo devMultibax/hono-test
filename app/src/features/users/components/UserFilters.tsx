@@ -2,6 +2,7 @@ import { Paper, Group, Select } from '@mantine/core';
 import { SearchInput } from '@/components/common/SearchInput';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
+import { useTranslation } from '@/lib/i18n';
 import type { UserQueryParams } from '@/types';
 
 interface Props {
@@ -9,18 +10,19 @@ interface Props {
   onChange: (params: UserQueryParams) => void;
 }
 
-const ROLE_OPTIONS = [
-  { value: 'USER', label: 'User' },
-  { value: 'ADMIN', label: 'Admin' },
-];
-
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'ใช้งาน' },
-  { value: 'inactive', label: 'ไม่ใช้งาน' },
-];
-
 export function UserFilters({ params, onChange }: Props) {
+  const { t } = useTranslation(['users', 'common']);
   const update = (patch: Partial<UserQueryParams>) => onChange({ ...params, ...patch });
+
+  const ROLE_OPTIONS = [
+    { value: 'USER', label: t('users:role.user') },
+    { value: 'ADMIN', label: t('users:role.admin') },
+  ];
+
+  const STATUS_OPTIONS = [
+    { value: 'active', label: t('users:status.active') },
+    { value: 'inactive', label: t('users:status.inactive') },
+  ];
 
   return (
     <Paper p="md" mb="md" withBorder>
@@ -28,24 +30,24 @@ export function UserFilters({ params, onChange }: Props) {
         <SearchInput
           value={params.search ?? ''}
           onChange={(search) => update({ search })}
-          placeholder="ค้นหาชื่อ, username..."
+          placeholder={t('users:filter.searchPlaceholder')}
         />
 
         <DepartmentSelect
           value={params.departmentId ?? null}
           onChange={(departmentId) => update({ departmentId: departmentId ?? undefined, sectionId: undefined })}
-          placeholder="ทุกแผนก"
+          placeholder={t('users:filter.allDepartments')}
         />
 
         <SectionSelect
           departmentId={params.departmentId ?? null}
           value={params.sectionId ?? null}
           onChange={(sectionId) => update({ sectionId: sectionId ?? undefined })}
-          placeholder="ทุกหน่วยงาน"
+          placeholder={t('users:filter.allSections')}
         />
 
         <Select
-          placeholder="ทุก Role"
+          placeholder={t('users:filter.allRoles')}
           value={params.role ?? null}
           onChange={(role) => update({ role: (role as 'USER' | 'ADMIN') || undefined })}
           data={ROLE_OPTIONS}
@@ -53,7 +55,7 @@ export function UserFilters({ params, onChange }: Props) {
         />
 
         <Select
-          placeholder="ทุกสถานะ"
+          placeholder={t('users:filter.allStatuses')}
           value={params.status ?? null}
           onChange={(status) => update({ status: (status as 'active' | 'inactive') || undefined })}
           data={STATUS_OPTIONS}

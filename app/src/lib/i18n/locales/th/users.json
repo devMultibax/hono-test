@@ -1,0 +1,136 @@
+{
+  "page": {
+    "title": "จัดการผู้ใช้",
+    "createTitle": "เพิ่มผู้ใช้",
+    "editTitle": "แก้ไขผู้ใช้",
+    "detailTitle": "ข้อมูลผู้ใช้"
+  },
+  "table": {
+    "column": {
+      "username": "Username",
+      "fullName": "ชื่อ-นามสกุล",
+      "department": "แผนก",
+      "section": "หน่วยงาน",
+      "role": "Role",
+      "status": "สถานะ"
+    },
+    "empty": "ไม่พบผู้ใช้งาน"
+  },
+  "form": {
+    "section": {
+      "account": "ข้อมูลบัญชี",
+      "personal": "ข้อมูลส่วนตัว",
+      "affiliation": "สังกัด",
+      "permissions": "สิทธิ์และสถานะ"
+    },
+    "button": {
+      "create": "สร้างผู้ใช้",
+      "update": "บันทึกการแก้ไข"
+    },
+    "username": {
+      "label": "Username",
+      "placeholder": "กรอก username 6 หลัก"
+    },
+    "firstName": {
+      "label": "ชื่อ",
+      "placeholder": "กรอกชื่อ"
+    },
+    "lastName": {
+      "label": "นามสกุล",
+      "placeholder": "กรอกนามสกุล"
+    },
+    "email": {
+      "label": "อีเมล",
+      "placeholder": "example@email.com"
+    },
+    "tel": {
+      "label": "เบอร์โทร",
+      "placeholder": "0812345678"
+    }
+  },
+  "resetPassword": {
+    "title": "รีเซ็ตรหัสผ่าน",
+    "successTitle": "รีเซ็ตรหัสผ่านสำเร็จ",
+    "warning": "คุณกำลังรีเซ็ตรหัสผ่านสำหรับ",
+    "autoGenerate": "ระบบจะสร้างรหัสผ่านใหม่ให้อัตโนมัติ",
+    "newPassword": "รหัสผ่านใหม่",
+    "saveWarning": "รีเซ็ตรหัสผ่านสำเร็จ กรุณาบันทึกรหัสผ่านนี้ เนื่องจากจะไม่สามารถดูได้อีกครั้ง",
+    "button": {
+      "confirm": "ยืนยันรีเซ็ตรหัสผ่าน",
+      "cancel": "ยกเลิก",
+      "close": "ปิด"
+    },
+    "copy": {
+      "label": "คัดลอก",
+      "success": "คัดลอกแล้ว"
+    }
+  },
+  "import": {
+    "button": "นำเข้าจาก Excel",
+    "resultTitle": "ผลการนำเข้าข้อมูล",
+    "success": "สำเร็จ: {{count}} รายการ",
+    "failed": "ล้มเหลว: {{count}} รายการ",
+    "errorDetails": "รายละเอียดข้อผิดพลาด:",
+    "fileSizeError": "ไฟล์มีขนาดใหญ่เกิน {{size}} MB",
+    "importError": "เกิดข้อผิดพลาดในการนำเข้าข้อมูล",
+    "successMessage": "นำเข้าข้อมูลสำเร็จ {{count}} รายการ"
+  },
+  "action": {
+    "add": "เพิ่มผู้ใช้",
+    "addUser": "เพิ่มผู้ใช้",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "view": "ดู",
+    "resetPassword": "รีเซ็ตรหัสผ่าน"
+  },
+  "message": {
+    "empty": "ไม่พบผู้ใช้งาน",
+    "createSuccess": "สร้างผู้ใช้สำเร็จ",
+    "savePasswordWarning": "กรุณาบันทึกรหัสผ่านนี้ เนื่องจากจะไม่สามารถดูได้อีกครั้ง",
+    "userNotFound": "ไม่พบข้อมูลผู้ใช้"
+  },
+  "breadcrumb": {
+    "users": "ผู้ใช้งาน"
+  },
+  "field": {
+    "username": "Username",
+    "password": "รหัสผ่าน",
+    "role": "Role",
+    "status": "สถานะ",
+    "firstName": "ชื่อ",
+    "lastName": "นามสกุล",
+    "email": "อีเมล",
+    "tel": "เบอร์โทร",
+    "department": "แผนก",
+    "section": "หน่วยงาน",
+    "lastLoginAt": "เข้าสู่ระบบล่าสุด"
+  },
+  "section": {
+    "accountInfo": "ข้อมูลบัญชี",
+    "personalInfo": "ข้อมูลส่วนตัว",
+    "affiliation": "สังกัด",
+    "systemInfo": "ข้อมูลระบบ"
+  },
+  "filter": {
+    "searchPlaceholder": "ค้นหาชื่อ, username...",
+    "allDepartments": "ทุกแผนก",
+    "allSections": "ทุกหน่วยงาน",
+    "allRoles": "ทุก Role",
+    "allStatuses": "ทุกสถานะ"
+  },
+  "role": {
+    "user": "User",
+    "admin": "Admin"
+  },
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน"
+  },
+  "confirm": {
+    "delete": {
+      "title": "ยืนยันการลบ",
+      "message": "คุณต้องการลบ \"{{name}}\" หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "button": "ลบ"
+    }
+  }
+}

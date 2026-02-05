@@ -3,6 +3,7 @@ import { TextInput, Select, Button, Grid, Stack, Paper, Divider } from '@mantine
 import { useForm } from '@mantine/form';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
+import { useTranslation } from '@/lib/i18n';
 import type { User, CreateUserRequest } from '@/types';
 
 interface Props {
@@ -11,18 +12,19 @@ interface Props {
   isLoading?: boolean;
 }
 
-const ROLE_OPTIONS = [
-  { value: 'USER', label: 'User' },
-  { value: 'ADMIN', label: 'Admin' },
-];
-
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'ใช้งาน' },
-  { value: 'inactive', label: 'ไม่ใช้งาน' },
-];
-
 export function UserForm({ initialData, onSubmit, isLoading }: Props) {
   const isEdit = !!initialData;
+  const { t } = useTranslation(['users', 'validation', 'common']);
+
+  const ROLE_OPTIONS = [
+    { value: 'USER', label: t('common:role.USER') },
+    { value: 'ADMIN', label: t('common:role.ADMIN') },
+  ];
+
+  const STATUS_OPTIONS = [
+    { value: 'active', label: t('common:status.active') },
+    { value: 'inactive', label: t('common:status.inactive') },
+  ];
 
   const form = useForm({
     initialValues: {
@@ -37,12 +39,12 @@ export function UserForm({ initialData, onSubmit, isLoading }: Props) {
       status: 'active' as 'active' | 'inactive',
     },
     validate: {
-      username: (v) => (!v ? 'กรุณากรอก Username' : !/^\d{6}$/.test(v) ? 'Username ต้องเป็นตัวเลข 6 หลัก' : null),
-      firstName: (v) => (!v ? 'กรุณากรอกชื่อ' : null),
-      lastName: (v) => (!v ? 'กรุณากรอกนามสกุล' : null),
-      departmentId: (v) => (!v ? 'กรุณาเลือกแผนก' : null),
-      email: (v) => (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? 'รูปแบบอีเมลไม่ถูกต้อง' : null),
-      tel: (v) => (v && !/^\d{10}$/.test(v) ? 'เบอร์โทรต้องเป็นตัวเลข 10 หลัก' : null),
+      username: (v) => (!v ? t('validation:required.username') : !/^\d{6}$/.test(v) ? t('validation:format.usernameDigits') : null),
+      firstName: (v) => (!v ? t('validation:required.firstName') : null),
+      lastName: (v) => (!v ? t('validation:required.lastName') : null),
+      departmentId: (v) => (!v ? t('validation:required.department') : null),
+      email: (v) => (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? t('validation:format.emailInvalid') : null),
+      tel: (v) => (v && !/^\d{10}$/.test(v) ? t('validation:format.telInvalid') : null),
     },
     validateInputOnBlur: true,
   });
@@ -83,10 +85,10 @@ export function UserForm({ initialData, onSubmit, isLoading }: Props) {
       <form onSubmit={handleSubmit}>
         <Stack gap="lg">
           <section>
-            <h3 className="text-lg font-medium mb-4">ข้อมูลบัญชี</h3>
+            <h3 className="text-lg font-medium mb-4">{t('users:form.section.account')}</h3>
             <TextInput
-              label="Username"
-              placeholder="กรอก username 6 หลัก"
+              label={t('users:form.username.label')}
+              placeholder={t('users:form.username.placeholder')}
               disabled={isEdit}
               maxLength={6}
               required
@@ -97,19 +99,19 @@ export function UserForm({ initialData, onSubmit, isLoading }: Props) {
           <Divider />
 
           <section>
-            <h3 className="text-lg font-medium mb-4">ข้อมูลส่วนตัว</h3>
+            <h3 className="text-lg font-medium mb-4">{t('users:form.section.personal')}</h3>
             <Grid>
               <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput label="ชื่อ" placeholder="กรอกชื่อ" required {...form.getInputProps('firstName')} />
+                <TextInput label={t('users:form.firstName.label')} placeholder={t('users:form.firstName.placeholder')} required {...form.getInputProps('firstName')} />
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput label="นามสกุล" placeholder="กรอกนามสกุล" required {...form.getInputProps('lastName')} />
+                <TextInput label={t('users:form.lastName.label')} placeholder={t('users:form.lastName.placeholder')} required {...form.getInputProps('lastName')} />
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput label="อีเมล" placeholder="example@email.com" {...form.getInputProps('email')} />
+                <TextInput label={t('users:form.email.label')} placeholder={t('users:form.email.placeholder')} {...form.getInputProps('email')} />
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput label="เบอร์โทร" placeholder="0812345678" maxLength={10} {...form.getInputProps('tel')} />
+                <TextInput label={t('users:form.tel.label')} placeholder={t('users:form.tel.placeholder')} maxLength={10} {...form.getInputProps('tel')} />
               </Grid.Col>
             </Grid>
           </section>
@@ -117,11 +119,11 @@ export function UserForm({ initialData, onSubmit, isLoading }: Props) {
           <Divider />
 
           <section>
-            <h3 className="text-lg font-medium mb-4">สังกัด</h3>
+            <h3 className="text-lg font-medium mb-4">{t('users:form.section.affiliation')}</h3>
             <Grid>
               <Grid.Col span={{ base: 12, md: 6 }}>
                 <DepartmentSelect
-                  label="แผนก"
+                  label={t('common:label.department')}
                   required
                   value={form.values.departmentId}
                   onChange={(value) => {
@@ -133,7 +135,7 @@ export function UserForm({ initialData, onSubmit, isLoading }: Props) {
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 6 }}>
                 <SectionSelect
-                  label="หน่วยงาน"
+                  label={t('common:label.section')}
                   departmentId={form.values.departmentId}
                   value={form.values.sectionId}
                   onChange={(value) => form.setFieldValue('sectionId', value)}
@@ -145,19 +147,19 @@ export function UserForm({ initialData, onSubmit, isLoading }: Props) {
           <Divider />
 
           <section>
-            <h3 className="text-lg font-medium mb-4">สิทธิ์และสถานะ</h3>
+            <h3 className="text-lg font-medium mb-4">{t('users:form.section.permissions')}</h3>
             <Grid>
               <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select label="Role" data={ROLE_OPTIONS} required {...form.getInputProps('role')} />
+                <Select label={t('common:label.role')} data={ROLE_OPTIONS} required {...form.getInputProps('role')} />
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select label="สถานะ" data={STATUS_OPTIONS} required {...form.getInputProps('status')} />
+                <Select label={t('common:label.status')} data={STATUS_OPTIONS} required {...form.getInputProps('status')} />
               </Grid.Col>
             </Grid>
           </section>
 
           <Button type="submit" loading={isLoading} size="md">
-            {isEdit ? 'บันทึกการแก้ไข' : 'สร้างผู้ใช้'}
+            {isEdit ? t('users:form.button.update') : t('users:form.button.create')}
           </Button>
         </Stack>
       </form>

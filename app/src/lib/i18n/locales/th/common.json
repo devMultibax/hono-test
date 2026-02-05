@@ -1,0 +1,78 @@
+{
+  "button": {
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "confirm": "ยืนยัน",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "create": "สร้าง",
+    "close": "ปิด",
+    "export": "ส่งออก",
+    "import": "นำเข้า",
+    "search": "ค้นหา",
+    "reset": "รีเซ็ต",
+    "submit": "ส่ง",
+    "add": "เพิ่ม"
+  },
+  "action": {
+    "copy": "คัดลอก",
+    "copied": "คัดลอกแล้ว"
+  },
+  "field": {
+    "createdAt": "สร้างเมื่อ",
+    "createdBy": "สร้างโดย",
+    "updatedAt": "แก้ไขเมื่อ",
+    "updatedBy": "แก้ไขโดย"
+  },
+  "label": {
+    "status": "สถานะ",
+    "role": "Role",
+    "department": "แผนก",
+    "section": "หน่วยงาน",
+    "username": "Username",
+    "password": "รหัสผ่าน",
+    "firstName": "ชื่อ",
+    "lastName": "นามสกุล",
+    "email": "อีเมล",
+    "tel": "เบอร์โทร",
+    "createdAt": "สร้างเมื่อ",
+    "updatedAt": "แก้ไขเมื่อ",
+    "fullName": "ชื่อ-นามสกุล"
+  },
+  "placeholder": {
+    "search": "ค้นหา...",
+    "selectDepartment": "เลือกแผนก",
+    "selectSection": "เลือกหน่วยงาน",
+    "enterUsername": "กรอก username",
+    "enterPassword": "กรอกรหัสผ่าน",
+    "enterEmail": "example@email.com",
+    "enterTel": "0812345678"
+  },
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน"
+  },
+  "role": {
+    "ADMIN": "Admin",
+    "USER": "User",
+    "admin": "ผู้ดูแลระบบ",
+    "user": "ผู้ใช้งาน"
+  },
+  "empty": {
+    "noData": "ไม่พบข้อมูล",
+    "tryChangeFilter": "ลองเปลี่ยนเงื่อนไขการค้นหา"
+  },
+  "confirm": {
+    "title": "ยืนยันการดำเนินการ",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก",
+    "delete": {
+      "title": "ยืนยันการลบ",
+      "message": "คุณต้องการลบ \"{{itemName}}\" หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "confirm": "ลบ"
+    }
+  },
+  "breadcrumb": {
+    "home": "หน้าหลัก"
+  }
+}

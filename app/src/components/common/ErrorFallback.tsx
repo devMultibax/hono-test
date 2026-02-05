@@ -1,17 +1,20 @@
 import { Stack, Title, Text, Button, Paper } from '@mantine/core';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 import type { FallbackProps } from 'react-error-boundary';
 
 export function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+  const { t } = useTranslation(['errors', 'common']);
+
   const errorMessage = error instanceof Error
     ? error.message
-    : 'เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง';
+    : t('errors:http.default');
 
   return (
     <Paper p="xl" className="text-center">
       <Stack align="center" gap="md">
         <AlertTriangle size={48} className="text-red-500" />
-        <Title order={3}>เกิดข้อผิดพลาด</Title>
+        <Title order={3}>{t('errors:title')}</Title>
         <Text c="dimmed" size="sm" className="max-w-md">
           {errorMessage}
         </Text>
@@ -19,7 +22,7 @@ export function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
           leftSection={<RefreshCw size={16} />}
           onClick={resetErrorBoundary}
         >
-          ลองใหม่
+          {t('common:button.reset')}
         </Button>
       </Stack>
     </Paper>

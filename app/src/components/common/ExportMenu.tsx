@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, Button, Loader } from '@mantine/core';
 import { Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   onExportExcel: () => Promise<void>;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function ExportMenu({ onExportExcel, onExportPdf, disabled }: Props) {
+  const { t } = useTranslation(['common']);
   const [loading, setLoading] = useState<'excel' | 'pdf' | null>(null);
 
   const handleExport = async (type: 'excel' | 'pdf') => {
@@ -32,7 +34,7 @@ export function ExportMenu({ onExportExcel, onExportPdf, disabled }: Props) {
           leftSection={loading ? <Loader size={14} /> : <Download size={16} />}
           disabled={disabled || !!loading}
         >
-          Export
+          {t('common:button.export')}
         </Button>
       </Menu.Target>
       <Menu.Dropdown>

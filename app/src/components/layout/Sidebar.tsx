@@ -11,26 +11,13 @@ import {
   Server,
 } from 'lucide-react';
 import { useIsAdmin } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/i18n';
 
 interface NavItem {
   path: string;
   label: string;
   icon: React.ElementType;
 }
-
-const mainMenuItems: NavItem[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: Home },
-  { path: '/users', label: 'ผู้ใช้งาน', icon: Users },
-  { path: '/departments', label: 'แผนก', icon: Building2 },
-  { path: '/sections', label: 'หน่วยงาน', icon: Folders },
-];
-
-const adminMenuItems: NavItem[] = [
-  { path: '/admin/user-logs', label: 'ประวัติการใช้งาน', icon: ClipboardList },
-  { path: '/admin/system-logs', label: 'System Logs', icon: Terminal },
-  { path: '/admin/backups', label: 'Backup', icon: Database },
-  { path: '/admin/database', label: 'Database', icon: Server },
-];
 
 interface Props {
   onNavigate?: () => void;
@@ -40,6 +27,21 @@ export function Sidebar({ onNavigate }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = useIsAdmin();
+  const { t } = useTranslation('navigation');
+
+  const mainMenuItems: NavItem[] = [
+    { path: '/dashboard', label: t('menu.dashboard'), icon: Home },
+    { path: '/users', label: t('menu.users'), icon: Users },
+    { path: '/departments', label: t('menu.departments'), icon: Building2 },
+    { path: '/sections', label: t('menu.sections'), icon: Folders },
+  ];
+
+  const adminMenuItems: NavItem[] = [
+    { path: '/admin/user-logs', label: t('menu.admin.userLogs'), icon: ClipboardList },
+    { path: '/admin/system-logs', label: t('menu.admin.systemLogs'), icon: Terminal },
+    { path: '/admin/backups', label: t('menu.admin.backups'), icon: Database },
+    { path: '/admin/database', label: t('menu.admin.database'), icon: Server },
+  ];
 
   const isActive = (path: string) => {
     if (path === '/dashboard') return location.pathname === path;
@@ -77,7 +79,7 @@ export function Sidebar({ onNavigate }: Props) {
           <>
             <Divider my="sm" />
             <Text size="xs" c="dimmed" fw={600} px="sm" tt="uppercase">
-              ผู้ดูแลระบบ
+              {t('menu.admin.title')}
             </Text>
             {adminMenuItems.map(renderNavItem)}
           </>

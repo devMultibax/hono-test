@@ -1,5 +1,6 @@
 import { modals } from '@mantine/modals';
 import { Text } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 
 interface ConfirmOptions {
   title?: string;
@@ -12,11 +13,13 @@ interface ConfirmOptions {
 }
 
 export function useConfirm() {
+  const { t } = useTranslation(['common']);
+
   const confirm = ({
-    title = 'ยืนยันการดำเนินการ',
+    title = t('common:confirm.title'),
     message,
-    confirmLabel = 'ยืนยัน',
-    cancelLabel = 'ยกเลิก',
+    confirmLabel = t('common:confirm.confirm'),
+    cancelLabel = t('common:confirm.cancel'),
     confirmColor = 'red',
     onConfirm,
     onCancel,
@@ -33,9 +36,9 @@ export function useConfirm() {
 
   const confirmDelete = (itemName: string, onConfirm: () => void | Promise<void>) => {
     confirm({
-      title: 'ยืนยันการลบ',
-      message: `คุณต้องการลบ "${itemName}" หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้`,
-      confirmLabel: 'ลบ',
+      title: t('common:confirm.delete.title'),
+      message: t('common:confirm.delete.message', { itemName }),
+      confirmLabel: t('common:confirm.delete.confirm'),
       onConfirm,
     });
   };

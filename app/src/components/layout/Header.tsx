@@ -2,6 +2,7 @@ import { Group, Burger, Title, Menu, Avatar, Text, UnstyledButton } from '@manti
 import { User, Lock, LogOut, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   opened: boolean;
@@ -11,6 +12,7 @@ interface Props {
 export function Header({ opened, onToggle }: Props) {
   const navigate = useNavigate();
   const { user, logout, isLoggingOut } = useAuth();
+  const { t } = useTranslation(['auth', 'common']);
 
   const initials = user
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
@@ -40,7 +42,7 @@ export function Header({ opened, onToggle }: Props) {
                   {user?.firstName} {user?.lastName}
                 </Text>
                 <Text size="xs" c="dimmed">
-                  {user?.role === 'ADMIN' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}
+                  {t(`common:role.${user?.role.toLowerCase()}`)}
                 </Text>
               </div>
               <ChevronDown size={14} />
@@ -49,18 +51,18 @@ export function Header({ opened, onToggle }: Props) {
         </Menu.Target>
 
         <Menu.Dropdown>
-          <Menu.Label>บัญชีผู้ใช้</Menu.Label>
+          <Menu.Label>{t('auth:menu.account')}</Menu.Label>
           <Menu.Item
             leftSection={<User size={14} />}
             onClick={() => navigate('/profile')}
           >
-            โปรไฟล์
+            {t('auth:menu.profile')}
           </Menu.Item>
           <Menu.Item
             leftSection={<Lock size={14} />}
             onClick={() => navigate('/profile/password')}
           >
-            เปลี่ยนรหัสผ่าน
+            {t('auth:menu.changePassword')}
           </Menu.Item>
 
           <Menu.Divider />
@@ -71,7 +73,7 @@ export function Header({ opened, onToggle }: Props) {
             onClick={() => logout()}
             disabled={isLoggingOut}
           >
-            ออกจากระบบ
+            {t('auth:menu.logout')}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

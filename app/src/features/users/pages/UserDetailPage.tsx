@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { useUser } from '../hooks/useUsers';
 import { useIsAdmin } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/date';
 
 function InfoField({ label, children }: { label: string; children: ReactNode }) {
@@ -21,6 +22,7 @@ function InfoField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 export function UserDetailPage() {
+  const { t } = useTranslation(['users', 'common', 'navigation']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const userId = Number(id);
@@ -33,7 +35,7 @@ export function UserDetailPage() {
   if (error || !user) {
     return (
       <Alert icon={<AlertCircle size={16} />} color="red">
-        ไม่พบข้อมูลผู้ใช้
+        {t('users:message.userNotFound')}
       </Alert>
     );
   }
@@ -41,16 +43,16 @@ export function UserDetailPage() {
   return (
     <div>
       <PageHeader
-        title="รายละเอียดผู้ใช้"
+        title={t('users:page.detailTitle')}
         breadcrumbs={[
-          { label: 'หน้าหลัก', path: '/dashboard' },
-          { label: 'ผู้ใช้งาน', path: '/users' },
-          { label: 'รายละเอียด' },
+          { label: t('navigation:breadcrumb.home'), path: '/dashboard' },
+          { label: t('navigation:breadcrumb.users'), path: '/users' },
+          { label: t('navigation:breadcrumb.detail') },
         ]}
       >
         {isAdmin && (
           <Button leftSection={<Edit size={16} />} onClick={() => navigate(`/users/${userId}/edit`)}>
-            แก้ไข
+            {t('common:button.edit')}
           </Button>
         )}
       </PageHeader>
@@ -58,12 +60,12 @@ export function UserDetailPage() {
       <Paper p="lg" withBorder>
         <Stack gap="lg">
           <section>
-            <h3 className="text-lg font-medium mb-4">ข้อมูลบัญชี</h3>
+            <h3 className="text-lg font-medium mb-4">{t('users:section.accountInfo')}</h3>
             <Grid>
-              <InfoField label="Username">{user.username}</InfoField>
-              <InfoField label="Role"><RoleBadge role={user.role} /></InfoField>
-              <InfoField label="สถานะ"><StatusBadge status={user.status} /></InfoField>
-              <InfoField label="เข้าสู่ระบบล่าสุด">
+              <InfoField label={t('users:field.username')}>{user.username}</InfoField>
+              <InfoField label={t('users:field.role')}><RoleBadge role={user.role} /></InfoField>
+              <InfoField label={t('users:field.status')}><StatusBadge status={user.status} /></InfoField>
+              <InfoField label={t('users:field.lastLoginAt')}>
                 {user.lastLoginAt ? formatDateTime(user.lastLoginAt) : '-'}
               </InfoField>
             </Grid>
@@ -72,36 +74,36 @@ export function UserDetailPage() {
           <Divider />
 
           <section>
-            <h3 className="text-lg font-medium mb-4">ข้อมูลส่วนตัว</h3>
+            <h3 className="text-lg font-medium mb-4">{t('users:section.personalInfo')}</h3>
             <Grid>
-              <InfoField label="ชื่อ">{user.firstName}</InfoField>
-              <InfoField label="นามสกุล">{user.lastName}</InfoField>
-              <InfoField label="อีเมล">{user.email || '-'}</InfoField>
-              <InfoField label="เบอร์โทร">{user.tel || '-'}</InfoField>
+              <InfoField label={t('users:field.firstName')}>{user.firstName}</InfoField>
+              <InfoField label={t('users:field.lastName')}>{user.lastName}</InfoField>
+              <InfoField label={t('users:field.email')}>{user.email || '-'}</InfoField>
+              <InfoField label={t('users:field.tel')}>{user.tel || '-'}</InfoField>
             </Grid>
           </section>
 
           <Divider />
 
           <section>
-            <h3 className="text-lg font-medium mb-4">สังกัด</h3>
+            <h3 className="text-lg font-medium mb-4">{t('users:section.affiliation')}</h3>
             <Grid>
-              <InfoField label="แผนก">{user.department?.name || '-'}</InfoField>
-              <InfoField label="หน่วยงาน">{user.section?.name || '-'}</InfoField>
+              <InfoField label={t('users:field.department')}>{user.department?.name || '-'}</InfoField>
+              <InfoField label={t('users:field.section')}>{user.section?.name || '-'}</InfoField>
             </Grid>
           </section>
 
           <Divider />
 
           <section>
-            <h3 className="text-lg font-medium mb-4">ข้อมูลระบบ</h3>
+            <h3 className="text-lg font-medium mb-4">{t('users:section.systemInfo')}</h3>
             <Grid>
-              <InfoField label="สร้างเมื่อ">{formatDateTime(user.createdAt)}</InfoField>
-              <InfoField label="สร้างโดย">{user.createdBy}</InfoField>
+              <InfoField label={t('common:field.createdAt')}>{formatDateTime(user.createdAt)}</InfoField>
+              <InfoField label={t('common:field.createdBy')}>{user.createdBy}</InfoField>
               {user.updatedAt && (
                 <>
-                  <InfoField label="แก้ไขเมื่อ">{formatDateTime(user.updatedAt)}</InfoField>
-                  <InfoField label="แก้ไขโดย">{user.updatedBy || '-'}</InfoField>
+                  <InfoField label={t('common:field.updatedAt')}>{formatDateTime(user.updatedAt)}</InfoField>
+                  <InfoField label={t('common:field.updatedBy')}>{user.updatedBy || '-'}</InfoField>
                 </>
               )}
             </Grid>

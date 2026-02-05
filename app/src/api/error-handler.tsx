@@ -1,6 +1,7 @@
 import type { AxiosError } from 'axios';
 import { notifications } from '@mantine/notifications';
 import { X } from 'lucide-react';
+import { t } from '@/lib/i18n/helpers';
 
 interface ApiErrorResponse {
   message: string;
@@ -14,21 +15,19 @@ export function handleApiError(error: AxiosError<unknown>): string {
 
   if (status === 401) return message;
 
-  const errorMessages: Record<number, string> = {
-    400: message || 'ข้อมูลไม่ถูกต้อง',
-    403: 'คุณไม่มีสิทธิ์ดำเนินการนี้',
-    404: 'ไม่พบข้อมูลที่ต้องการ',
-    409: message || 'ข้อมูลซ้ำในระบบ',
-    422: message || 'ข้อมูลไม่ผ่านการตรวจสอบ',
-    429: 'คำขอมากเกินไป กรุณารอสักครู่',
-    500: 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์',
-    503: 'ระบบไม่พร้อมให้บริการ',
+  // Use server message for specific status codes if available, otherwise use translation
+  const getErrorMessage = (statusCode: number) => {
+    const hasServerMessage = [400, 409, 422].includes(statusCode) && message;
+    if (hasServerMessage) return message;
+
+    const key = `errors:http.${statusCode}`;
+    return t(key, { defaultValue: message || t('errors:http.default') });
   };
 
-  const displayMessage = errorMessages[status || 0] || message || 'เกิดข้อผิดพลาด';
+  const displayMessage = status ? getErrorMessage(status) : (message || t('errors:http.default'));
 
   notifications.show({
-    title: 'เกิดข้อผิดพลาด',
+    title: t('errors:title'),
     message: displayMessage,
     color: 'red',
     icon: <X size={16} />,
@@ -37,7 +36,7 @@ export function handleApiError(error: AxiosError<unknown>): string {
   return displayMessage;
 }
 
-export function showSuccess(message: string, title = 'สำเร็จ') {
+export function showSuccess(message: string, title = t('errors:notification.success')) {
   notifications.show({
     title,
     message,
@@ -45,7 +44,7 @@ export function showSuccess(message: string, title = 'สำเร็จ') {
   });
 }
 
-export function showWarning(message: string, title = 'คำเตือน') {
+export function showWarning(message: string, title = t('errors:notification.warning')) {
   notifications.show({
     title,
     message,

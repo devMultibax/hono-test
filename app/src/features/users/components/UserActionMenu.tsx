@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, ActionIcon } from '@mantine/core';
 import { MoreVertical, Edit, Trash2, Key, Eye } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import type { User } from '@/types';
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDelete }: Props) {
+  const { t } = useTranslation(['users']);
   const [resetModalOpen, setResetModalOpen] = useState(false);
 
   return (
@@ -28,17 +30,17 @@ export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDel
         <Menu.Dropdown>
           {onView && (
             <Menu.Item leftSection={<Eye size={14} />} onClick={onView}>
-              ดูรายละเอียด
+              {t('users:action.view')}
             </Menu.Item>
           )}
 
           {canEdit && (
             <>
               <Menu.Item leftSection={<Edit size={14} />} onClick={onEdit}>
-                แก้ไข
+                {t('users:action.edit')}
               </Menu.Item>
               <Menu.Item leftSection={<Key size={14} />} onClick={() => setResetModalOpen(true)}>
-                รีเซ็ตรหัสผ่าน
+                {t('users:action.resetPassword')}
               </Menu.Item>
             </>
           )}
@@ -47,7 +49,7 @@ export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDel
             <>
               <Menu.Divider />
               <Menu.Item color="red" leftSection={<Trash2 size={14} />} onClick={onDelete}>
-                ลบ
+                {t('users:action.delete')}
               </Menu.Item>
             </>
           )}
