@@ -1,5 +1,5 @@
 import { Group, Burger, Title, Menu, Avatar, Text, UnstyledButton } from '@mantine/core';
-import { IconUser, IconLock, IconLogout, IconChevronDown } from '@tabler/icons-react';
+import { User, Lock, LogOut, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -43,7 +43,7 @@ export function Header({ opened, onToggle }: Props) {
                   {user?.role === 'ADMIN' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}
                 </Text>
               </div>
-              <IconChevronDown size={14} />
+              <ChevronDown size={14} />
             </Group>
           </UnstyledButton>
         </Menu.Target>
@@ -51,13 +51,13 @@ export function Header({ opened, onToggle }: Props) {
         <Menu.Dropdown>
           <Menu.Label>บัญชีผู้ใช้</Menu.Label>
           <Menu.Item
-            leftSection={<IconUser size={14} />}
+            leftSection={<User size={14} />}
             onClick={() => navigate('/profile')}
           >
             โปรไฟล์
           </Menu.Item>
           <Menu.Item
-            leftSection={<IconLock size={14} />}
+            leftSection={<Lock size={14} />}
             onClick={() => navigate('/profile/password')}
           >
             เปลี่ยนรหัสผ่าน
@@ -67,7 +67,7 @@ export function Header({ opened, onToggle }: Props) {
 
           <Menu.Item
             color="red"
-            leftSection={<IconLogout size={14} />}
+            leftSection={<LogOut size={14} />}
             onClick={() => logout()}
             disabled={isLoggingOut}
           >

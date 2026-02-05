@@ -1,15 +1,15 @@
 import { ScrollArea, Stack, NavLink, Divider, Text, ThemeIcon } from '@mantine/core';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  IconHome,
-  IconUsers,
-  IconBuilding,
-  IconFolders,
-  IconClipboardList,
-  IconTerminal,
-  IconDatabase,
-  IconServer,
-} from '@tabler/icons-react';
+  Home,
+  Users,
+  Building2,
+  Folders,
+  ClipboardList,
+  Terminal,
+  Database,
+  Server,
+} from 'lucide-react';
 import { useIsAdmin } from '@/stores/auth.store';
 
 interface NavItem {
@@ -19,17 +19,17 @@ interface NavItem {
 }
 
 const mainMenuItems: NavItem[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: IconHome },
-  { path: '/users', label: 'ผู้ใช้งาน', icon: IconUsers },
-  { path: '/departments', label: 'แผนก', icon: IconBuilding },
-  { path: '/sections', label: 'หน่วยงาน', icon: IconFolders },
+  { path: '/dashboard', label: 'Dashboard', icon: Home },
+  { path: '/users', label: 'ผู้ใช้งาน', icon: Users },
+  { path: '/departments', label: 'แผนก', icon: Building2 },
+  { path: '/sections', label: 'หน่วยงาน', icon: Folders },
 ];
 
 const adminMenuItems: NavItem[] = [
-  { path: '/admin/user-logs', label: 'ประวัติการใช้งาน', icon: IconClipboardList },
-  { path: '/admin/system-logs', label: 'System Logs', icon: IconTerminal },
-  { path: '/admin/backups', label: 'Backup', icon: IconDatabase },
-  { path: '/admin/database', label: 'Database', icon: IconServer },
+  { path: '/admin/user-logs', label: 'ประวัติการใช้งาน', icon: ClipboardList },
+  { path: '/admin/system-logs', label: 'System Logs', icon: Terminal },
+  { path: '/admin/backups', label: 'Backup', icon: Database },
+  { path: '/admin/database', label: 'Database', icon: Server },
 ];
 
 interface Props {

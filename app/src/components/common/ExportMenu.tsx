@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Menu, Button, Loader } from '@mantine/core';
-import { IconDownload, IconFileTypeCsv, IconFileTypePdf } from '@tabler/icons-react';
+import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 
 interface Props {
   onExportExcel: () => Promise<void>;
@@ -29,7 +29,7 @@ export function ExportMenu({ onExportExcel, onExportPdf, disabled }: Props) {
       <Menu.Target>
         <Button
           variant="default"
-          leftSection={loading ? <Loader size={14} /> : <IconDownload size={16} />}
+          leftSection={loading ? <Loader size={14} /> : <Download size={16} />}
           disabled={disabled || !!loading}
         >
           Export
@@ -37,14 +37,14 @@ export function ExportMenu({ onExportExcel, onExportPdf, disabled }: Props) {
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
-          leftSection={<IconFileTypeCsv size={14} />}
+          leftSection={<FileSpreadsheet size={14} />}
           onClick={() => handleExport('excel')}
           disabled={loading === 'excel'}
         >
           Excel (.xlsx)
         </Menu.Item>
         <Menu.Item
-          leftSection={<IconFileTypePdf size={14} />}
+          leftSection={<FileText size={14} />}
           onClick={() => handleExport('pdf')}
           disabled={loading === 'pdf'}
         >

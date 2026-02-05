@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Button, Modal, Text, List, Progress, Stack, Alert } from '@mantine/core';
-import { IconUpload, IconCheck, IconX } from '@tabler/icons-react';
+import { Upload, Check, X } from 'lucide-react';
 import { apiClient } from '@/api/client';
 import { showSuccess } from '@/api/error-handler';
 import type { AxiosError } from 'axios';
@@ -79,7 +79,7 @@ export function ImportButton({
     <>
       <Button
         variant="default"
-        leftSection={<IconUpload size={16} />}
+        leftSection={<Upload size={16} />}
         onClick={() => fileRef.current?.click()}
         loading={loading}
       >
@@ -108,11 +108,11 @@ export function ImportButton({
             />
 
             <div className="flex gap-4">
-              <Alert icon={<IconCheck size={16} />} color="green" className="flex-1">
+              <Alert icon={<Check size={16} />} color="green" className="flex-1">
                 <Text fw={500}>สำเร็จ: {result.success} รายการ</Text>
               </Alert>
               {result.failed > 0 && (
-                <Alert icon={<IconX size={16} />} color="red" className="flex-1">
+                <Alert icon={<X size={16} />} color="red" className="flex-1">
                   <Text fw={500}>ล้มเหลว: {result.failed} รายการ</Text>
                 </Alert>
               )}

@@ -1,5 +1,5 @@
 import { Stack, Title, Text, Button, Paper } from '@mantine/core';
-import { IconAlertTriangle, IconRefresh } from '@tabler/icons-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import type { FallbackProps } from 'react-error-boundary';
 
 export function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
@@ -10,13 +10,13 @@ export function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
     <Paper p="xl" className="text-center">
       <Stack align="center" gap="md">
-        <IconAlertTriangle size={48} className="text-red-500" />
+        <AlertTriangle size={48} className="text-red-500" />
         <Title order={3}>เกิดข้อผิดพลาด</Title>
         <Text c="dimmed" size="sm" className="max-w-md">
           {errorMessage}
         </Text>
         <Button
-          leftSection={<IconRefresh size={16} />}
+          leftSection={<RefreshCw size={16} />}
           onClick={resetErrorBoundary}
         >
           ลองใหม่

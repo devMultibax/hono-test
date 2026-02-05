@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TextInput, CloseButton } from '@mantine/core';
-import { IconSearch } from '@tabler/icons-react';
+import { Search } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 
 interface Props {
@@ -29,12 +29,13 @@ export function SearchInput({
     if (debouncedValue !== value) {
       onChange(debouncedValue);
     }
-  }, [debouncedValue, onChange, value]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValue, value]);
 
   return (
     <TextInput
       placeholder={placeholder}
-      leftSection={<IconSearch size={16} />}
+      leftSection={<Search size={16} />}
       rightSection={
         localValue && (
           <CloseButton
