@@ -5,55 +5,82 @@ import { handleApiError } from './error-handler';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 30000;
+const MUTATING_METHODS = ['post', 'put', 'patch', 'delete'];
+
+let refreshPromise: Promise<string | null> | null = null;
 
 export const apiClient = axios.create({
   baseURL: API_URL,
   timeout: TIMEOUT,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const { csrfToken } = useAuthStore.getState();
+// Attach CSRF token to mutating requests
+apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const { csrfToken } = useAuthStore.getState();
+  if (csrfToken && MUTATING_METHODS.includes(config.method ?? '')) {
+    config.headers['X-CSRF-Token'] = csrfToken;
+  }
+  return config;
+});
 
-    const mutatingMethods = ['post', 'put', 'patch', 'delete'];
-    if (csrfToken && mutatingMethods.includes(config.method || '')) {
-      config.headers['X-CSRF-Token'] = csrfToken;
+// Refresh CSRF token (singleton pattern)
+async function refreshCsrfToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = axios
+    .get(`${API_URL}/auth/csrf-token`, { withCredentials: true })
+    .then((res) => {
+      const token = res.data.csrfToken;
+      useAuthStore.getState().setCsrfToken(token);
+      return token;
+    })
+    .catch(() => null)
+    .finally(() => (refreshPromise = null));
+
+  return refreshPromise;
+}
+
+function isCsrfError(err: AxiosError<{ error?: string }>): boolean {
+  return err.response?.status === 403 && (err.response?.data?.error ?? '').toLowerCase().includes('csrf');
+}
+
+// Handle errors and auto-retry CSRF failures
+apiClient.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const err = error as AxiosError<{ error?: string }>;
+    const config = err.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // Auto-retry on CSRF error
+    if (isCsrfError(err) && config && !config._retry) {
+      config._retry = true;
+      const token = await refreshCsrfToken();
+      if (token) {
+        config.headers['X-CSRF-Token'] = token;
+        return apiClient(config);
+      }
     }
 
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const axiosError = error as AxiosError<unknown>;
-
-    if (axiosError.response?.status === 401) {
+    // Redirect to login on 401
+    if (err.response?.status === 401) {
       useAuthStore.getState().logout();
-
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }
 
-    handleApiError(axiosError);
-
+    handleApiError(err);
     return Promise.reject(error);
   }
 );
 
-export const downloadFile = async (url: string, filename: string) => {
-  const response = await apiClient.get(url, { responseType: 'blob' });
-  const blob = new Blob([response.data]);
+export async function downloadFile(url: string, filename: string) {
+  const res = await apiClient.get(url, { responseType: 'blob' });
   const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+  link.href = URL.createObjectURL(new Blob([res.data]));
   link.download = filename;
   link.click();
   URL.revokeObjectURL(link.href);
-};
+}

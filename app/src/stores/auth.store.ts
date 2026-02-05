@@ -7,7 +7,6 @@ interface AuthState {
   csrfToken: string | null;
   isAuthenticated: boolean;
   isHydrated: boolean;
-
   setUser: (user: User | null) => void;
   setCsrfToken: (token: string) => void;
   updateUser: (data: Partial<User>) => void;
@@ -23,43 +22,24 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isHydrated: false,
 
-      setUser: (user) => set({
-        user,
-        isAuthenticated: !!user
-      }),
-
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
       setCsrfToken: (csrfToken) => set({ csrfToken }),
-
       updateUser: (data) => {
-        const currentUser = get().user;
-        if (currentUser) {
-          set({ user: { ...currentUser, ...data } });
-        }
+        const user = get().user;
+        if (user) set({ user: { ...user, ...data } });
       },
-
-      logout: () => set({
-        user: null,
-        csrfToken: null,
-        isAuthenticated: false
-      }),
-
+      logout: () => set({ user: null, csrfToken: null, isAuthenticated: false }),
       setHydrated: () => set({ isHydrated: true }),
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-        csrfToken: state.csrfToken,
-      }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHydrated();
-      },
+      partialize: (s) => ({ user: s.user, isAuthenticated: s.isAuthenticated, csrfToken: s.csrfToken }),
+      onRehydrateStorage: () => (state) => state?.setHydrated(),
     }
   )
 );
 
-export const useUser = () => useAuthStore((state) => state.user);
-export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
-export const useIsAdmin = () => useAuthStore((state) => state.user?.role === 'ADMIN');
+export const useUser = () => useAuthStore((s) => s.user);
+export const useIsAuthenticated = () => useAuthStore((s) => s.isAuthenticated);
+export const useIsAdmin = () => useAuthStore((s) => s.user?.role === 'ADMIN');
