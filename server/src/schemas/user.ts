@@ -6,9 +6,6 @@ export const registerSchema = z.object({
   username: z.string({ message: 'Username is required' })
     .length(6, { message: 'Username must be exactly 6 characters' })
     .regex(/^[a-zA-Z0-9]+$/, { message: 'Username must contain only letters and numbers' }),
-  password: z.string({ message: 'Password is required' })
-    .min(6, { message: 'Password must be at least 6 characters' })
-    .max(255, { message: 'Password is too long' }),
   firstName: z.string({ message: 'First name is required' })
     .min(1, { message: 'First name cannot be empty' })
     .max(100, { message: 'First name is too long' }),

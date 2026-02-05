@@ -23,9 +23,8 @@ users.post('/', requireAdmin, async (c) => {
   const body = await c.req.json()
   const validated = registerSchema.parse(body)
 
-  const user = await UserService.create(
+  const result = await UserService.create(
     validated.username,
-    validated.password,
     validated.firstName,
     validated.lastName,
     validated.departmentId,
@@ -36,7 +35,7 @@ users.post('/', requireAdmin, async (c) => {
     currentUser.username
   )
 
-  return createdResponse(c, { user })
+  return createdResponse(c, result)
 })
 
 // Get all with Pagination and Filters
@@ -135,13 +134,8 @@ users.patch('/:id/password/reset', requireAdmin, async (c) => {
     return c.json({ error: MESSAGES.USER.INVALID_ID }, 400)
   }
 
-  const body = await c.req.json()
-
-  const { resetPasswordSchema } = await import('../schemas/user')
-  const validated = resetPasswordSchema.parse(body)
-
-  const user = await UserService.resetPassword(id, validated.newPassword, currentUser.username)
-  return successResponse(c, { user })
+  const result = await UserService.resetPassword(id, currentUser.username)
+  return successResponse(c, result)
 })
 
 users.get('/export/excel', requireUser, async (c) => {

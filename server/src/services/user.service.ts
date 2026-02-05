@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma'
 import { NotFoundError } from '../lib/errors'
 import { ActionType, Role, type UserResponse, type UserWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
+import { generateDefaultPassword } from '../lib/password'
 import type { Prisma } from '@prisma/client'
 
 const SALT_ROUNDS = 10
@@ -144,7 +145,6 @@ export class UserService {
 
   static async create(
     username: string,
-    password: string,
     firstName: string,
     lastName: string,
     departmentId: number,
@@ -153,7 +153,7 @@ export class UserService {
     tel: string | null,
     role: Role,
     createdBy: string
-  ): Promise<UserResponse> {
+  ): Promise<{ user: UserResponse; password: string }> {
     // Check if username already exists
     const existingUser = await prisma.user.findUnique({
       where: { username }
@@ -183,7 +183,8 @@ export class UserService {
       }
     }
 
-    // Hash password
+    // Generate default password
+    const password = generateDefaultPassword()
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
     // Create user
@@ -210,7 +211,10 @@ export class UserService {
 
     await this.logUserAction(user, ActionType.CREATE)
 
-    return this.formatUserResponse(user)
+    return {
+      user: this.formatUserResponse(user),
+      password
+    }
   }
 
   static async getById(id: number, includeRelations = false): Promise<UserResponse | UserWithRelations> {
@@ -365,7 +369,7 @@ export class UserService {
     return await bcrypt.compare(password, user.password)
   }
 
-  static async resetPassword(id: number, newPassword: string, updatedBy: string): Promise<UserResponse> {
+  static async resetPassword(id: number, updatedBy: string): Promise<{ user: UserResponse; password: string }> {
     const user = await prisma.user.findUnique({
       where: { id }
     })
@@ -374,7 +378,9 @@ export class UserService {
       throw new NotFoundError('User not found')
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS)
+    // Generate new default password
+    const password = generateDefaultPassword()
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -393,7 +399,10 @@ export class UserService {
 
     await this.logUserAction(updatedUser as any, ActionType.UPDATE)
 
-    return this.formatUserResponse(updatedUser)
+    return {
+      user: this.formatUserResponse(updatedUser),
+      password
+    }
   }
 
   static async changePassword(

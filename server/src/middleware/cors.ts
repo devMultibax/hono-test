@@ -17,7 +17,7 @@ const getValidOrigin = (origin: string): string => {
 
 export const corsMiddleware = honoCors({
   origin: getValidOrigin,
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   exposeHeaders: ['Content-Length'],
   maxAge: CORS_MAX_AGE,
