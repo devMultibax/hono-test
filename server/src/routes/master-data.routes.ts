@@ -11,10 +11,7 @@ const masterDataService = new MasterDataService();
 // Apply authentication middleware to all routes
 masterDataRoutes.use('*', authMiddleware);
 
-/**
- * GET /master-data/departments
- * Get all departments (simplified)
- */
+// Get all departments
 masterDataRoutes.get('/departments', async (c) => {
     try {
         const departments = await masterDataService.getAllDepartments();
@@ -35,10 +32,7 @@ masterDataRoutes.get('/departments', async (c) => {
     }
 });
 
-/**
- * GET /master-data/departments/:id/sections
- * Get sections by department ID
- */
+// Get sections by department ID
 masterDataRoutes.get('/departments/:id/sections', async (c) => {
     try {
         const departmentId = parseInt(c.req.param('id'));
@@ -71,10 +65,7 @@ masterDataRoutes.get('/departments/:id/sections', async (c) => {
     }
 });
 
-/**
- * POST /master-data/departments/sections/search
- * Search sections by name
- */
+// Search sections
 masterDataRoutes.post(
     '/departments/sections/search',
     zValidator('json', sectionSearchSchema),
@@ -100,10 +91,7 @@ masterDataRoutes.post(
     }
 );
 
-/**
- * GET /master-data/users
- * Get all users (simplified)
- */
+// Get all users
 masterDataRoutes.get('/users', async (c) => {
     try {
         const users = await masterDataService.getAllUsers();
@@ -124,10 +112,7 @@ masterDataRoutes.get('/users', async (c) => {
     }
 });
 
-/**
- * GET /master-data/users/from-logs
- * Get unique users from user logs
- */
+// Get users from logs
 masterDataRoutes.get('/users/from-logs', async (c) => {
     try {
         const users = await masterDataService.getUsersFromLogs();

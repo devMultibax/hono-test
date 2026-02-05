@@ -16,6 +16,7 @@ const sections = new Hono<HonoContext>()
 sections.use('/*', authMiddleware)
 sections.use('/*', csrfProtection)
 
+// Get all sections with optional pagination and filtering
 sections.get('/', async (c) => {
   const include = c.req.query('include') === 'true'
   const queryParams = listSectionsQuerySchema.parse({
@@ -45,6 +46,7 @@ sections.get('/', async (c) => {
   return successResponse(c, sectionList)
 })
 
+// Get a single section by ID
 sections.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
 
@@ -57,6 +59,7 @@ sections.get('/:id', async (c) => {
   return successResponse(c, section)
 })
 
+// Create a new section
 sections.post('/', requireAdmin, async (c) => {
   const user = c.get('user')
   const body = await c.req.json()
@@ -70,6 +73,7 @@ sections.post('/', requireAdmin, async (c) => {
   return createdResponse(c, section)
 })
 
+// Update an existing section
 sections.put('/:id', requireAdmin, async (c) => {
   const user = c.get('user')
   const id = Number(c.req.param('id'))
@@ -85,6 +89,7 @@ sections.put('/:id', requireAdmin, async (c) => {
   return successResponse(c, section)
 })
 
+// Delete a section
 sections.delete('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 

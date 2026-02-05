@@ -13,17 +13,20 @@ const systemLogRoutes = new Hono<HonoContext>()
 systemLogRoutes.use('/*', authMiddleware)
 systemLogRoutes.use('/*', requireAdmin)
 
+// Get system logs with optional filtering
 systemLogRoutes.get('/', zValidator('query', logQuerySchema), async (c) => {
     const query = c.req.valid('query')
     const logs = await SystemLogService.getLogs(query)
     return successResponse(c, { logs, total: logs.length })
 })
 
+// Get available log files
 systemLogRoutes.get('/files', async (c) => {
     const files = await SystemLogService.getLogFiles()
     return successResponse(c, { files, total: files.length })
 })
 
+// Delete old logs
 systemLogRoutes.delete('/cleanup', async (c) => {
     const deletedCount = await SystemLogService.cleanupOldLogs()
     return successResponse(c, {

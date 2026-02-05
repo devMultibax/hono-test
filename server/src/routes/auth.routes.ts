@@ -46,13 +46,14 @@ auth.post('/logout', authMiddleware, async (c) => {
   return successResponse(c, { message: MESSAGES.AUTH.LOGOUT_SUCCESS })
 })
 
-// Profile Management Endpoints
+// Get current authenticated user
 auth.get('/me', authMiddleware, async (c) => {
   const currentUser = c.get('user')
   const user = await AuthService.getCurrentUser(currentUser.id)
   return successResponse(c, { user })
 })
 
+// Update current authenticated user's profile
 auth.put('/me', authMiddleware, csrfProtection, async (c) => {
   const currentUser = c.get('user')
   const body = await c.req.json()
@@ -64,6 +65,7 @@ auth.put('/me', authMiddleware, csrfProtection, async (c) => {
   return successResponse(c, { message: MESSAGES.AUTH.PROFILE_UPDATE_SUCCESS, user })
 })
 
+// Change current authenticated user's password
 auth.put('/me/password', authMiddleware, csrfProtection, async (c) => {
   const currentUser = c.get('user')
   const body = await c.req.json()

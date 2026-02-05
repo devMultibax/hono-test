@@ -13,6 +13,7 @@ const userLogRoutes = new Hono<HonoContext>()
 userLogRoutes.use('/*', authMiddleware)
 userLogRoutes.use('/*', requireAdmin)
 
+// Get user logs with optional filtering
 userLogRoutes.get('/', zValidator('query', userLogQuerySchema), async (c) => {
   const { page, limit, sort, order, username, actionType, startDate, endDate } =
     c.req.valid('query')
@@ -25,6 +26,7 @@ userLogRoutes.get('/', zValidator('query', userLogQuerySchema), async (c) => {
   return successResponse(c, result)
 })
 
+// Get a single user log by ID
 userLogRoutes.get(
   '/:id',
   zValidator('param', userLogIdSchema),

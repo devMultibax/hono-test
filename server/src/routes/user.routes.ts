@@ -17,6 +17,7 @@ const users = new Hono<HonoContext>()
 users.use('/*', authMiddleware)
 users.use('/*', csrfProtection)
 
+// Create a new User
 users.post('/', requireAdmin, async (c) => {
   const currentUser = c.get('user')
   const body = await c.req.json()
@@ -38,6 +39,7 @@ users.post('/', requireAdmin, async (c) => {
   return createdResponse(c, { user })
 })
 
+// Get all with Pagination and Filters
 users.get('/', requireUser, async (c) => {
   const include = c.req.query('include') === 'true'
   const queryParams = listUsersQuerySchema.parse({
@@ -71,6 +73,7 @@ users.get('/', requireUser, async (c) => {
   return successResponse(c, userList)
 })
 
+// Get a single user by ID 
 users.get('/:id', requireUser, async (c) => {
   const id = Number(c.req.param('id'))
 
@@ -83,6 +86,7 @@ users.get('/:id', requireUser, async (c) => {
   return successResponse(c, user)
 })
 
+// Update an existing user
 users.put('/:id', requireAdmin, async (c) => {
   const currentUser = c.get('user')
   const id = Number(c.req.param('id'))
@@ -98,6 +102,7 @@ users.put('/:id', requireAdmin, async (c) => {
   return successResponse(c, user)
 })
 
+// Delete a user
 users.delete('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
@@ -109,7 +114,7 @@ users.delete('/:id', requireAdmin, async (c) => {
   return noContentResponse(c)
 })
 
-// Password Management Endpoints
+// Verify Password
 users.post('/password/verify', requireUser, async (c) => {
   const currentUser = c.get('user')
   const body = await c.req.json()
@@ -121,6 +126,7 @@ users.post('/password/verify', requireUser, async (c) => {
   return successResponse(c, { valid: isValid })
 })
 
+// Reset Password
 users.patch('/:id/password/reset', requireAdmin, async (c) => {
   const currentUser = c.get('user')
   const id = Number(c.req.param('id'))
@@ -137,7 +143,6 @@ users.patch('/:id/password/reset', requireAdmin, async (c) => {
   const user = await UserService.resetPassword(id, validated.newPassword, currentUser.username)
   return successResponse(c, { user })
 })
-
 
 users.get('/export/excel', requireUser, async (c) => {
   const queryParams = listUsersQuerySchema.parse({

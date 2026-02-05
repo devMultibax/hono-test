@@ -17,6 +17,7 @@ const departments = new Hono<HonoContext>()
 departments.use('/*', authMiddleware)
 departments.use('/*', csrfProtection)
 
+// Get all departments with optional pagination and filtering
 departments.get('/', async (c) => {
   const include = c.req.query('include') === 'true'
   const queryParams = listDepartmentsQuerySchema.parse({
@@ -44,6 +45,7 @@ departments.get('/', async (c) => {
   return successResponse(c, departmentList)
 })
 
+// Get a single department by ID
 departments.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
 
@@ -56,6 +58,7 @@ departments.get('/:id', async (c) => {
   return successResponse(c, department)
 })
 
+// Create a new department
 departments.post('/', requireAdmin, async (c) => {
   const user = c.get('user')
   const body = await c.req.json()
@@ -65,6 +68,7 @@ departments.post('/', requireAdmin, async (c) => {
   return createdResponse(c, department)
 })
 
+// Update an existing department
 departments.put('/:id', requireAdmin, async (c) => {
   const user = c.get('user')
   const id = Number(c.req.param('id'))
@@ -80,6 +84,7 @@ departments.put('/:id', requireAdmin, async (c) => {
   return successResponse(c, department)
 })
 
+// Delete a department
 departments.delete('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
