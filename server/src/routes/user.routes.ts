@@ -8,6 +8,7 @@ import { successResponse, createdResponse, noContentResponse } from '../lib/resp
 import { Role, type HonoContext, type UserWithRelations } from '../types'
 import { ExportService } from '../services/export.service'
 import { ImportService } from '../services/import.service'
+import { userExcelColumns, userPdfColumns } from '../controllers/user.controller'
 import { parseUpload, validateFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
 import { MESSAGES } from '../constants/message'
@@ -160,13 +161,11 @@ users.get('/export/excel', requireUser, async (c) => {
   }
 
   const userList = await UserService.getAll(true, undefined, filters)
-  const users = Array.isArray(userList) ? userList : []
-  const totalCount = users.length
+  const userData = Array.isArray(userList) ? userList : []
 
-  const result = await ExportService.exportUsersToExcel(
-    users as UserWithRelations[],
-    totalCount
-  )
+  const result = await ExportService.exportToExcel(userData as UserWithRelations[], {
+    columns: userExcelColumns
+  })
 
   const filename = `users_${new Date().toISOString().split('T')[0]}.xlsx`
 
@@ -217,9 +216,13 @@ users.get('/export/pdf', requireUser, async (c) => {
   }
 
   const userList = await UserService.getAll(true, undefined, filters)
-  const users = Array.isArray(userList) ? userList : []
+  const userData = Array.isArray(userList) ? userList : []
 
-  const pdfStream = await ExportService.exportUsersToPDF(users as UserWithRelations[])
+  const pdfStream = await ExportService.exportToPDF(userData as UserWithRelations[], {
+    title: 'User Report',
+    columns: userPdfColumns,
+    orientation: 'landscape'
+  })
   const filename = `users_${new Date().toISOString().split('T')[0]}.pdf`
 
   return stream(c, async (stream) => {

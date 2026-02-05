@@ -8,6 +8,7 @@ import { successResponse, createdResponse, noContentResponse } from '../lib/resp
 import type { HonoContext, SectionResponse } from '../types'
 import { ExportService } from '../services/export.service'
 import { ImportService } from '../services/import.service'
+import { sectionExcelColumns, sectionPdfColumns } from '../controllers/section.controller'
 import { parseUpload, validateFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
 
@@ -119,13 +120,11 @@ sections.get('/export/excel', async (c) => {
   }
 
   const sectionList = await SectionService.getAll(false, undefined, filters)
-  const sections = Array.isArray(sectionList) ? sectionList : []
-  const totalCount = sections.length
+  const sectionData = Array.isArray(sectionList) ? sectionList : []
 
-  const result = await ExportService.exportSectionsToExcel(
-    sections as SectionResponse[],
-    totalCount
-  )
+  const result = await ExportService.exportToExcel(sectionData as SectionResponse[], {
+    columns: sectionExcelColumns
+  })
 
   const filename = `sections_${new Date().toISOString().split('T')[0]}.xlsx`
 
@@ -172,9 +171,12 @@ sections.get('/export/pdf', async (c) => {
   }
 
   const sectionList = await SectionService.getAll(false, undefined, filters)
-  const sections = Array.isArray(sectionList) ? sectionList : []
+  const sectionData = Array.isArray(sectionList) ? sectionList : []
 
-  const pdfStream = await ExportService.exportSectionsToPDF(sections as SectionResponse[])
+  const pdfStream = await ExportService.exportToPDF(sectionData as SectionResponse[], {
+    title: 'Section Report',
+    columns: sectionPdfColumns
+  })
   const filename = `sections_${new Date().toISOString().split('T')[0]}.pdf`
 
   return stream(c, async (stream) => {

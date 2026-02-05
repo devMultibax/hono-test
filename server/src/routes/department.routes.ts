@@ -8,6 +8,7 @@ import { successResponse, createdResponse, noContentResponse } from '../lib/resp
 import type { HonoContext, DepartmentResponse } from '../types'
 import { ExportService } from '../services/export.service'
 import { ImportService } from '../services/import.service'
+import { departmentExcelColumns, departmentPdfColumns } from '../controllers/department.controller'
 import { parseUpload, validateFile, type UploadedFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
 import { MESSAGES } from '../constants/message'
@@ -112,13 +113,11 @@ departments.get('/export/excel', async (c) => {
   }
 
   const departmentList = await DepartmentService.getAll(false, undefined, filters)
-  const departments = Array.isArray(departmentList) ? departmentList : []
-  const totalCount = departments.length
+  const departmentData = Array.isArray(departmentList) ? departmentList : []
 
-  const result = await ExportService.exportDepartmentsToExcel(
-    departments as DepartmentResponse[],
-    totalCount
-  )
+  const result = await ExportService.exportToExcel(departmentData as DepartmentResponse[], {
+    columns: departmentExcelColumns
+  })
 
   const filename = `departments_${new Date().toISOString().split('T')[0]}.xlsx`
 
@@ -163,9 +162,12 @@ departments.get('/export/pdf', async (c) => {
   }
 
   const departmentList = await DepartmentService.getAll(false, undefined, filters)
-  const departments = Array.isArray(departmentList) ? departmentList : []
+  const departmentData = Array.isArray(departmentList) ? departmentList : []
 
-  const pdfStream = await ExportService.exportDepartmentsToPDF(departments as DepartmentResponse[])
+  const pdfStream = await ExportService.exportToPDF(departmentData as DepartmentResponse[], {
+    title: 'Department Report',
+    columns: departmentPdfColumns
+  })
   const filename = `departments_${new Date().toISOString().split('T')[0]}.pdf`
 
   return stream(c, async (stream) => {

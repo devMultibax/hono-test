@@ -1,206 +1,106 @@
 import ExcelJS from 'exceljs'
 import PDFDocument from 'pdfkit'
 import { PassThrough } from 'stream'
-import type { UserWithRelations } from '../types'
-import type { DepartmentResponse } from '../types'
-import type { SectionResponse } from '../types'
+import type { ExportColumn, ExcelExportOptions, PDFExportOptions } from '../types/export'
 
 const MAX_ROWS_NORMAL = 10000
-const MAX_ROWS_STREAMING = 50000
 const MAX_ROWS_LIMIT = 50000
 
 export class ExportService {
-  /**
-   * Export users to Excel with automatic strategy selection based on data size
-   */
-  static async exportUsersToExcel(
-    users: UserWithRelations[],
-    totalCount: number
+  // Get nested value from object (e.g., 'department.name')
+  private static getNestedValue<T>(item: T, key: string): unknown {
+    return key.split('.').reduce((obj: unknown, k) => {
+      if (obj && typeof obj === 'object' && k in obj) {
+        return (obj as Record<string, unknown>)[k]
+      }
+      return undefined
+    }, item)
+  }
+
+  // Apply value transformer or return raw value
+  private static applyValueTransformer<T>(
+    item: T,
+    column: ExportColumn<T>
+  ): string | number | Date | null {
+    const rawValue = this.getNestedValue(item, column.key)
+
+    if (column.value) {
+      return column.value(rawValue, item)
+    }
+
+    if (rawValue === null || rawValue === undefined) {
+      return ''
+    }
+
+    return rawValue as string | number | Date
+  }
+
+  // Export to Excel (auto-select normal or streaming based on data size)
+  static async exportToExcel<T>(
+    data: T[],
+    options: ExcelExportOptions<T>
   ): Promise<ExcelJS.Workbook | PassThrough> {
+    const totalCount = data.length
+
     if (totalCount > MAX_ROWS_LIMIT) {
-      throw new Error(
-        `Export limited to ${MAX_ROWS_LIMIT} rows. Please apply filters to reduce the dataset.`
-      )
+      throw new Error(`Export limited to ${MAX_ROWS_LIMIT} rows.`)
     }
 
     if (totalCount <= MAX_ROWS_NORMAL) {
-      return this.exportUsersNormal(users)
+      return this.exportToExcelNormal(data, options)
     } else {
-      return this.exportUsersStreaming(users)
+      return this.exportToExcelStreaming(data, options)
     }
   }
 
-  /**
-   * Normal export strategy for small datasets (< 10k rows)
-   */
-  private static async exportUsersNormal(users: UserWithRelations[]): Promise<ExcelJS.Workbook> {
-    const workbook = new ExcelJS.Workbook()
-    const worksheet = workbook.addWorksheet('Users')
-
-    worksheet.columns = [
-      { header: 'Username', key: 'username', width: 12 },
-      { header: 'First Name', key: 'firstName', width: 20 },
-      { header: 'Last Name', key: 'lastName', width: 20 },
-      { header: 'Department', key: 'department', width: 25 },
-      { header: 'Section', key: 'section', width: 25 },
-      { header: 'Email', key: 'email', width: 30 },
-      { header: 'Phone', key: 'tel', width: 15 },
-      { header: 'Role', key: 'role', width: 10 },
-      { header: 'Status', key: 'status', width: 10 },
-      { header: 'Last Login', key: 'lastLoginAt', width: 20 }
-    ]
-
-    worksheet.getRow(1).font = { bold: true }
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' }
-    }
-
-    users.forEach((user) => {
-      worksheet.addRow({
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        department: user.department?.name || '',
-        section: user.section?.name || '',
-        email: user.email || '',
-        tel: user.tel || '',
-        role: user.role,
-        status: user.status,
-        lastLoginAt: user.lastLoginAt
-          ? new Date(user.lastLoginAt).toLocaleString('th-TH')
-          : ''
-      })
-    })
-
-    return workbook
-  }
-
-  /**
-   * Streaming export strategy for large datasets (10k-50k rows)
-   */
-  private static async exportUsersStreaming(users: UserWithRelations[]): Promise<PassThrough> {
-    const stream = new PassThrough()
-
-    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-      stream: stream,
-      useStyles: true,
-      useSharedStrings: true
-    })
-
-    const worksheet = workbook.addWorksheet('Users')
-
-    worksheet.columns = [
-      { header: 'Username', key: 'username', width: 12 },
-      { header: 'First Name', key: 'firstName', width: 20 },
-      { header: 'Last Name', key: 'lastName', width: 20 },
-      { header: 'Department', key: 'department', width: 25 },
-      { header: 'Section', key: 'section', width: 25 },
-      { header: 'Email', key: 'email', width: 30 },
-      { header: 'Phone', key: 'tel', width: 15 },
-      { header: 'Role', key: 'role', width: 10 },
-      { header: 'Status', key: 'status', width: 10 },
-      { header: 'Last Login', key: 'lastLoginAt', width: 20 }
-    ]
-
-    worksheet.getRow(1).font = { bold: true }
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' }
-    }
-    worksheet.getRow(1).commit()
-
-    for (const user of users) {
-      worksheet
-        .addRow({
-          username: user.username,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          department: user.department?.name || '',
-          section: user.section?.name || '',
-          email: user.email || '',
-          tel: user.tel || '',
-          role: user.role,
-          status: user.status,
-          lastLoginAt: user.lastLoginAt
-            ? new Date(user.lastLoginAt).toLocaleString('th-TH')
-            : ''
-        })
-        .commit()
-    }
-
-    await worksheet.commit()
-    await workbook.commit()
-
-    return stream
-  }
-
-  /**
-   * Export departments to Excel with automatic strategy selection
-   */
-  static async exportDepartmentsToExcel(
-    departments: DepartmentResponse[],
-    totalCount: number
-  ): Promise<ExcelJS.Workbook | PassThrough> {
-    if (totalCount > MAX_ROWS_LIMIT) {
-      throw new Error(
-        `Export limited to ${MAX_ROWS_LIMIT} rows. Please apply filters to reduce the dataset.`
-      )
-    }
-
-    if (totalCount <= MAX_ROWS_NORMAL) {
-      return this.exportDepartmentsNormal(departments)
-    } else {
-      return this.exportDepartmentsStreaming(departments)
-    }
-  }
-
-  /**
-   * Normal export strategy for departments
-   */
-  private static async exportDepartmentsNormal(
-    departments: DepartmentResponse[]
+  // Normal export for small datasets (< 10k rows)
+  private static async exportToExcelNormal<T>(
+    data: T[],
+    options: ExcelExportOptions<T>
   ): Promise<ExcelJS.Workbook> {
     const workbook = new ExcelJS.Workbook()
-    const worksheet = workbook.addWorksheet('Departments')
+    const worksheet = workbook.addWorksheet('Sheet1')
 
-    worksheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Name', key: 'name', width: 30 },
-      { header: 'Status', key: 'status', width: 12 },
-      { header: 'Created At', key: 'createdAt', width: 20 },
-      { header: 'Updated At', key: 'updatedAt', width: 20 }
-    ]
+    // Prepare data for table
+    const tableData = data.map((item) =>
+      options.columns.map((column) => this.applyValueTransformer(item, column))
+    )
 
-    worksheet.getRow(1).font = { bold: true }
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' }
-    }
-
-    departments.forEach((dept) => {
-      worksheet.addRow({
-        id: dept.id,
-        name: dept.name,
-        status: dept.status,
-        createdAt: new Date(dept.createdAt).toLocaleString('th-TH'),
-        updatedAt: dept.updatedAt
-          ? new Date(dept.updatedAt).toLocaleString('th-TH')
-          : ''
-      })
+    // Add table with filter
+    worksheet.addTable({
+      name: 'DataTable',
+      ref: 'A1',
+      headerRow: true,
+      totalsRow: false,
+      style: {
+        theme: 'TableStyleMedium2',
+        showRowStripes: true
+      },
+      columns: options.columns.map((column) => ({
+        name: column.label,
+        filterButton: true
+      })),
+      rows: tableData
     })
+
+    // Auto-fit column widths based on config
+    worksheet.columns = options.columns.map((column) => ({
+      key: column.key,
+      width: column.width || 15
+    }))
+
+    // Freeze header row
+    worksheet.views = [
+      { state: 'frozen', ySplit: 1, xSplit: 0, topLeftCell: 'A2', activeCell: 'A2' }
+    ]
 
     return workbook
   }
 
-  /**
-   * Streaming export strategy for departments
-   */
-  private static async exportDepartmentsStreaming(
-    departments: DepartmentResponse[]
+  // Streaming export for large datasets (10k-50k rows)
+  private static async exportToExcelStreaming<T>(
+    data: T[],
+    options: ExcelExportOptions<T>
   ): Promise<PassThrough> {
     const stream = new PassThrough()
 
@@ -210,149 +110,75 @@ export class ExportService {
       useSharedStrings: true
     })
 
-    const worksheet = workbook.addWorksheet('Departments')
+    const worksheet = workbook.addWorksheet('Sheet1')
 
-    worksheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Name', key: 'name', width: 30 },
-      { header: 'Status', key: 'status', width: 12 },
-      { header: 'Created At', key: 'createdAt', width: 20 },
-      { header: 'Updated At', key: 'updatedAt', width: 20 }
+    // Set columns with headers
+    worksheet.columns = options.columns.map((column) => ({
+      header: column.label,
+      key: column.key,
+      width: column.width || 15
+    }))
+
+    // Add auto filter
+    worksheet.autoFilter = {
+      from: 'A1',
+      to: { row: data.length + 1, column: options.columns.length }
+    }
+
+    // Freeze header row
+    worksheet.views = [
+      { state: 'frozen', ySplit: 1, xSplit: 0, topLeftCell: 'A2', activeCell: 'A2' }
     ]
 
-    worksheet.getRow(1).font = { bold: true }
-    worksheet.getRow(1).fill = {
+    // Style header row with table-like appearance
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' }
+      fgColor: { argb: 'FF4472C4' }
     }
-    worksheet.getRow(1).commit()
+    headerRow.alignment = { vertical: 'middle', horizontal: 'left' }
+    headerRow.eachCell((cell) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      }
+    })
+    headerRow.commit()
 
-    for (const dept of departments) {
-      worksheet
-        .addRow({
-          id: dept.id,
-          name: dept.name,
-          status: dept.status,
-          createdAt: new Date(dept.createdAt).toLocaleString('th-TH'),
-          updatedAt: dept.updatedAt
-            ? new Date(dept.updatedAt).toLocaleString('th-TH')
-            : ''
-        })
-        .commit()
-    }
-
-    await worksheet.commit()
-    await workbook.commit()
-
-    return stream
-  }
-
-  /**
-   * Export sections to Excel with automatic strategy selection
-   */
-  static async exportSectionsToExcel(
-    sections: SectionResponse[],
-    totalCount: number
-  ): Promise<ExcelJS.Workbook | PassThrough> {
-    if (totalCount > MAX_ROWS_LIMIT) {
-      throw new Error(
-        `Export limited to ${MAX_ROWS_LIMIT} rows. Please apply filters to reduce the dataset.`
-      )
-    }
-
-    if (totalCount <= MAX_ROWS_NORMAL) {
-      return this.exportSectionsNormal(sections)
-    } else {
-      return this.exportSectionsStreaming(sections)
-    }
-  }
-
-  /**
-   * Normal export strategy for sections
-   */
-  private static async exportSectionsNormal(
-    sections: SectionResponse[]
-  ): Promise<ExcelJS.Workbook> {
-    const workbook = new ExcelJS.Workbook()
-    const worksheet = workbook.addWorksheet('Sections')
-
-    worksheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Department ID', key: 'departmentId', width: 15 },
-      { header: 'Name', key: 'name', width: 30 },
-      { header: 'Status', key: 'status', width: 12 },
-      { header: 'Created At', key: 'createdAt', width: 20 },
-      { header: 'Updated At', key: 'updatedAt', width: 20 }
-    ]
-
-    worksheet.getRow(1).font = { bold: true }
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' }
-    }
-
-    sections.forEach((section) => {
-      worksheet.addRow({
-        id: section.id,
-        departmentId: section.departmentId,
-        name: section.name,
-        status: section.status,
-        createdAt: new Date(section.createdAt).toLocaleString('th-TH'),
-        updatedAt: section.updatedAt
-          ? new Date(section.updatedAt).toLocaleString('th-TH')
-          : ''
+    // Add data rows with alternating colors
+    let rowIndex = 0
+    for (const item of data) {
+      const rowData: Record<string, unknown> = {}
+      options.columns.forEach((column) => {
+        rowData[column.key] = this.applyValueTransformer(item, column)
       })
-    })
 
-    return workbook
-  }
+      const row = worksheet.addRow(rowData)
 
-  /**
-   * Streaming export strategy for sections
-   */
-  private static async exportSectionsStreaming(sections: SectionResponse[]): Promise<PassThrough> {
-    const stream = new PassThrough()
+      // Add borders and alternating row colors
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+          left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+          bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+          right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+        }
+        // Alternating row colors
+        if (rowIndex % 2 === 1) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD9E1F2' }
+          }
+        }
+      })
 
-    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-      stream: stream,
-      useStyles: true,
-      useSharedStrings: true
-    })
-
-    const worksheet = workbook.addWorksheet('Sections')
-
-    worksheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Department ID', key: 'departmentId', width: 15 },
-      { header: 'Name', key: 'name', width: 30 },
-      { header: 'Status', key: 'status', width: 12 },
-      { header: 'Created At', key: 'createdAt', width: 20 },
-      { header: 'Updated At', key: 'updatedAt', width: 20 }
-    ]
-
-    worksheet.getRow(1).font = { bold: true }
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' }
-    }
-    worksheet.getRow(1).commit()
-
-    for (const section of sections) {
-      worksheet
-        .addRow({
-          id: section.id,
-          departmentId: section.departmentId,
-          name: section.name,
-          status: section.status,
-          createdAt: new Date(section.createdAt).toLocaleString('th-TH'),
-          updatedAt: section.updatedAt
-            ? new Date(section.updatedAt).toLocaleString('th-TH')
-            : ''
-        })
-        .commit()
+      row.commit()
+      rowIndex++
     }
 
     await worksheet.commit()
@@ -361,39 +187,45 @@ export class ExportService {
     return stream
   }
 
-  /**
-   * Check if the result is a stream or workbook
-   */
+  // Check if result is stream or workbook
   static isStream(result: ExcelJS.Workbook | PassThrough): result is PassThrough {
     return result instanceof PassThrough
   }
 
-  /**
-   * Export users to PDF
-   */
-  static async exportUsersToPDF(users: UserWithRelations[]): Promise<PassThrough> {
+  // Export to PDF
+  static async exportToPDF<T>(
+    data: T[],
+    options: PDFExportOptions<T>
+  ): Promise<PassThrough> {
     const stream = new PassThrough()
-    const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' })
+    const orientation = options.orientation || 'portrait'
+    const doc = new PDFDocument({ margin: 50, size: 'A4', layout: orientation })
 
     doc.pipe(stream)
 
-    doc.fontSize(16).text('User Report', { align: 'center' })
+    // Title
+    doc.fontSize(16).text(options.title, { align: 'center' })
     doc.moveDown()
     doc.fontSize(10).text(`Generated: ${new Date().toLocaleString('th-TH')}`, { align: 'center' })
     doc.moveDown(2)
 
     const tableTop = 120
     const itemHeight = 20
-    const headers = [
-      { label: 'Username', x: 50, width: 70 },
-      { label: 'Name', x: 120, width: 120 },
-      { label: 'Department', x: 240, width: 100 },
-      { label: 'Section', x: 340, width: 100 },
-      { label: 'Email', x: 440, width: 140 },
-      { label: 'Role', x: 580, width: 60 },
-      { label: 'Status', x: 640, width: 60 }
-    ]
 
+    // Build headers with positions
+    let xPosition = 50
+    const headers = options.columns.map((column) => {
+      const header = {
+        label: column.label,
+        x: xPosition,
+        width: column.width || 100,
+        alignment: column.alignment || 'left'
+      }
+      xPosition += header.width
+      return header
+    })
+
+    // Draw header row
     doc.fontSize(10).fillColor('#000000')
     headers.forEach((header) => {
       doc.rect(header.x, tableTop, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
@@ -404,12 +236,16 @@ export class ExportService {
     })
 
     let yPosition = tableTop + itemHeight
+    const pageHeight = orientation === 'landscape' ? 500 : 700
 
-    users.forEach((user, index) => {
-      if (yPosition > 500) {
-        doc.addPage({ margin: 50, size: 'A4', layout: 'landscape' })
+    // Draw data rows
+    data.forEach((item, index) => {
+      // Check if new page needed
+      if (yPosition > pageHeight) {
+        doc.addPage({ margin: 50, size: 'A4', layout: orientation })
         yPosition = 50
 
+        // Redraw headers on new page
         headers.forEach((header) => {
           doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
           doc.fillColor('#000000').text(header.label, header.x + 5, yPosition + 5, {
@@ -420,177 +256,22 @@ export class ExportService {
         yPosition += itemHeight
       }
 
+      // Draw row background
       const fillColor = index % 2 === 0 ? '#FFFFFF' : '#F5F5F5'
       headers.forEach((header) => {
         doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke(fillColor, '#CCCCCC')
       })
 
+      // Draw cell values
       doc.fillColor('#000000').fontSize(8)
-      doc.text(user.username, headers[0].x + 5, yPosition + 5, { width: headers[0].width - 10 })
-      doc.text(
-        `${user.firstName} ${user.lastName}`,
-        headers[1].x + 5,
-        yPosition + 5,
-        { width: headers[1].width - 10 }
-      )
-      doc.text(user.department?.name || '', headers[2].x + 5, yPosition + 5, {
-        width: headers[2].width - 10
-      })
-      doc.text(user.section?.name || '', headers[3].x + 5, yPosition + 5, {
-        width: headers[3].width - 10
-      })
-      doc.text(user.email || '', headers[4].x + 5, yPosition + 5, { width: headers[4].width - 10 })
-      doc.text(user.role, headers[5].x + 5, yPosition + 5, { width: headers[5].width - 10 })
-      doc.text(user.status, headers[6].x + 5, yPosition + 5, { width: headers[6].width - 10 })
-
-      yPosition += itemHeight
-    })
-
-    doc.end()
-    return stream
-  }
-
-  /**
-   * Export departments to PDF
-   */
-  static async exportDepartmentsToPDF(departments: DepartmentResponse[]): Promise<PassThrough> {
-    const stream = new PassThrough()
-    const doc = new PDFDocument({ margin: 50, size: 'A4' })
-
-    doc.pipe(stream)
-
-    doc.fontSize(16).text('Department Report', { align: 'center' })
-    doc.moveDown()
-    doc.fontSize(10).text(`Generated: ${new Date().toLocaleString('th-TH')}`, { align: 'center' })
-    doc.moveDown(2)
-
-    const tableTop = 120
-    const itemHeight = 20
-    const headers = [
-      { label: 'ID', x: 50, width: 50 },
-      { label: 'Name', x: 100, width: 200 },
-      { label: 'Status', x: 300, width: 80 },
-      { label: 'Created At', x: 380, width: 100 }
-    ]
-
-    doc.fontSize(10).fillColor('#000000')
-    headers.forEach((header) => {
-      doc.rect(header.x, tableTop, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
-      doc.fillColor('#000000').text(header.label, header.x + 5, tableTop + 5, {
-        width: header.width - 10,
-        align: 'left'
-      })
-    })
-
-    let yPosition = tableTop + itemHeight
-
-    departments.forEach((dept, index) => {
-      if (yPosition > 700) {
-        doc.addPage({ margin: 50, size: 'A4' })
-        yPosition = 50
-
-        headers.forEach((header) => {
-          doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
-          doc.fillColor('#000000').text(header.label, header.x + 5, yPosition + 5, {
-            width: header.width - 10,
-            align: 'left'
-          })
+      options.columns.forEach((column, colIndex) => {
+        const value = this.applyValueTransformer(item, column)
+        const header = headers[colIndex]
+        doc.text(String(value ?? ''), header.x + 5, yPosition + 5, {
+          width: header.width - 10,
+          align: 'left'
         })
-        yPosition += itemHeight
-      }
-
-      const fillColor = index % 2 === 0 ? '#FFFFFF' : '#F5F5F5'
-      headers.forEach((header) => {
-        doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke(fillColor, '#CCCCCC')
       })
-
-      doc.fillColor('#000000').fontSize(9)
-      doc.text(dept.id.toString(), headers[0].x + 5, yPosition + 5, {
-        width: headers[0].width - 10
-      })
-      doc.text(dept.name, headers[1].x + 5, yPosition + 5, { width: headers[1].width - 10 })
-      doc.text(dept.status, headers[2].x + 5, yPosition + 5, { width: headers[2].width - 10 })
-      doc.text(new Date(dept.createdAt).toLocaleString('th-TH'), headers[3].x + 5, yPosition + 5, {
-        width: headers[3].width - 10
-      })
-
-      yPosition += itemHeight
-    })
-
-    doc.end()
-    return stream
-  }
-
-  /**
-   * Export sections to PDF
-   */
-  static async exportSectionsToPDF(sections: SectionResponse[]): Promise<PassThrough> {
-    const stream = new PassThrough()
-    const doc = new PDFDocument({ margin: 50, size: 'A4' })
-
-    doc.pipe(stream)
-
-    doc.fontSize(16).text('Section Report', { align: 'center' })
-    doc.moveDown()
-    doc.fontSize(10).text(`Generated: ${new Date().toLocaleString('th-TH')}`, { align: 'center' })
-    doc.moveDown(2)
-
-    const tableTop = 120
-    const itemHeight = 20
-    const headers = [
-      { label: 'ID', x: 50, width: 50 },
-      { label: 'Dept ID', x: 100, width: 60 },
-      { label: 'Name', x: 160, width: 180 },
-      { label: 'Status', x: 340, width: 80 },
-      { label: 'Created At', x: 420, width: 100 }
-    ]
-
-    doc.fontSize(10).fillColor('#000000')
-    headers.forEach((header) => {
-      doc.rect(header.x, tableTop, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
-      doc.fillColor('#000000').text(header.label, header.x + 5, tableTop + 5, {
-        width: header.width - 10,
-        align: 'left'
-      })
-    })
-
-    let yPosition = tableTop + itemHeight
-
-    sections.forEach((section, index) => {
-      if (yPosition > 700) {
-        doc.addPage({ margin: 50, size: 'A4' })
-        yPosition = 50
-
-        headers.forEach((header) => {
-          doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
-          doc.fillColor('#000000').text(header.label, header.x + 5, yPosition + 5, {
-            width: header.width - 10,
-            align: 'left'
-          })
-        })
-        yPosition += itemHeight
-      }
-
-      const fillColor = index % 2 === 0 ? '#FFFFFF' : '#F5F5F5'
-      headers.forEach((header) => {
-        doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke(fillColor, '#CCCCCC')
-      })
-
-      doc.fillColor('#000000').fontSize(9)
-      doc.text(section.id.toString(), headers[0].x + 5, yPosition + 5, {
-        width: headers[0].width - 10
-      })
-      doc.text(section.departmentId.toString(), headers[1].x + 5, yPosition + 5, {
-        width: headers[1].width - 10
-      })
-      doc.text(section.name, headers[2].x + 5, yPosition + 5, { width: headers[2].width - 10 })
-      doc.text(section.status, headers[3].x + 5, yPosition + 5, { width: headers[3].width - 10 })
-      doc.text(
-        new Date(section.createdAt).toLocaleString('th-TH'),
-        headers[4].x + 5,
-        yPosition + 5,
-        { width: headers[4].width - 10 }
-      )
 
       yPosition += itemHeight
     })
