@@ -4,8 +4,8 @@ import { paginationQuerySchema } from '../utils/pagination.utils'
 
 export const registerSchema = z.object({
   username: z.string({ message: 'Username is required' })
-    .length(6, { message: 'Username must be exactly 6 characters' })
-    .regex(/^[a-zA-Z0-9]+$/, { message: 'Username must contain only letters and numbers' }),
+    .length(6, { message: 'Username must be exactly 6 digits' })
+    .regex(/^\d{6}$/, { message: 'Username must contain only 6 digits' }),
   firstName: z.string({ message: 'First name is required' })
     .min(1, { message: 'First name cannot be empty' })
     .max(100, { message: 'First name is too long' }),
@@ -35,7 +35,8 @@ export const registerSchema = z.object({
 
 export const loginSchema = z.object({
   username: z.string({ message: 'Username is required' })
-    .length(6, { message: 'Username must be exactly 6 characters' }),
+    .length(6, { message: 'Username must be exactly 6 digits' })
+    .regex(/^\d{6}$/, { message: 'Username must contain only 6 digits' }),
   password: z.string({ message: 'Password is required' })
     .min(1, { message: 'Password cannot be empty' })
 })

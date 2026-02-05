@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Paper, Title, Stack, Alert, Center, Box } from '@mantine/core';
-import { IconAlertCircle } from '@tabler/icons-react';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginForm } from '../components/LoginForm';
 import type { AxiosError } from 'axios';
@@ -27,7 +27,7 @@ export function LoginPage() {
 
           {loginError && (
             <Alert
-              icon={<IconAlertCircle size={16} />}
+              icon={<AlertCircle size={16} />}
               color="red"
               variant="light"
             >

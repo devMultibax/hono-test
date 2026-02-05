@@ -13,12 +13,13 @@ export interface Pagination {
 }
 
 export interface PaginatedResponse<T> {
-  users?: T[];
-  departments?: T[];
-  sections?: T[];
-  logs?: T[];
+  data: T[];
   pagination: Pagination;
 }
+
+export type UserListResponse = PaginatedResponse<User>;
+export type DepartmentListResponse = PaginatedResponse<Department>;
+export type SectionListResponse = PaginatedResponse<Section>;
 
 // ============ Query Params ============
 export interface BaseQueryParams {
@@ -76,7 +77,6 @@ export interface User {
 
 export interface CreateUserRequest {
   username: string;
-  password: string;
   firstName: string;
   lastName: string;
   departmentId: number;
@@ -85,6 +85,16 @@ export interface CreateUserRequest {
   tel?: string;
   role?: Role;
   status?: Status;
+}
+
+export interface CreateUserResponse {
+  user: User;
+  password: string;
+}
+
+export interface ResetPasswordResponse {
+  user: User;
+  password: string;
 }
 
 export interface UpdateUserRequest {

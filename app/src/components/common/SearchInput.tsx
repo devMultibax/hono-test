@@ -10,43 +10,24 @@ interface Props {
   debounce?: number;
 }
 
-export function SearchInput({
-  value,
-  onChange,
-  placeholder = 'ค้นหา...',
-  debounce = 400
-}: Props) {
+export function SearchInput({ value, onChange, placeholder = 'ค้นหา...', debounce = 400 }: Props) {
   const [localValue, setLocalValue] = useState(value);
   const [debouncedValue] = useDebouncedValue(localValue, debounce);
 
-  // Sync external value changes
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
+  // Sync external value
+  useEffect(() => setLocalValue(value), [value]);
 
-  // Trigger onChange when debounced value changes
+  // Emit debounced changes
   useEffect(() => {
-    if (debouncedValue !== value) {
-      onChange(debouncedValue);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedValue, value]);
+    onChange(debouncedValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValue]);
 
   return (
     <TextInput
       placeholder={placeholder}
       leftSection={<Search size={16} />}
-      rightSection={
-        localValue && (
-          <CloseButton
-            size="sm"
-            onClick={() => {
-              setLocalValue('');
-              onChange('');
-            }}
-          />
-        )
-      }
+      rightSection={localValue && <CloseButton size="sm" onClick={() => setLocalValue('')} />}
       value={localValue}
       onChange={(e) => setLocalValue(e.currentTarget.value)}
     />
