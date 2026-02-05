@@ -13,21 +13,18 @@ export const API_ENDPOINTS = {
     VERIFY_PASSWORD: '/users/password/verify',
     RESET_PASSWORD: (id: number) => `/users/${id}/password/reset`,
     EXPORT_EXCEL: '/users/export/excel',
-    EXPORT_PDF: '/users/export/pdf',
     IMPORT: '/users/import',
   },
   DEPARTMENTS: {
     BASE: '/departments',
     BY_ID: (id: number) => `/departments/${id}`,
     EXPORT_EXCEL: '/departments/export/excel',
-    EXPORT_PDF: '/departments/export/pdf',
     IMPORT: '/departments/import',
   },
   SECTIONS: {
     BASE: '/sections',
     BY_ID: (id: number) => `/sections/${id}`,
     EXPORT_EXCEL: '/sections/export/excel',
-    EXPORT_PDF: '/sections/export/pdf',
     IMPORT: '/sections/import',
   },
   MASTER_DATA: {

@@ -9,9 +9,3 @@ export interface ExportColumn<T = unknown> {
 export interface ExcelExportOptions<T = unknown> {
     columns: ExportColumn<T>[]
 }
-
-export interface PDFExportOptions<T = unknown> {
-    title: string
-    columns: ExportColumn<T>[]
-    orientation?: 'portrait' | 'landscape'
-}

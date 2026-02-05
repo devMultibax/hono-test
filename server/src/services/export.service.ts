@@ -1,7 +1,6 @@
 import ExcelJS from 'exceljs'
-import PDFDocument from 'pdfkit'
 import { PassThrough } from 'stream'
-import type { ExportColumn, ExcelExportOptions, PDFExportOptions } from '../types/export'
+import type { ExportColumn, ExcelExportOptions } from '../types/export'
 
 const MAX_ROWS_NORMAL = 10000
 const MAX_ROWS_LIMIT = 50000
@@ -190,93 +189,5 @@ export class ExportService {
   // Check if result is stream or workbook
   static isStream(result: ExcelJS.Workbook | PassThrough): result is PassThrough {
     return result instanceof PassThrough
-  }
-
-  // Export to PDF
-  static async exportToPDF<T>(
-    data: T[],
-    options: PDFExportOptions<T>
-  ): Promise<PassThrough> {
-    const stream = new PassThrough()
-    const orientation = options.orientation || 'portrait'
-    const doc = new PDFDocument({ margin: 50, size: 'A4', layout: orientation })
-
-    doc.pipe(stream)
-
-    // Title
-    doc.fontSize(16).text(options.title, { align: 'center' })
-    doc.moveDown()
-    doc.fontSize(10).text(`Generated: ${new Date().toLocaleString('th-TH')}`, { align: 'center' })
-    doc.moveDown(2)
-
-    const tableTop = 120
-    const itemHeight = 20
-
-    // Build headers with positions
-    let xPosition = 50
-    const headers = options.columns.map((column) => {
-      const header = {
-        label: column.label,
-        x: xPosition,
-        width: column.width || 100,
-        alignment: column.alignment || 'left'
-      }
-      xPosition += header.width
-      return header
-    })
-
-    // Draw header row
-    doc.fontSize(10).fillColor('#000000')
-    headers.forEach((header) => {
-      doc.rect(header.x, tableTop, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
-      doc.fillColor('#000000').text(header.label, header.x + 5, tableTop + 5, {
-        width: header.width - 10,
-        align: 'left'
-      })
-    })
-
-    let yPosition = tableTop + itemHeight
-    const pageHeight = orientation === 'landscape' ? 500 : 700
-
-    // Draw data rows
-    data.forEach((item, index) => {
-      // Check if new page needed
-      if (yPosition > pageHeight) {
-        doc.addPage({ margin: 50, size: 'A4', layout: orientation })
-        yPosition = 50
-
-        // Redraw headers on new page
-        headers.forEach((header) => {
-          doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke('#E0E0E0', '#000000')
-          doc.fillColor('#000000').text(header.label, header.x + 5, yPosition + 5, {
-            width: header.width - 10,
-            align: 'left'
-          })
-        })
-        yPosition += itemHeight
-      }
-
-      // Draw row background
-      const fillColor = index % 2 === 0 ? '#FFFFFF' : '#F5F5F5'
-      headers.forEach((header) => {
-        doc.rect(header.x, yPosition, header.width, itemHeight).fillAndStroke(fillColor, '#CCCCCC')
-      })
-
-      // Draw cell values
-      doc.fillColor('#000000').fontSize(8)
-      options.columns.forEach((column, colIndex) => {
-        const value = this.applyValueTransformer(item, column)
-        const header = headers[colIndex]
-        doc.text(String(value ?? ''), header.x + 5, yPosition + 5, {
-          width: header.width - 10,
-          align: 'left'
-        })
-      })
-
-      yPosition += itemHeight
-    })
-
-    doc.end()
-    return stream
   }
 }

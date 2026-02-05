@@ -103,7 +103,7 @@ export function UserListPage() {
         title={t('users:page.title')}
         breadcrumbs={[{ label: t('common:breadcrumb.home'), path: '/dashboard' }, { label: t('users:breadcrumb.users') }]}
       >
-        <ExportMenu onExportExcel={() => userApi.exportExcel(params)} onExportPdf={() => userApi.exportPdf(params)} />
+        <ExportMenu onExport={() => userApi.exportExcel(params)} />
         {isAdmin && (
           <>
             <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} />

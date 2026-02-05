@@ -8,7 +8,7 @@ import { successResponse, createdResponse, noContentResponse } from '../lib/resp
 import type { HonoContext, DepartmentResponse } from '../types'
 import { ExportService } from '../services/export.service'
 import { ImportService } from '../services/import.service'
-import { departmentExcelColumns, departmentPdfColumns } from '../controllers/department.controller'
+import { departmentExcelColumns } from '../controllers/department.controller'
 import { parseUpload, validateFile, type UploadedFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
 import { MESSAGES } from '../constants/message'
@@ -144,48 +144,6 @@ departments.get('/export/excel', async (c) => {
     c.header('Content-Disposition', `attachment; filename="${filename}"`)
     return c.body(buffer)
   }
-})
-
-departments.get('/export/pdf', async (c) => {
-  const queryParams = listDepartmentsQuerySchema.parse({
-    page: c.req.query('page'),
-    limit: c.req.query('limit'),
-    sort: c.req.query('sort'),
-    order: c.req.query('order'),
-    search: c.req.query('search'),
-    status: c.req.query('status')
-  })
-
-  const filters = {
-    search: queryParams.search,
-    status: queryParams.status
-  }
-
-  const departmentList = await DepartmentService.getAll(false, undefined, filters)
-  const departmentData = Array.isArray(departmentList) ? departmentList : []
-
-  const pdfStream = await ExportService.exportToPDF(departmentData as DepartmentResponse[], {
-    title: 'Department Report',
-    columns: departmentPdfColumns
-  })
-  const filename = `departments_${new Date().toISOString().split('T')[0]}.pdf`
-
-  return stream(c, async (stream) => {
-    c.header('Content-Type', 'application/pdf')
-    c.header('Content-Disposition', `attachment; filename="${filename}"`)
-
-    pdfStream.on('data', (chunk) => {
-      stream.write(chunk)
-    })
-
-    return new Promise((resolve, reject) => {
-      pdfStream.on('end', () => {
-        stream.close()
-        resolve()
-      })
-      pdfStream.on('error', reject)
-    })
-  })
 })
 
 departments.post('/import', requireAdmin, async (c) => {

@@ -40,9 +40,6 @@ export const userApi = {
   exportExcel: (params?: UserQueryParams) =>
     downloadFile(`/users/export/excel?${buildQueryString(params)}`, `users-${Date.now()}.xlsx`),
 
-  exportPdf: (params?: UserQueryParams) =>
-    downloadFile(`/users/export/pdf?${buildQueryString(params)}`, `users-${Date.now()}.pdf`),
-
   import: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);

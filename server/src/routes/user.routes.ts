@@ -8,7 +8,7 @@ import { successResponse, createdResponse, noContentResponse } from '../lib/resp
 import { Role, type HonoContext, type UserWithRelations } from '../types'
 import { ExportService } from '../services/export.service'
 import { ImportService } from '../services/import.service'
-import { userExcelColumns, userPdfColumns } from '../controllers/user.controller'
+import { userExcelColumns } from '../controllers/user.controller'
 import { parseUpload, validateFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
 import { MESSAGES } from '../constants/message'
@@ -192,55 +192,6 @@ users.get('/export/excel', requireUser, async (c) => {
     c.header('Content-Disposition', `attachment; filename="${filename}"`)
     return c.body(buffer)
   }
-})
-
-users.get('/export/pdf', requireUser, async (c) => {
-  const queryParams = listUsersQuerySchema.parse({
-    page: c.req.query('page'),
-    limit: c.req.query('limit'),
-    sort: c.req.query('sort'),
-    order: c.req.query('order'),
-    search: c.req.query('search'),
-    departmentId: c.req.query('departmentId'),
-    sectionId: c.req.query('sectionId'),
-    role: c.req.query('role'),
-    status: c.req.query('status')
-  })
-
-  const filters = {
-    search: queryParams.search,
-    departmentId: queryParams.departmentId,
-    sectionId: queryParams.sectionId,
-    role: queryParams.role as Role | undefined,
-    status: queryParams.status
-  }
-
-  const userList = await UserService.getAll(true, undefined, filters)
-  const userData = Array.isArray(userList) ? userList : []
-
-  const pdfStream = await ExportService.exportToPDF(userData as UserWithRelations[], {
-    title: 'User Report',
-    columns: userPdfColumns,
-    orientation: 'landscape'
-  })
-  const filename = `users_${new Date().toISOString().split('T')[0]}.pdf`
-
-  return stream(c, async (stream) => {
-    c.header('Content-Type', 'application/pdf')
-    c.header('Content-Disposition', `attachment; filename="${filename}"`)
-
-    pdfStream.on('data', (chunk) => {
-      stream.write(chunk)
-    })
-
-    return new Promise((resolve, reject) => {
-      pdfStream.on('end', () => {
-        stream.close()
-        resolve()
-      })
-      pdfStream.on('error', reject)
-    })
-  })
 })
 
 users.post('/import', requireAdmin, async (c) => {
