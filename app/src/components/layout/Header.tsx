@@ -27,7 +27,7 @@ export function Header({ opened, onToggle }: Props) {
           hiddenFrom="sm"
           size="sm"
         />
-        <Title order={3} visibleFrom="sm">Admin System</Title>
+        <Title order={3} visibleFrom="sm">{t('auth:app.appName')}</Title>
       </Group>
 
       <Menu position="bottom-end" width={200}>

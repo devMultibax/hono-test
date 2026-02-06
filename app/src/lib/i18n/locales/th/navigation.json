@@ -12,6 +12,20 @@
       "database": "Database"
     }
   },
+  "page": {
+    "dashboard": {
+      "title": "Dashboard",
+      "welcome": "ยินดีต้อนรับสู่ Admin System"
+    },
+    "profile": "โปรไฟล์",
+    "changePassword": "เปลี่ยนรหัสผ่าน",
+    "departments": "แผนก",
+    "sections": "หน่วยงาน",
+    "userLogs": "ประวัติการใช้งาน",
+    "systemLogs": "System Logs",
+    "backups": "Backup",
+    "database": "Database"
+  },
   "breadcrumb": {
     "home": "หน้าหลัก",
     "users": "ผู้ใช้งาน",

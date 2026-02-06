@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Button, Modal, Text, List, Progress, Stack, Alert } from '@mantine/core';
 import { Upload, Check, X } from 'lucide-react';
 import { apiClient } from '@/api/client';
-import { showSuccess } from '@/api/error-handler';
+import { Report } from '@/utils/notiflix';
 import { useTranslation } from '@/lib/i18n';
 import type { AxiosError } from 'axios';
 
@@ -58,7 +58,7 @@ export function ImportButton({
       setResult(response.data);
 
       if (response.data.success > 0) {
-        showSuccess(t('users:import.successMessage', { count: response.data.success }));
+        Report.success(t('users:import.successMessage', { count: response.data.success }));
         onSuccess?.();
       }
     } catch (error) {

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/services/user.api';
-import { showSuccess } from '@/api/error-handler';
+import { Report } from '@/utils/notiflix';
+import { t } from '@/lib/i18n/helpers';
 import type { UserQueryParams, UpdateUserRequest } from '@/types';
 
 export const userKeys = {
@@ -33,7 +34,7 @@ export function useCreateUser() {
     mutationFn: userApi.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: userKeys.lists() });
-      showSuccess('สร้างผู้ใช้สำเร็จ');
+      Report.success(t('users:message.createSuccess'));
     },
   });
 }
@@ -45,7 +46,7 @@ export function useUpdateUser() {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: userKeys.lists() });
       qc.invalidateQueries({ queryKey: userKeys.detail(id) });
-      showSuccess('อัปเดตผู้ใช้สำเร็จ');
+      Report.success(t('users:message.updateSuccess'));
     },
   });
 }
@@ -56,7 +57,7 @@ export function useDeleteUser() {
     mutationFn: userApi.delete,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: userKeys.lists() });
-      showSuccess('ลบผู้ใช้สำเร็จ');
+      Report.success(t('users:message.deleteSuccess'));
     },
   });
 }

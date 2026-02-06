@@ -6,6 +6,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import { Table, Box } from '@mantine/core';
+import { useTranslation } from '@/lib/i18n';
 import { TablePagination } from './TablePagination';
 import { TableSkeleton } from './TableSkeleton';
 import { EmptyState } from './EmptyState';
@@ -28,10 +29,11 @@ export function DataTable<T>({
   pagination,
   sorting,
   isLoading,
-  emptyMessage = 'ไม่พบข้อมูล',
+  emptyMessage,
   onPaginationChange,
   onSortingChange,
 }: DataTableProps<T>) {
+  const { t } = useTranslation(['common']);
   const table = useReactTable({
     data,
     columns,
@@ -53,7 +55,7 @@ export function DataTable<T>({
   }
 
   if (data.length === 0) {
-    return <EmptyState message={emptyMessage} />;
+    return <EmptyState message={emptyMessage || t('common:empty.noData')} />;
   }
 
   return (

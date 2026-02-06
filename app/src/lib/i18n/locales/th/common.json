@@ -74,5 +74,16 @@
   },
   "breadcrumb": {
     "home": "หน้าหลัก"
+  },
+  "notiflix": {
+    "ok": "ตกลง",
+    "info": "ข้อมูล",
+    "confirmTitle": "ต้องการยืนยัน"
+  },
+  "debug": {
+    "title": "ข้อมูลการ Debug"
+  },
+  "pagination": {
+    "showing": "แสดง {{start}} - {{end}} จาก {{total}} รายการ"
   }
 }

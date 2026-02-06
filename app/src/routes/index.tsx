@@ -9,6 +9,17 @@ import {
   UserEditPage,
   UserDetailPage,
 } from '@/features/users';
+import {
+  DashboardPage,
+  ProfilePage,
+  ChangePasswordPage,
+  DepartmentsPage,
+  SectionsPage,
+  UserLogsPage,
+  SystemLogsPage,
+  BackupsPage,
+  DatabasePage,
+} from './pages';
 
 export const router = createBrowserRouter([
   {
@@ -28,31 +39,15 @@ export const router = createBrowserRouter([
         children: [
           {
             path: 'dashboard',
-            element: (
-              <div className="p-8">
-                <h1 className="text-2xl font-bold">Dashboard</h1>
-                <p>Welcome to Admin System</p>
-                <div className="mt-4 p-4 bg-gray-100 rounded">
-                  <h2 className="font-semibold mb-2">Debug Info:</h2>
-                  <pre className="text-xs">{JSON.stringify(
-                    (() => {
-                      const authStorage = localStorage.getItem('auth-storage');
-                      return authStorage ? JSON.parse(authStorage) : null;
-                    })(),
-                    null,
-                    2
-                  )}</pre>
-                </div>
-              </div>
-            ),
+            element: <DashboardPage />,
           },
           {
             path: 'profile',
-            element: <div className="p-8"><h1 className="text-2xl font-bold">Profile</h1></div>,
+            element: <ProfilePage />,
           },
           {
             path: 'profile/password',
-            element: <div className="p-8"><h1 className="text-2xl font-bold">Change Password</h1></div>,
+            element: <ChangePasswordPage />,
           },
           {
             path: 'users',
@@ -72,11 +67,11 @@ export const router = createBrowserRouter([
           },
           {
             path: 'departments',
-            element: <div className="p-8"><h1 className="text-2xl font-bold">Departments</h1></div>,
+            element: <DepartmentsPage />,
           },
           {
             path: 'sections',
-            element: <div className="p-8"><h1 className="text-2xl font-bold">Sections</h1></div>,
+            element: <SectionsPage />,
           },
           {
             path: 'admin',
@@ -84,19 +79,19 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: 'user-logs',
-                element: <div className="p-8"><h1 className="text-2xl font-bold">User Logs</h1></div>,
+                element: <UserLogsPage />,
               },
               {
                 path: 'system-logs',
-                element: <div className="p-8"><h1 className="text-2xl font-bold">System Logs</h1></div>,
+                element: <SystemLogsPage />,
               },
               {
                 path: 'backups',
-                element: <div className="p-8"><h1 className="text-2xl font-bold">Backups</h1></div>,
+                element: <BackupsPage />,
               },
               {
                 path: 'database',
-                element: <div className="p-8"><h1 className="text-2xl font-bold">Database</h1></div>,
+                element: <DatabasePage />,
               },
             ],
           },

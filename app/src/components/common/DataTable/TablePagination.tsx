@@ -1,4 +1,5 @@
 import { Group, Text, Select, Pagination as MantinePagination } from '@mantine/core';
+import { useTranslation } from '@/lib/i18n';
 import type { Pagination } from '@/types';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 const PAGE_SIZE_OPTIONS = ['10', '25', '50', '100'];
 
 export function TablePagination({ pagination, onChange }: Props) {
+  const { t } = useTranslation(['common']);
   const { page, limit, total, totalPages } = pagination;
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
@@ -17,7 +19,7 @@ export function TablePagination({ pagination, onChange }: Props) {
     <Group justify="space-between" mt="md">
       <Group gap="xs">
         <Text size="sm" c="dimmed">
-          แสดง {start} - {end} จาก {total} รายการ
+          {t('common:pagination.showing', { start, end, total })}
         </Text>
         <Select
           size="xs"

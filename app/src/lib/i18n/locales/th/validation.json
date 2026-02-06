@@ -1,5 +1,6 @@
 {
   "required": {
+    "employeeId": "กรุณากรอกรหัสพนักงาน",
     "username": "กรุณากรอก Username",
     "password": "กรุณากรอกรหัสผ่าน",
     "firstName": "กรุณากรอกชื่อ",
@@ -8,10 +9,12 @@
     "email": "กรุณากรอกอีเมล"
   },
   "format": {
+    "employeeIdLength": "รหัสพนักงานต้องมี 6 ตัวอักษร",
+    "employeeIdDigits": "รหัสพนักงานต้องเป็นตัวเลข 6 หลัก",
     "usernameLength": "Username ต้องมี 6 ตัวอักษร",
     "usernamePattern": "ต้องเป็นตัวอักษรหรือตัวเลขเท่านั้น",
     "usernameDigits": "Username ต้องเป็นตัวเลข 6 หลัก",
-    "passwordMinLength": "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+    "passwordMinLength": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
     "emailInvalid": "รูปแบบอีเมลไม่ถูกต้อง",
     "telInvalid": "เบอร์โทรต้องเป็นตัวเลข 10 หลัก"
   }
