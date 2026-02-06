@@ -14,7 +14,6 @@ const theme = createTheme({
   colors: {
     primary: primaryColor,
   },
-  defaultRadius: 'md',
   components: {
     Button: {
       defaultProps: {
