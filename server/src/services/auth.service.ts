@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import { prisma } from '../lib/prisma'
 import { env } from '../config/env'
 import { UnauthorizedError, NotFoundError } from '../lib/errors'
-import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserResponse } from '../types'
+import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations } from '../types'
 
 const TOKEN_EXPIRY = '24h'
 
@@ -24,7 +24,26 @@ export class AuthService {
     updatedAt: Date | null
     updatedBy: string | null
     lastLoginAt: Date | null
-  }): UserResponse {
+    department?: {
+      id: number
+      name: string
+      status: string
+      createdAt: Date
+      createdBy: string
+      updatedAt: Date | null
+      updatedBy: string | null
+    }
+    section?: {
+      id: number
+      departmentId: number
+      name: string
+      status: string
+      createdAt: Date
+      createdBy: string
+      updatedAt: Date | null
+      updatedBy: string | null
+    } | null
+  }): UserWithRelations {
     return {
       id: user.id,
       username: user.username,
@@ -40,7 +59,26 @@ export class AuthService {
       createdBy: user.createdBy,
       updatedAt: user.updatedAt,
       updatedBy: user.updatedBy,
-      lastLoginAt: user.lastLoginAt
+      lastLoginAt: user.lastLoginAt,
+      department: user.department ? {
+        id: user.department.id,
+        name: user.department.name,
+        status: user.department.status as Status,
+        createdAt: user.department.createdAt,
+        createdBy: user.department.createdBy,
+        updatedAt: user.department.updatedAt,
+        updatedBy: user.department.updatedBy
+      } : undefined,
+      section: user.section ? {
+        id: user.section.id,
+        departmentId: user.section.departmentId,
+        name: user.section.name,
+        status: user.section.status as Status,
+        createdAt: user.section.createdAt,
+        createdBy: user.section.createdBy,
+        updatedAt: user.section.updatedAt,
+        updatedBy: user.section.updatedBy
+      } : null
     }
   }
 
@@ -87,7 +125,12 @@ export class AuthService {
 
     return {
       token,
-      user: this.formatUserResponse({ ...user, lastLoginAt: new Date() })
+      user: this.formatUserResponse({
+        ...user,
+        lastLoginAt: new Date(),
+        department: user.department,
+        section: user.section
+      })
     }
   }
 
@@ -135,25 +178,12 @@ export class AuthService {
   }
 
   // Profile Management Methods
-  static async getCurrentUser(userId: number): Promise<UserResponse> {
+  static async getCurrentUser(userId: number): Promise<UserWithRelations> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        departmentId: true,
-        sectionId: true,
-        email: true,
-        tel: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        createdBy: true,
-        updatedAt: true,
-        updatedBy: true,
-        lastLoginAt: true
+      include: {
+        department: true,
+        section: true
       }
     })
 
@@ -172,7 +202,7 @@ export class AuthService {
       email?: string | null
       tel?: string | null
     }
-  ): Promise<UserResponse> {
+  ): Promise<UserWithRelations> {
     const user = await prisma.user.findUnique({
       where: { id: userId }
     })
@@ -187,36 +217,13 @@ export class AuthService {
         ...data,
         updatedBy: user.username
       },
-      select: {
-        id: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        departmentId: true,
-        sectionId: true,
-        email: true,
-        tel: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        createdBy: true,
-        updatedAt: true,
-        updatedBy: true,
-        lastLoginAt: true
-      }
-    })
-
-    const userWithRelations = await prisma.user.findUnique({
-      where: { id: userId },
       include: {
         department: true,
         section: true
       }
     })
 
-    if (userWithRelations) {
-      await this.logUserAction(userWithRelations, ActionType.UPDATE)
-    }
+    await this.logUserAction(updatedUser, ActionType.UPDATE)
 
     return this.formatUserResponse(updatedUser)
   }

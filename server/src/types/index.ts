@@ -133,7 +133,7 @@ export interface AuthPayload {
 
 export interface LoginResponse {
   token: string
-  user: UserResponse
+  user: UserWithRelations
 }
 
 // User Log Types
