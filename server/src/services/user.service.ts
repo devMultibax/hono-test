@@ -49,8 +49,7 @@ export class UserService {
         where.OR = [
           { username: { contains: filters.search, mode: 'insensitive' } },
           { firstName: { contains: filters.search, mode: 'insensitive' } },
-          { lastName: { contains: filters.search, mode: 'insensitive' } },
-          { email: { contains: filters.search, mode: 'insensitive' } }
+          { lastName: { contains: filters.search, mode: 'insensitive' } }
         ]
       }
 
@@ -97,6 +96,18 @@ export class UserService {
 
     if (pagination) {
       const paginationOptions = calculatePagination(pagination)
+
+      // Handle relation-based sorting for department and section
+      const relationSortFields: Record<string, string> = {
+        department: 'department',
+        section: 'section',
+      }
+
+      if (pagination.sort && relationSortFields[pagination.sort]) {
+        paginationOptions.orderBy = {
+          [relationSortFields[pagination.sort]]: { name: pagination.order || 'asc' },
+        }
+      }
 
       const [users, total] = await Promise.all([
         prisma.user.findMany({
