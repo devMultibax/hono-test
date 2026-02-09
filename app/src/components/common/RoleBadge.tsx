@@ -15,7 +15,7 @@ export function RoleBadge({ role }: Props) {
   const { t } = useTranslation('common');
 
   return (
-    <Badge color={roleColorMap[role]} variant="light">
+    <Badge color={roleColorMap[role]} variant="light" radius="xl">
       {t(`role.${role}`)}
     </Badge>
   );

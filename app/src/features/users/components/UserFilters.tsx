@@ -1,4 +1,4 @@
-import { Paper, Group, Select } from '@mantine/core';
+import { Paper, SimpleGrid, Select } from '@mantine/core';
 import { SearchInput } from '@/components/common/SearchInput';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
@@ -25,8 +25,8 @@ export function UserFilters({ params, onChange }: Props) {
   ];
 
   return (
-    <Paper p="md" mb="md" withBorder>
-      <Group>
+    <Paper p="md" mb="md" withBorder radius="md" shadow="xs">
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 5 }} spacing="md">
         <SearchInput
           value={params.search ?? ''}
           onChange={(search) => update({ search })}
@@ -61,7 +61,7 @@ export function UserFilters({ params, onChange }: Props) {
           data={STATUS_OPTIONS}
           clearable
         />
-      </Group>
+      </SimpleGrid>
     </Paper>
   );
 }

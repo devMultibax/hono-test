@@ -1,4 +1,4 @@
-import { Group, Title, Breadcrumbs, Anchor, Stack } from '@mantine/core';
+import { Group, Title, Breadcrumbs, Anchor, Stack, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 
@@ -15,16 +15,19 @@ interface Props {
 
 export function PageHeader({ title, breadcrumbs, children }: Props) {
   return (
-    <Stack gap="xs" mb="lg">
+    <Stack gap="sm" mb="xl">
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <Breadcrumbs separator={<ChevronRight size={14} />}>
+        <Breadcrumbs
+          separator={<ChevronRight size={12} style={{ color: 'var(--mantine-color-dimmed)' }} />}
+          separatorMargin={6}
+        >
           {breadcrumbs.map((item, index) => (
             item.path ? (
-              <Anchor key={index} component={Link} to={item.path} size="sm">
+              <Anchor key={index} component={Link} to={item.path} size="sm" c="dimmed">
                 {item.label}
               </Anchor>
             ) : (
-              <span key={index}>{item.label}</span>
+              <Text key={index} size="sm" c="dimmed">{item.label}</Text>
             )
           ))}
         </Breadcrumbs>

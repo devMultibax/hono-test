@@ -9,7 +9,7 @@ import {
   type RowSelectionState,
   type VisibilityState,
 } from '@tanstack/react-table';
-import { Table, Box, Checkbox } from '@mantine/core';
+import { Table, Paper, Checkbox } from '@mantine/core';
 import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { TablePagination } from './TablePagination';
@@ -130,7 +130,7 @@ export function DataTable<T>({
   }
 
   return (
-    <Box>
+    <Paper withBorder radius="md" shadow="sm">
       {showToolbar && (
         <DataTableToolbar
           table={table}
@@ -158,7 +158,10 @@ export function DataTable<T>({
                           key={header.id}
                           onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                           className={canSort ? 'cursor-pointer select-none hover:bg-gray-50' : undefined}
-                          style={header.column.columnDef.size ? { width: header.column.columnDef.size } : undefined}
+                          style={{
+                            ...(header.column.columnDef.size ? { width: header.column.columnDef.size } : {}),
+                            padding: '12px 16px',
+                          }}
                         >
                           {canSort ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -187,7 +190,7 @@ export function DataTable<T>({
                     bg={row.getIsSelected() ? 'var(--mantine-color-primary-light)' : undefined}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <Table.Td key={cell.id}>
+                      <Table.Td key={cell.id} style={{ padding: '10px 16px' }}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </Table.Td>
                     ))}
@@ -202,6 +205,6 @@ export function DataTable<T>({
           )}
         </>
       )}
-    </Box>
+    </Paper>
   );
 }

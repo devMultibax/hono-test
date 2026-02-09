@@ -1,4 +1,5 @@
-import { Table, Skeleton } from '@mantine/core';
+import { useMemo } from 'react';
+import { Table, Skeleton, Paper } from '@mantine/core';
 
 interface Props {
   columns: number;
@@ -6,28 +7,38 @@ interface Props {
 }
 
 export function TableSkeleton({ columns, rows = 5 }: Props) {
+  const widths = useMemo(
+    () =>
+      Array.from({ length: rows }, () =>
+        Array.from({ length: columns }, () => `${60 + Math.random() * 30}%`)
+      ),
+    [columns, rows]
+  );
+
   return (
-    <Table>
-      <Table.Thead>
-        <Table.Tr>
-          {Array.from({ length: columns }).map((_, i) => (
-            <Table.Th key={i}>
-              <Skeleton height={20} width="80%" />
-            </Table.Th>
-          ))}
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {Array.from({ length: rows }).map((_, rowIndex) => (
-          <Table.Tr key={rowIndex}>
-            {Array.from({ length: columns }).map((_, colIndex) => (
-              <Table.Td key={colIndex}>
-                <Skeleton height={16} width={`${60 + Math.random() * 30}%`} />
-              </Table.Td>
+    <Paper withBorder radius="md" shadow="sm">
+      <Table>
+        <Table.Thead bg="var(--mantine-color-gray-0)">
+          <Table.Tr>
+            {Array.from({ length: columns }).map((_, i) => (
+              <Table.Th key={i} style={{ padding: '12px 16px' }}>
+                <Skeleton height={20} width="80%" animate />
+              </Table.Th>
             ))}
           </Table.Tr>
-        ))}
-      </Table.Tbody>
-    </Table>
+        </Table.Thead>
+        <Table.Tbody>
+          {widths.map((rowWidths, rowIndex) => (
+            <Table.Tr key={rowIndex}>
+              {rowWidths.map((width, colIndex) => (
+                <Table.Td key={colIndex} style={{ padding: '10px 16px' }}>
+                  <Skeleton height={16} width={width} animate />
+                </Table.Td>
+              ))}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </Paper>
   );
 }

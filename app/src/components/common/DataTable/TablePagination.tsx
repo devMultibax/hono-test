@@ -16,7 +16,12 @@ export function TablePagination({ pagination, onChange }: Props) {
   const end = Math.min(page * limit, total);
 
   return (
-    <Group justify="space-between" mt="md">
+    <Group
+      justify="space-between"
+      px="md"
+      py="sm"
+      style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}
+    >
       <Group gap="xs">
         <Text size="sm" c="dimmed">
           {t('common:pagination.showing', { start, end, total })}

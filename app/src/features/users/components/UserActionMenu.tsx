@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Menu, ActionIcon } from '@mantine/core';
-import { MoreVertical, Edit, Trash2, Key, Eye } from 'lucide-react';
+import { Group, ActionIcon, Tooltip } from '@mantine/core';
+import { Edit, Trash2, Key, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import type { User } from '@/types';
@@ -20,41 +20,38 @@ export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDel
 
   return (
     <>
-      <Menu position="bottom-end" withinPortal>
-        <Menu.Target>
-          <ActionIcon variant="subtle" color="gray">
-            <MoreVertical size={16} />
-          </ActionIcon>
-        </Menu.Target>
+      <Group gap={4} wrap="nowrap">
+        {onView && (
+          <Tooltip label={t('users:action.view')}>
+            <ActionIcon variant="subtle" color="blue" onClick={onView}>
+              <Eye size={16} />
+            </ActionIcon>
+          </Tooltip>
+        )}
 
-        <Menu.Dropdown>
-          {onView && (
-            <Menu.Item leftSection={<Eye size={14} />} onClick={onView}>
-              {t('users:action.view')}
-            </Menu.Item>
-          )}
+        {canEdit && (
+          <>
+            <Tooltip label={t('users:action.edit')}>
+              <ActionIcon variant="subtle" color="yellow" onClick={onEdit}>
+                <Edit size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={t('users:action.resetPassword')}>
+              <ActionIcon variant="subtle" color="violet" onClick={() => setResetModalOpen(true)}>
+                <Key size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </>
+        )}
 
-          {canEdit && (
-            <>
-              <Menu.Item leftSection={<Edit size={14} />} onClick={onEdit}>
-                {t('users:action.edit')}
-              </Menu.Item>
-              <Menu.Item leftSection={<Key size={14} />} onClick={() => setResetModalOpen(true)}>
-                {t('users:action.resetPassword')}
-              </Menu.Item>
-            </>
-          )}
-
-          {canDelete && (
-            <>
-              <Menu.Divider />
-              <Menu.Item color="red" leftSection={<Trash2 size={14} />} onClick={onDelete}>
-                {t('users:action.delete')}
-              </Menu.Item>
-            </>
-          )}
-        </Menu.Dropdown>
-      </Menu>
+        {canDelete && (
+          <Tooltip label={t('users:action.delete')}>
+            <ActionIcon variant="subtle" color="red" onClick={onDelete}>
+              <Trash2 size={16} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </Group>
 
       <ResetPasswordModal user={user} opened={resetModalOpen} onClose={() => setResetModalOpen(false)} />
     </>
