@@ -85,5 +85,13 @@
   },
   "pagination": {
     "showing": "แสดง {{start}} - {{end}} จาก {{total}} รายการ"
+  },
+  "table": {
+    "columnsVisibility": "แสดง/ซ่อนคอลัมน์",
+    "selectedCount": "เลือกแล้ว {{count}} รายการ",
+    "selectAll": "เลือกทั้งหมด",
+    "deleteSelected": "ลบที่เลือก",
+    "sortAsc": "เรียงน้อยไปมาก",
+    "sortDesc": "เรียงมากไปน้อย"
   }
 }

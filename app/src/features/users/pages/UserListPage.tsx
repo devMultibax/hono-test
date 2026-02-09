@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper } from '@tanstack/react-table';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable } from '@/components/common/DataTable/DataTable';
@@ -18,6 +18,7 @@ import { useConfirm } from '@/hooks/useConfirm';
 import { useIsAdmin } from '@/stores/auth.store';
 import { userApi } from '@/api/services/user.api';
 import type { User, UserQueryParams } from '@/types';
+import type { ExtendedColumnDef } from '@/components/common/DataTable';
 
 const columnHelper = createColumnHelper<User>();
 
@@ -47,11 +48,12 @@ export function UserListPage() {
   );
 
   const columns = useMemo(
-    () => [
-      columnHelper.accessor('username', { header: 'Username', enableSorting: true }),
+    (): ExtendedColumnDef<User>[] => [
+      columnHelper.accessor('username', { header: 'Username', enableSorting: true, enableHiding: false }),
       columnHelper.display({
         id: 'fullName',
         header: t('users:table.column.fullName'),
+        enableHiding: false,
         cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
       }),
       columnHelper.display({
@@ -77,6 +79,7 @@ export function UserListPage() {
       columnHelper.display({
         id: 'actions',
         header: '',
+        enableHiding: false,
         cell: ({ row }) => (
           <UserActionMenu
             user={row.original}
@@ -88,9 +91,15 @@ export function UserListPage() {
           />
         ),
       }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ] as any,
+    ],
     [navigate, handleDelete, isAdmin, t]
+  );
+
+  const handleBulkDelete = useCallback(
+    (selectedUsers: User[]) => {
+      selectedUsers.forEach((user) => deleteUser.mutate(user.id));
+    },
+    [deleteUser]
   );
 
   const handleFilterChange = (newParams: UserQueryParams) => setParams({ ...newParams, page: 1 });
@@ -122,7 +131,22 @@ export function UserListPage() {
         pagination={data?.pagination}
         isLoading={isLoading}
         emptyMessage={t('users:message.empty')}
+        enableColumnVisibility
+        enableRowSelection={isAdmin}
         onPaginationChange={handlePageChange}
+        toolbarActions={(selectedRows) =>
+          isAdmin && (
+            <Button
+              size="xs"
+              variant="light"
+              color="red"
+              leftSection={<Trash2 size={14} />}
+              onClick={() => handleBulkDelete(selectedRows)}
+            >
+              {t('common:table.deleteSelected')}
+            </Button>
+          )
+        }
       />
     </div>
   );
