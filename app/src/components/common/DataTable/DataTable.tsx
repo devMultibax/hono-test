@@ -5,13 +5,11 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   flexRender,
-  type SortingState,
   type RowSelectionState,
   type VisibilityState,
   type ColumnDef,
 } from '@tanstack/react-table';
 import { Table, Paper, Checkbox } from '@mantine/core';
-import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { TablePagination } from './TablePagination';
 import { TableSkeleton } from './TableSkeleton';
@@ -23,7 +21,6 @@ interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T, unknown>[];
   pagination?: Pagination;
-  sorting?: SortingState;
   isLoading?: boolean;
   emptyMessage?: string;
   enableColumnVisibility?: boolean;
@@ -31,7 +28,6 @@ interface DataTableProps<T> {
   columnVisibility?: VisibilityState;
   onColumnVisibilityChange?: (state: VisibilityState) => void;
   onPaginationChange?: (page: number, limit: number) => void;
-  onSortingChange?: (sorting: SortingState) => void;
   onSelectionChange?: (rows: T[]) => void;
   toolbarActions?: (selectedRows: T[]) => ReactNode;
 }
@@ -40,7 +36,6 @@ export function DataTable<T>({
   data,
   columns,
   pagination,
-  sorting,
   isLoading,
   emptyMessage,
   enableColumnVisibility,
@@ -48,7 +43,6 @@ export function DataTable<T>({
   columnVisibility: controlledColumnVisibility,
   onColumnVisibilityChange,
   onPaginationChange,
-  onSortingChange,
   onSelectionChange,
   toolbarActions,
 }: DataTableProps<T>) {
@@ -63,7 +57,6 @@ export function DataTable<T>({
     const selectionColumn: ColumnDef<T, unknown> = {
       id: 'selection',
       enableHiding: false,
-      enableSorting: false,
       header: ({ table }) => (
         <Checkbox
           size="xs"
@@ -92,17 +85,11 @@ export function DataTable<T>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     manualPagination: true,
-    manualSorting: true,
     enableSorting: false,
     enableRowSelection: !!enableRowSelection,
     state: {
-      sorting,
       columnVisibility,
       rowSelection,
-    },
-    onSortingChange: (updater) => {
-      const newSorting = typeof updater === 'function' ? updater(sorting || []) : updater;
-      onSortingChange?.(newSorting);
     },
     onColumnVisibilityChange: (updater) => {
       const next = typeof updater === 'function' ? updater(columnVisibility) : updater;
@@ -138,11 +125,15 @@ export function DataTable<T>({
   const showToolbar = enableColumnVisibility || enableRowSelection;
 
   if (isLoading) {
-    return <TableSkeleton columns={tableColumns.length} rows={5} />;
+    return (
+      <Paper withBorder radius="md">
+        <TableSkeleton columns={tableColumns.length} rows={5} />
+      </Paper>
+    );
   }
 
   return (
-    <Paper withBorder radius="md" shadow="sm">
+    <Paper withBorder radius="md">
       {showToolbar && (
         <DataTableToolbar
           table={table}
@@ -157,41 +148,20 @@ export function DataTable<T>({
       ) : (
         <>
           <Table.ScrollContainer minWidth={800}>
-            <Table>
-              <Table.Thead>
+            <Table horizontalSpacing="md" verticalSpacing="sm" striped={false} withTableBorder={false}>
+              <Table.Thead bg="var(--mantine-color-gray-0)">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <Table.Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      const canSort = header.column.getCanSort();
-                      const sorted = header.column.getIsSorted();
-
-                      return (
-                        <Table.Th
-                          key={header.id}
-                          onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                          className={canSort ? 'cursor-pointer select-none hover:bg-gray-50' : undefined}
-                          style={{
-                            ...(header.column.columnDef.size ? { width: header.column.columnDef.size } : {}),
-                            padding: '12px 16px',
-                          }}
-                        >
-                          {canSort ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              {sorted === 'asc' ? (
-                                <ArrowUp size={14} />
-                              ) : sorted === 'desc' ? (
-                                <ArrowDown size={14} />
-                              ) : (
-                                <ArrowUpDown size={14} style={{ opacity: 0.3 }} />
-                              )}
-                            </span>
-                          ) : (
-                            flexRender(header.column.columnDef.header, header.getContext())
-                          )}
-                        </Table.Th>
-                      );
-                    })}
+                    {headerGroup.headers.map((header) => (
+                      <Table.Th
+                        key={header.id}
+                        style={{
+                          ...(header.column.columnDef.size ? { width: header.column.columnDef.size } : {}),
+                        }}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </Table.Th>
+                    ))}
                   </Table.Tr>
                 ))}
               </Table.Thead>
@@ -202,7 +172,7 @@ export function DataTable<T>({
                     bg={row.getIsSelected() ? 'var(--mantine-color-primary-light)' : undefined}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <Table.Td key={cell.id} style={{ padding: '10px 16px' }}>
+                      <Table.Td key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </Table.Td>
                     ))}

@@ -16,6 +16,10 @@ interface Props {
 export function PageHeader({ title, breadcrumbs, children }: Props) {
   return (
     <Stack gap="sm" mb="xl">
+      <Group justify="space-between" align="center">
+        <Title order={2}>{title}</Title>
+        {children && <Group gap="sm">{children}</Group>}
+      </Group>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumbs
           separator={<ChevronRight size={12} style={{ color: 'var(--mantine-color-dimmed)' }} />}
@@ -32,11 +36,6 @@ export function PageHeader({ title, breadcrumbs, children }: Props) {
           ))}
         </Breadcrumbs>
       )}
-
-      <Group justify="space-between" align="center">
-        <Title order={2}>{title}</Title>
-        {children && <Group gap="sm">{children}</Group>}
-      </Group>
     </Stack>
   );
 }

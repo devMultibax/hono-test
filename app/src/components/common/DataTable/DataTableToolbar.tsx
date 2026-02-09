@@ -25,7 +25,7 @@ export function DataTableToolbar<T>({
   if (!showToolbar) return null;
 
   return (
-    <Group justify="space-between" mb="xs">
+    <Group justify="space-between" px="md" py="sm">
       <Group gap="sm">
         {hasSelection && (
           <>

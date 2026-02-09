@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Table, Skeleton, Paper } from '@mantine/core';
+import { Table, Skeleton } from '@mantine/core';
 
 interface Props {
   columns: number;
@@ -16,29 +16,27 @@ export function TableSkeleton({ columns, rows = 5 }: Props) {
   );
 
   return (
-    <Paper withBorder radius="md" shadow="sm">
-      <Table>
-        <Table.Thead bg="var(--mantine-color-gray-0)">
-          <Table.Tr>
-            {Array.from({ length: columns }).map((_, i) => (
-              <Table.Th key={i} style={{ padding: '12px 16px' }}>
-                <Skeleton height={20} width="80%" animate />
-              </Table.Th>
+    <Table horizontalSpacing="md" verticalSpacing="sm" striped={false} withTableBorder={false}>
+      <Table.Thead bg="var(--mantine-color-gray-0)">
+        <Table.Tr>
+          {Array.from({ length: columns }).map((_, i) => (
+            <Table.Th key={i}>
+              <Skeleton height={20} width="80%" animate />
+            </Table.Th>
+          ))}
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {widths.map((rowWidths, rowIndex) => (
+          <Table.Tr key={rowIndex}>
+            {rowWidths.map((width, colIndex) => (
+              <Table.Td key={colIndex}>
+                <Skeleton height={16} width={width} animate />
+              </Table.Td>
             ))}
           </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {widths.map((rowWidths, rowIndex) => (
-            <Table.Tr key={rowIndex}>
-              {rowWidths.map((width, colIndex) => (
-                <Table.Td key={colIndex} style={{ padding: '10px 16px' }}>
-                  <Skeleton height={16} width={width} animate />
-                </Table.Td>
-              ))}
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-    </Paper>
+        ))}
+      </Table.Tbody>
+    </Table>
   );
 }
