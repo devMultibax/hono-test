@@ -1,8 +1,8 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useQueryClient } from '@tanstack/react-query';
-import { createColumnHelper } from '@tanstack/react-table';
+import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -13,12 +13,12 @@ import { ExportMenu } from '@/components/common/ExportMenu';
 import { ImportButton } from '@/components/common/ImportButton';
 import { UserFilters } from '../components/UserFilters';
 import { UserActionMenu } from '../components/UserActionMenu';
-import { useUsers, useDeleteUser, userKeys } from '../hooks/useUsers';
+import { useUsers, useDeleteUser, useBulkDeleteUsers, userKeys } from '../hooks/useUsers';
 import { useConfirm } from '@/hooks/useConfirm';
+import { useDataTable } from '@/hooks/useDataTable';
 import { useIsAdmin } from '@/stores/auth.store';
 import { userApi } from '@/api/services/user.api';
 import type { User, UserQueryParams } from '@/types';
-import type { ExtendedColumnDef } from '@/components/common/DataTable';
 
 const columnHelper = createColumnHelper<User>();
 
@@ -33,12 +33,22 @@ export function UserListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isAdmin = useIsAdmin();
-  const { confirmDelete } = useConfirm();
+  const { confirm, confirmDelete } = useConfirm();
   const { t } = useTranslation(['users', 'common']);
 
-  const [params, setParams] = useState<UserQueryParams>(DEFAULT_PARAMS);
+  const {
+    params,
+    sorting,
+    columnVisibility,
+    setColumnVisibility,
+    handleSortingChange,
+    handlePaginationChange,
+    handleFilterChange,
+  } = useDataTable<UserQueryParams>({ tableKey: 'users', defaultParams: DEFAULT_PARAMS });
+
   const { data, isLoading } = useUsers(params);
   const deleteUser = useDeleteUser();
+  const bulkDeleteUsers = useBulkDeleteUsers();
 
   const handleDelete = useCallback(
     (user: User) => {
@@ -48,8 +58,14 @@ export function UserListPage() {
   );
 
   const columns = useMemo(
-    (): ExtendedColumnDef<User>[] => [
-      columnHelper.accessor('username', { header: 'Username', enableSorting: true, enableHiding: false }),
+    (): ColumnDef<User, unknown>[] => [
+      columnHelper.display({
+        id: 'username',
+        header: 'Username',
+        enableSorting: true,
+        enableHiding: false,
+        cell: ({ row }) => row.original.username,
+      }),
       columnHelper.display({
         id: 'fullName',
         header: t('users:table.column.fullName'),
@@ -97,13 +113,16 @@ export function UserListPage() {
 
   const handleBulkDelete = useCallback(
     (selectedUsers: User[]) => {
-      selectedUsers.forEach((user) => deleteUser.mutate(user.id));
+      confirm({
+        title: t('users:confirm.bulkDelete.title'),
+        message: t('users:confirm.bulkDelete.message', { count: selectedUsers.length }),
+        confirmLabel: t('users:confirm.bulkDelete.button'),
+        onConfirm: () => bulkDeleteUsers.mutate(selectedUsers.map((u) => u.id)),
+      });
     },
-    [deleteUser]
+    [confirm, bulkDeleteUsers, t]
   );
 
-  const handleFilterChange = (newParams: UserQueryParams) => setParams({ ...newParams, page: 1 });
-  const handlePageChange = (page: number, limit: number) => setParams((p) => ({ ...p, page, limit }));
   const handleImportSuccess = () => queryClient.invalidateQueries({ queryKey: userKeys.lists() });
 
   return (
@@ -129,11 +148,15 @@ export function UserListPage() {
         data={data?.data ?? []}
         columns={columns}
         pagination={data?.pagination}
+        sorting={sorting}
         isLoading={isLoading}
         emptyMessage={t('users:message.empty')}
         enableColumnVisibility
         enableRowSelection={isAdmin}
-        onPaginationChange={handlePageChange}
+        columnVisibility={columnVisibility}
+        onColumnVisibilityChange={setColumnVisibility}
+        onPaginationChange={handlePaginationChange}
+        onSortingChange={handleSortingChange}
         toolbarActions={(selectedRows) =>
           isAdmin && (
             <Button

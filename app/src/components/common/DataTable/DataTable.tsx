@@ -8,6 +8,7 @@ import {
   type SortingState,
   type RowSelectionState,
   type VisibilityState,
+  type ColumnDef,
 } from '@tanstack/react-table';
 import { Table, Paper, Checkbox } from '@mantine/core';
 import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
@@ -17,17 +18,18 @@ import { TableSkeleton } from './TableSkeleton';
 import { EmptyState } from './EmptyState';
 import { DataTableToolbar } from './DataTableToolbar';
 import type { Pagination } from '@/types';
-import type { ExtendedColumnDef } from './types';
 
 interface DataTableProps<T> {
   data: T[];
-  columns: ExtendedColumnDef<T>[];
+  columns: ColumnDef<T, unknown>[];
   pagination?: Pagination;
   sorting?: SortingState;
   isLoading?: boolean;
   emptyMessage?: string;
   enableColumnVisibility?: boolean;
   enableRowSelection?: boolean;
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: (state: VisibilityState) => void;
   onPaginationChange?: (page: number, limit: number) => void;
   onSortingChange?: (sorting: SortingState) => void;
   onSelectionChange?: (rows: T[]) => void;
@@ -43,19 +45,22 @@ export function DataTable<T>({
   emptyMessage,
   enableColumnVisibility,
   enableRowSelection,
+  columnVisibility: controlledColumnVisibility,
+  onColumnVisibilityChange,
   onPaginationChange,
   onSortingChange,
   onSelectionChange,
   toolbarActions,
 }: DataTableProps<T>) {
   const { t } = useTranslation(['common']);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [internalColumnVisibility, setInternalColumnVisibility] = useState<VisibilityState>({});
+  const columnVisibility = controlledColumnVisibility ?? internalColumnVisibility;
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const tableColumns = useMemo(() => {
-    if (!enableRowSelection) return columns as ExtendedColumnDef<T>[];
+    if (!enableRowSelection) return columns;
 
-    const selectionColumn: ExtendedColumnDef<T> = {
+    const selectionColumn: ColumnDef<T, unknown> = {
       id: 'selection',
       enableHiding: false,
       enableSorting: false,
@@ -78,7 +83,7 @@ export function DataTable<T>({
       size: 40,
     };
 
-    return [selectionColumn, ...columns] as ExtendedColumnDef<T>[];
+    return [selectionColumn, ...columns];
   }, [columns, enableRowSelection, t]);
 
   const table = useReactTable({
@@ -99,7 +104,14 @@ export function DataTable<T>({
       const newSorting = typeof updater === 'function' ? updater(sorting || []) : updater;
       onSortingChange?.(newSorting);
     },
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(columnVisibility) : updater;
+      if (onColumnVisibilityChange) {
+        onColumnVisibilityChange(next);
+      } else {
+        setInternalColumnVisibility(next);
+      }
+    },
     onRowSelectionChange: setRowSelection,
     pageCount: pagination?.totalPages || 0,
   });

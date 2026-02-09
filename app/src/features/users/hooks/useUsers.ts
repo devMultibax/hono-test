@@ -62,6 +62,17 @@ export function useDeleteUser() {
   });
 }
 
+export function useBulkDeleteUsers() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: number[]) => Promise.all(ids.map((id) => userApi.delete(id))),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: userKeys.lists() });
+      Report.success(t('users:message.bulkDeleteSuccess'));
+    },
+  });
+}
+
 export function useResetPassword() {
   return useMutation({ mutationFn: userApi.resetPassword });
 }
