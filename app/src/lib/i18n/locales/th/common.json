@@ -12,7 +12,9 @@
     "search": "ค้นหา",
     "reset": "รีเซ็ต",
     "submit": "ส่ง",
-    "add": "เพิ่ม"
+    "add": "เพิ่ม",
+    "columnsSetting": "ตั้งค่าคอลัมน์",
+    "downloadReport": "ดาวน์โหลดรายงาน"
   },
   "action": {
     "copy": "คัดลอก",
@@ -88,6 +90,7 @@
   },
   "table": {
     "columnsVisibility": "แสดง/ซ่อนคอลัมน์",
+    "columns": "คอลัมน์",
     "selectedCount": "เลือกแล้ว {{count}} รายการ",
     "selectAll": "เลือกทั้งหมด",
     "deleteSelected": "ลบที่เลือก",

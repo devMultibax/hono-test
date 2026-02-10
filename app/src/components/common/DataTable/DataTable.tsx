@@ -7,9 +7,11 @@ import {
   flexRender,
   type RowSelectionState,
   type VisibilityState,
+  type SortingState,
   type ColumnDef,
 } from '@tanstack/react-table';
-import { Table, Paper, Checkbox } from '@mantine/core';
+import { Table, Paper, Checkbox, Group, Center } from '@mantine/core';
+import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { TablePagination } from './TablePagination';
 import { TableSkeleton } from './TableSkeleton';
@@ -19,17 +21,21 @@ import type { Pagination } from '@/types';
 
 interface DataTableProps<T> {
   data: T[];
-  columns: ColumnDef<T, unknown>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: ColumnDef<T, any>[];
   pagination?: Pagination;
   isLoading?: boolean;
   emptyMessage?: string;
   enableColumnVisibility?: boolean;
   enableRowSelection?: boolean;
+  sorting?: SortingState;
   columnVisibility?: VisibilityState;
+  onSortingChange?: (sorting: SortingState) => void;
   onColumnVisibilityChange?: (state: VisibilityState) => void;
   onPaginationChange?: (page: number, limit: number) => void;
   onSelectionChange?: (rows: T[]) => void;
   toolbarActions?: (selectedRows: T[]) => ReactNode;
+  headerActions?: ReactNode;
 }
 
 export function DataTable<T>({
@@ -40,11 +46,14 @@ export function DataTable<T>({
   emptyMessage,
   enableColumnVisibility,
   enableRowSelection,
+  sorting: controlledSorting,
   columnVisibility: controlledColumnVisibility,
+  onSortingChange,
   onColumnVisibilityChange,
   onPaginationChange,
   onSelectionChange,
   toolbarActions,
+  headerActions,
 }: DataTableProps<T>) {
   const { t } = useTranslation(['common']);
   const [internalColumnVisibility, setInternalColumnVisibility] = useState<VisibilityState>({});
@@ -79,17 +88,26 @@ export function DataTable<T>({
     return [selectionColumn, ...columns];
   }, [columns, enableRowSelection, t]);
 
+  const enableSorting = !!onSortingChange;
+
   const table = useReactTable({
     data,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     manualPagination: true,
-    enableSorting: false,
+    manualSorting: true,
+    enableSorting,
     enableRowSelection: !!enableRowSelection,
     state: {
+      sorting: controlledSorting ?? [],
       columnVisibility,
       rowSelection,
+    },
+    onSortingChange: (updater) => {
+      if (!onSortingChange) return;
+      const next = typeof updater === 'function' ? updater(controlledSorting ?? []) : updater;
+      onSortingChange(next);
     },
     onColumnVisibilityChange: (updater) => {
       const next = typeof updater === 'function' ? updater(columnVisibility) : updater;
@@ -122,24 +140,25 @@ export function DataTable<T>({
     onSelectionChange?.(selectedRows);
   }, [selectedRows, onSelectionChange]);
 
-  const showToolbar = enableColumnVisibility || enableRowSelection;
+  const showToolbar = enableColumnVisibility || enableRowSelection || headerActions;
 
   if (isLoading) {
     return (
-      <Paper withBorder radius="md">
+      <Paper withBorder radius="md" style={{ borderTop: 'none', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
         <TableSkeleton columns={tableColumns.length} rows={5} />
       </Paper>
     );
   }
 
   return (
-    <Paper withBorder radius="md">
+    <Paper withBorder radius="md" style={{ borderTop: 'none', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
       {showToolbar && (
         <DataTableToolbar
           table={table}
           enableColumnVisibility={enableColumnVisibility}
           selectedRows={selectedRows}
           toolbarActions={toolbarActions}
+          headerActions={headerActions}
         />
       )}
 
@@ -149,19 +168,37 @@ export function DataTable<T>({
         <>
           <Table.ScrollContainer minWidth={800}>
             <Table horizontalSpacing="md" verticalSpacing="sm" striped={false} withTableBorder={false}>
-              <Table.Thead bg="var(--mantine-color-gray-0)">
+              <Table.Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <Table.Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Table.Th
-                        key={header.id}
-                        style={{
-                          ...(header.column.columnDef.size ? { width: header.column.columnDef.size } : {}),
-                        }}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </Table.Th>
-                    ))}
+                    {headerGroup.headers.map((header) => {
+                      const canSort = header.column.getCanSort();
+                      return (
+                        <Table.Th
+                          key={header.id}
+                          style={{
+                            ...(header.column.columnDef.size ? { width: header.column.columnDef.size } : {}),
+                            ...(canSort ? { cursor: 'pointer', userSelect: 'none' } : {}),
+                          }}
+                          onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                        >
+                          <Group gap={4} wrap="nowrap">
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {canSort && (
+                              <Center>
+                                {header.column.getIsSorted() === 'asc' ? (
+                                  <ArrowUp size={14} />
+                                ) : header.column.getIsSorted() === 'desc' ? (
+                                  <ArrowDown size={14} />
+                                ) : (
+                                  <ArrowUpDown size={14} opacity={0.3} />
+                                )}
+                              </Center>
+                            )}
+                          </Group>
+                        </Table.Th>
+                      );
+                    })}
                   </Table.Tr>
                 ))}
               </Table.Thead>

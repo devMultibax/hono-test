@@ -7,11 +7,11 @@
   },
   "table": {
     "column": {
-      "username": "Username",
+      "username": "รหัสพนักงาน",
       "fullName": "ชื่อ-นามสกุล",
-      "department": "แผนก",
+      "department": "ฝ่าย",
       "section": "หน่วยงาน",
-      "role": "Role",
+      "role": "สิทธิ์",
       "status": "สถานะ"
     },
     "empty": "ไม่พบผู้ใช้งาน"
@@ -28,8 +28,8 @@
       "update": "บันทึกการแก้ไข"
     },
     "username": {
-      "label": "Username",
-      "placeholder": "กรอก username 6 หลัก"
+      "label": "รหัสพนักงาน",
+      "placeholder": "กรอกรหัสพนักงาน 6 หลัก"
     },
     "firstName": {
       "label": "ชื่อ",
@@ -66,7 +66,7 @@
     }
   },
   "import": {
-    "button": "นำเข้าจาก Excel",
+    "button": "นำเข้าข้อมูลด้วยไฟล์",
     "resultTitle": "ผลการนำเข้าข้อมูล",
     "success": "สำเร็จ: {{count}} รายการ",
     "failed": "ล้มเหลว: {{count}} รายการ",
@@ -81,6 +81,7 @@
     "edit": "แก้ไข",
     "delete": "ลบ",
     "view": "ดู",
+    "viewDetails": "ดูรายละเอียด",
     "resetPassword": "รีเซ็ตรหัสผ่าน"
   },
   "message": {
@@ -96,15 +97,15 @@
     "users": "ผู้ใช้งาน"
   },
   "field": {
-    "username": "Username",
+    "username": "รหัสพนักงาน",
     "password": "รหัสผ่าน",
-    "role": "Role",
+    "role": "สิทธิ์",
     "status": "สถานะ",
     "firstName": "ชื่อ",
     "lastName": "นามสกุล",
     "email": "อีเมล",
     "tel": "เบอร์โทร",
-    "department": "แผนก",
+    "department": "ฝ่าย",
     "section": "หน่วยงาน",
     "lastLoginAt": "เข้าสู่ระบบล่าสุด"
   },
@@ -115,11 +116,19 @@
     "systemInfo": "ข้อมูลระบบ"
   },
   "filter": {
-    "searchPlaceholder": "ค้นหาชื่อ, username...",
-    "allDepartments": "ทุกแผนก",
+    "title": "ตัวกรอง",
+    "searchPlaceholder": "ค้นหาชื่อ, รหัสพนักงาน...",
+    "allDepartments": "ทุกฝ่าย",
     "allSections": "ทุกหน่วยงาน",
-    "allRoles": "ทุก Role",
-    "allStatuses": "ทุกสถานะ"
+    "allRoles": "ทุกสิทธิ์",
+    "allStatuses": "ทุกสถานะ",
+    "sortBy": "เรียงตาม",
+    "sort": {
+      "createdAtDesc": "วันที่สร้าง (ใหม่สุด)",
+      "createdAtAsc": "วันที่สร้าง (เก่าสุด)",
+      "usernameAsc": "รหัสพนักงาน (A-Z)",
+      "usernameDesc": "รหัสพนักงาน (Z-A)"
+    }
   },
   "role": {
     "user": "User",

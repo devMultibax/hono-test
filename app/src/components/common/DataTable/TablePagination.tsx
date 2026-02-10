@@ -33,6 +33,7 @@ export function TablePagination({ pagination, onChange }: Props) {
           data={PAGE_SIZE_OPTIONS}
           onChange={(value) => value && onChange(1, Number(value))}
           allowDeselect={false}
+          clearable={false}
         />
       </Group>
 

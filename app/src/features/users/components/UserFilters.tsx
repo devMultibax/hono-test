@@ -1,4 +1,4 @@
-import { Paper, SimpleGrid, Select } from '@mantine/core';
+import { Paper, SimpleGrid, Select, Title } from '@mantine/core';
 import { SearchInput } from '@/components/common/SearchInput';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
@@ -25,7 +25,8 @@ export function UserFilters({ params, onChange }: Props) {
   ];
 
   return (
-    <Paper p="md" mb="md" withBorder radius="md" shadow="xs">
+    <Paper p="md" mb={0} withBorder radius="md" style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}>
+      <Title order={5} size="h6" mb="md" c="dimmed">{t('users:filter.title')}</Title>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 5 }} spacing="md">
         <SearchInput
           value={params.search ?? ''}

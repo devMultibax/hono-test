@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Button, Loader } from '@mantine/core';
-import { Download } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 
 interface Props {
@@ -8,7 +7,7 @@ interface Props {
   disabled?: boolean;
 }
 
-export function ExportMenu({ onExport, disabled }: Props) {
+export function ExportButton({ onExport, disabled }: Props) {
   const { t } = useTranslation(['common']);
   const [loading, setLoading] = useState(false);
 
@@ -23,12 +22,14 @@ export function ExportMenu({ onExport, disabled }: Props) {
 
   return (
     <Button
-      variant="default"
-      leftSection={loading ? <Loader size={14} /> : <Download size={16} />}
+      variant="light"
+      color='teal'
+      size='xs'
+      leftSection={loading ? <Loader size={14} /> : undefined}
       disabled={disabled || loading}
       onClick={handleExport}
     >
-      {t('common:button.export')}
+      {t('common:button.downloadReport')}
     </Button>
   );
 }

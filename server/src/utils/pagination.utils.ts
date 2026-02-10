@@ -20,7 +20,7 @@ export interface PaginationResult<T> {
 export interface PrismaQueryOptions {
   skip: number;
   take: number;
-  orderBy?: Record<string, 'asc' | 'desc'>;
+  orderBy?: Record<string, 'asc' | 'desc' | Record<string, 'asc' | 'desc'>>;
 }
 
 /**

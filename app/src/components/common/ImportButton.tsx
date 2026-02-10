@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { Button, Modal, Text, List, Progress, Stack, Alert } from '@mantine/core';
-import { Upload, Check, X } from 'lucide-react';
 import { apiClient } from '@/api/client';
 import { Report } from '@/utils/notiflix';
 import { useTranslation } from '@/lib/i18n';
@@ -24,7 +23,7 @@ export function ImportButton({
   endpoint,
   onSuccess,
   accept = '.xlsx,.xls',
-  maxSize = 5
+  maxSize = 5,
 }: Props) {
   const { t } = useTranslation(['users', 'common']);
   const [loading, setLoading] = useState(false);
@@ -80,8 +79,8 @@ export function ImportButton({
   return (
     <>
       <Button
-        variant="default"
-        leftSection={<Upload size={16} />}
+        variant="light"
+        size='xs'
         onClick={() => fileRef.current?.click()}
         loading={loading}
       >
@@ -110,11 +109,11 @@ export function ImportButton({
             />
 
             <div className="flex gap-4">
-              <Alert icon={<Check size={16} />} color="green" className="flex-1">
+              <Alert color="green" className="flex-1">
                 <Text fw={500}>{t('users:import.success', { count: result.success })}</Text>
               </Alert>
               {result.failed > 0 && (
-                <Alert icon={<X size={16} />} color="red" className="flex-1">
+                <Alert color="red" className="flex-1">
                   <Text fw={500}>{t('users:import.failed', { count: result.failed })}</Text>
                 </Alert>
               )}

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Group, ActionIcon, Tooltip } from '@mantine/core';
-import { Edit, Trash2, Key, Eye } from 'lucide-react';
+import { Group, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import type { User } from '@/types';
@@ -20,36 +19,28 @@ export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDel
 
   return (
     <>
-      <Group gap={4} wrap="nowrap">
+      <Group gap={6} wrap="nowrap">
         {onView && (
-          <Tooltip label={t('users:action.view')}>
-            <ActionIcon variant="subtle" color="blue" onClick={onView}>
-              <Eye size={16} />
-            </ActionIcon>
-          </Tooltip>
+          <Button variant="light" size="xs" onClick={onView}>
+            {t('users:action.viewDetails')}
+          </Button>
         )}
 
         {canEdit && (
           <>
-            <Tooltip label={t('users:action.edit')}>
-              <ActionIcon variant="subtle" color="yellow" onClick={onEdit}>
-                <Edit size={16} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label={t('users:action.resetPassword')}>
-              <ActionIcon variant="subtle" color="violet" onClick={() => setResetModalOpen(true)}>
-                <Key size={16} />
-              </ActionIcon>
-            </Tooltip>
+            <Button variant="light" size="xs" color='yellow' onClick={onEdit}>
+              {t('users:action.edit')}
+            </Button>
+            <Button variant="light" size="xs" color='violet' onClick={() => setResetModalOpen(true)}>
+              {t('users:action.resetPassword')}
+            </Button>
           </>
         )}
 
         {canDelete && (
-          <Tooltip label={t('users:action.delete')}>
-            <ActionIcon variant="subtle" color="red" onClick={onDelete}>
-              <Trash2 size={16} />
-            </ActionIcon>
-          </Tooltip>
+          <Button variant="light" size="xs" color='red' onClick={onDelete}>
+            {t('users:action.delete')}
+          </Button>
         )}
       </Group>
 

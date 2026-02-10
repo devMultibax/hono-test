@@ -2,32 +2,21 @@ import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useQueryClient } from '@tanstack/react-query';
-import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import { Plus, Trash2 } from 'lucide-react';
+import type { SortingState } from '@tanstack/react-table';
 import { useTranslation } from '@/lib/i18n';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable } from '@/components/common/DataTable/DataTable';
-import { StatusBadge } from '@/components/common/StatusBadge';
-import { RoleBadge } from '@/components/common/RoleBadge';
-import { ExportMenu } from '@/components/common/ExportMenu';
+import { ExportButton } from '@/components/common/ExportButton';
 import { ImportButton } from '@/components/common/ImportButton';
 import { UserFilters } from '../components/UserFilters';
-import { UserActionMenu } from '../components/UserActionMenu';
-import { useUsers, useDeleteUser, useBulkDeleteUsers, userKeys } from '../hooks/useUsers';
+import { useUsers, useDeleteUser, useUpdateUser, useBulkDeleteUsers, userKeys } from '../hooks/useUsers';
+import { useUserColumns } from '../hooks/useUserColumns';
+import { DEFAULT_PARAMS, SORT_FIELD_MAP, SORT_FIELD_REVERSE } from '../hooks/userTable.config';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useIsAdmin } from '@/stores/auth.store';
 import { userApi } from '@/api/services/user.api';
-import type { User, UserQueryParams } from '@/types';
-
-const columnHelper = createColumnHelper<User>();
-
-const DEFAULT_PARAMS: UserQueryParams = {
-  page: 1,
-  limit: 10,
-  sort: 'createdAt',
-  order: 'desc',
-};
+import type { User, UserQueryParams, Status } from '@/types';
 
 export function UserListPage() {
   const navigate = useNavigate();
@@ -38,16 +27,39 @@ export function UserListPage() {
 
   const {
     params,
-    sorting,
+    sorting: rawSorting,
     columnVisibility,
     setColumnVisibility,
-    handleSortingChange,
+    handleSortingChange: rawHandleSortingChange,
     handlePaginationChange,
     handleFilterChange,
   } = useDataTable<UserQueryParams>({ tableKey: 'users', defaultParams: DEFAULT_PARAMS });
 
+  // Map DB field back to column id for UI sort indicator
+  const sorting: SortingState = useMemo(
+    () => rawSorting.map((s) => ({ ...s, id: SORT_FIELD_REVERSE[s.id] ?? s.id })),
+    [rawSorting]
+  );
+
+  // Map column id to DB field before sending to API, fallback to default sort when cleared
+  const handleSortingChange = useCallback(
+    (newSorting: SortingState) => {
+      if (newSorting.length === 0) {
+        rawHandleSortingChange([
+          { id: DEFAULT_PARAMS.sort!, desc: DEFAULT_PARAMS.order === 'desc' },
+        ]);
+      } else {
+        rawHandleSortingChange(
+          newSorting.map((s) => ({ ...s, id: SORT_FIELD_MAP[s.id] ?? s.id }))
+        );
+      }
+    },
+    [rawHandleSortingChange]
+  );
+
   const { data, isLoading } = useUsers(params);
   const deleteUser = useDeleteUser();
+  const updateUser = useUpdateUser();
   const bulkDeleteUsers = useBulkDeleteUsers();
 
   const handleDelete = useCallback(
@@ -57,59 +69,21 @@ export function UserListPage() {
     [confirmDelete, deleteUser]
   );
 
-  const columns = useMemo(
-    (): ColumnDef<User, unknown>[] => [
-      columnHelper.display({
-        id: 'username',
-        header: 'Username',
-        enableSorting: true,
-        enableHiding: false,
-        cell: ({ row }) => row.original.username,
-      }),
-      columnHelper.display({
-        id: 'fullName',
-        header: t('users:table.column.fullName'),
-        enableHiding: false,
-        cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
-      }),
-      columnHelper.display({
-        id: 'department',
-        header: t('users:table.column.department'),
-        cell: ({ row }) => row.original.department?.name ?? '-',
-      }),
-      columnHelper.display({
-        id: 'section',
-        header: t('users:table.column.section'),
-        cell: ({ row }) => row.original.section?.name ?? '-',
-      }),
-      columnHelper.display({
-        id: 'role',
-        header: t('users:table.column.role'),
-        cell: ({ row }) => <RoleBadge role={row.original.role} />,
-      }),
-      columnHelper.display({
-        id: 'status',
-        header: t('users:table.column.status'),
-        cell: ({ row }) => <StatusBadge status={row.original.status} />,
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: '',
-        enableHiding: false,
-        cell: ({ row }) => (
-          <UserActionMenu
-            user={row.original}
-            onEdit={() => navigate(`/users/${row.original.id}/edit`)}
-            onDelete={() => handleDelete(row.original)}
-            onView={() => navigate(`/users/${row.original.id}`)}
-            canEdit={isAdmin}
-            canDelete={isAdmin}
-          />
-        ),
-      }),
-    ],
-    [navigate, handleDelete, isAdmin, t]
+  const handleStatusChange = useCallback(
+    (user: User, status: Status) => {
+      updateUser.mutate({ id: user.id, data: { status } });
+    },
+    [updateUser]
   );
+
+  const columns = useUserColumns({
+    onView: (user) => navigate(`/users/${user.id}`),
+    onEdit: (user) => navigate(`/users/${user.id}/edit`),
+    onDelete: handleDelete,
+    onStatusChange: handleStatusChange,
+    canEdit: isAdmin,
+    canDelete: isAdmin,
+  });
 
   const handleBulkDelete = useCallback(
     (selectedUsers: User[]) => {
@@ -123,24 +97,35 @@ export function UserListPage() {
     [confirm, bulkDeleteUsers, t]
   );
 
-  const handleImportSuccess = () => queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+  const handleImportSuccess = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: userKeys.lists() }),
+    [queryClient]
+  );
+
+  const headerActions = useMemo(() => (
+    <>
+      <ExportButton onExport={() => userApi.exportExcel(params)} />
+      {isAdmin && (
+        <>
+          <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} />
+          <Button
+            variant="filled"
+            size="xs"
+            onClick={() => navigate('/users/create')}
+          >
+            {t('users:action.addUser')}
+          </Button>
+        </>
+      )}
+    </>
+  ), [params, isAdmin, handleImportSuccess, navigate, t]);
 
   return (
     <div>
       <PageHeader
         title={t('users:page.title')}
         breadcrumbs={[{ label: t('common:breadcrumb.home'), path: '/dashboard' }, { label: t('users:breadcrumb.users') }]}
-      >
-        <ExportMenu onExport={() => userApi.exportExcel(params)} />
-        {isAdmin && (
-          <>
-            <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} />
-            <Button leftSection={<Plus size={16} />} onClick={() => navigate('/users/create')}>
-              {t('users:action.addUser')}
-            </Button>
-          </>
-        )}
-      </PageHeader>
+      />
 
       <UserFilters params={params} onChange={handleFilterChange} />
 
@@ -148,28 +133,28 @@ export function UserListPage() {
         data={data?.data ?? []}
         columns={columns}
         pagination={data?.pagination}
-        sorting={sorting}
         isLoading={isLoading}
         emptyMessage={t('users:message.empty')}
         enableColumnVisibility
         enableRowSelection={isAdmin}
+        sorting={sorting}
         columnVisibility={columnVisibility}
+        onSortingChange={handleSortingChange}
         onColumnVisibilityChange={setColumnVisibility}
         onPaginationChange={handlePaginationChange}
-        onSortingChange={handleSortingChange}
         toolbarActions={(selectedRows) =>
           isAdmin && (
             <Button
               size="xs"
               variant="light"
               color="red"
-              leftSection={<Trash2 size={14} />}
               onClick={() => handleBulkDelete(selectedRows)}
             >
               {t('common:table.deleteSelected')}
             </Button>
           )
         }
+        headerActions={headerActions}
       />
     </div>
   );
