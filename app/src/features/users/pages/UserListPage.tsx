@@ -107,7 +107,7 @@ export function UserListPage() {
       <ExportButton onExport={() => userApi.exportExcel(params)} />
       {isAdmin && (
         <>
-          <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} />
+          <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} />
           <Button
             variant="filled"
             size="xs"

@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx'
 import { DepartmentService } from './department.service'
 import { SectionService } from './section.service'
 import { UserService } from './user.service'
+import { prisma } from '../lib/prisma'
 import { Role } from '../types'
 
 export interface ImportResult {
@@ -178,7 +179,6 @@ export class ImportService {
 
       const data = XLSX.utils.sheet_to_json<{
         Username: string
-        Password: string
         'First Name': string
         'Last Name': string
         'Department ID': number
@@ -188,140 +188,139 @@ export class ImportService {
         Role?: string
       }>(worksheet)
 
+      // Pre-load lookup data for validation
+      const [allDepartments, allSections, existingUsers] = await Promise.all([
+        prisma.department.findMany({ select: { id: true, status: true } }),
+        prisma.section.findMany({ select: { id: true, departmentId: true, status: true } }),
+        prisma.user.findMany({ select: { username: true } }),
+      ])
+
+      const activeDepartmentIds = new Set(
+        allDepartments.filter(d => d.status === 'active').map(d => d.id)
+      )
+      const sectionMap = new Map(
+        allSections.filter(s => s.status === 'active').map(s => [s.id, s.departmentId])
+      )
+      const existingUsernames = new Set(existingUsers.map(u => u.username))
+      const batchUsernames = new Set<string>()
+
       for (let i = 0; i < data.length; i++) {
         const row = data[i]
         const rowNumber = i + 2
 
         try {
           // Validate required fields
-          if (!row.Username || row.Username.trim() === '') {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Username is required'
-            })
+          if (!row.Username || String(row.Username).trim() === '') {
+            result.errors.push({ row: rowNumber, error: 'Username is required' })
             result.failed++
             continue
           }
 
-          if (!row.Password || row.Password.trim() === '') {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Password is required'
-            })
+          if (!row['First Name'] || String(row['First Name']).trim() === '') {
+            result.errors.push({ row: rowNumber, error: 'First name is required' })
             result.failed++
             continue
           }
 
-          if (!row['First Name'] || row['First Name'].trim() === '') {
-            result.errors.push({
-              row: rowNumber,
-              error: 'First name is required'
-            })
-            result.failed++
-            continue
-          }
-
-          if (!row['Last Name'] || row['Last Name'].trim() === '') {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Last name is required'
-            })
+          if (!row['Last Name'] || String(row['Last Name']).trim() === '') {
+            result.errors.push({ row: rowNumber, error: 'Last name is required' })
             result.failed++
             continue
           }
 
           if (!row['Department ID']) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Department ID is required'
-            })
+            result.errors.push({ row: rowNumber, error: 'Department ID is required' })
             result.failed++
             continue
           }
 
-          const username = row.Username.trim()
-          const password = row.Password.trim()
-          const firstName = row['First Name'].trim()
-          const lastName = row['Last Name'].trim()
+          const username = String(row.Username).trim()
+          const firstName = String(row['First Name']).trim()
+          const lastName = String(row['Last Name']).trim()
           const departmentId = Number(row['Department ID'])
           const sectionId = row['Section ID'] ? Number(row['Section ID']) : null
-          const email = row.Email ? row.Email.trim() : null
-          const tel = row.Tel ? row.Tel.trim() : null
-          const role = row.Role && row.Role.trim().toUpperCase() === 'ADMIN' ? Role.ADMIN : Role.USER
-
-          // Validate username length
-          if (username.length !== 6) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Username must be exactly 6 characters'
-            })
-            result.failed++
-            continue
-          }
+          const email = row.Email ? String(row.Email).trim() : null
+          const tel = row.Tel ? String(row.Tel).trim() : null
+          const role = row.Role && String(row.Role).trim().toUpperCase() === 'ADMIN' ? Role.ADMIN : Role.USER
 
           // Validate username format
+          if (username.length !== 6) {
+            result.errors.push({ row: rowNumber, error: 'Username must be exactly 6 characters' })
+            result.failed++
+            continue
+          }
+
           if (!/^[a-zA-Z0-9]+$/.test(username)) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Username must contain only letters and numbers'
-            })
+            result.errors.push({ row: rowNumber, error: 'Username must contain only letters and numbers' })
             result.failed++
             continue
           }
 
-          // Validate password length
-          if (password.length < 6) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Password must be at least 6 characters'
-            })
+          // Validate username uniqueness (DB)
+          if (existingUsernames.has(username)) {
+            result.errors.push({ row: rowNumber, error: `Username "${username}" already exists` })
             result.failed++
             continue
           }
 
-          // Validate department ID
+          // Validate username uniqueness (within this import batch)
+          if (batchUsernames.has(username)) {
+            result.errors.push({ row: rowNumber, error: `Duplicate username "${username}" in file` })
+            result.failed++
+            continue
+          }
+
+          // Validate department exists
           if (isNaN(departmentId) || departmentId <= 0) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Department ID must be a positive number'
-            })
+            result.errors.push({ row: rowNumber, error: 'Department ID must be a positive number' })
             result.failed++
             continue
           }
 
-          // Validate section ID if provided
-          if (sectionId !== null && (isNaN(sectionId) || sectionId <= 0)) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Section ID must be a positive number'
-            })
+          if (!activeDepartmentIds.has(departmentId)) {
+            result.errors.push({ row: rowNumber, error: `Department ID ${departmentId} not found or inactive` })
             result.failed++
             continue
           }
 
-          // Validate email format if provided
+          // Validate section exists and belongs to department
+          if (sectionId !== null) {
+            if (isNaN(sectionId) || sectionId <= 0) {
+              result.errors.push({ row: rowNumber, error: 'Section ID must be a positive number' })
+              result.failed++
+              continue
+            }
+
+            const sectionDeptId = sectionMap.get(sectionId)
+            if (sectionDeptId === undefined) {
+              result.errors.push({ row: rowNumber, error: `Section ID ${sectionId} not found or inactive` })
+              result.failed++
+              continue
+            }
+
+            if (sectionDeptId !== departmentId) {
+              result.errors.push({ row: rowNumber, error: `Section ID ${sectionId} does not belong to Department ID ${departmentId}` })
+              result.failed++
+              continue
+            }
+          }
+
+          // Validate email format
           if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Invalid email format'
-            })
+            result.errors.push({ row: rowNumber, error: `Invalid email format: ${email}` })
             result.failed++
             continue
           }
 
-          // Validate tel format if provided
+          // Validate tel format
           if (tel && (tel.length !== 10 || !/^[0-9]+$/.test(tel))) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Phone number must be exactly 10 digits'
-            })
+            result.errors.push({ row: rowNumber, error: `Phone number must be exactly 10 digits: ${tel}` })
             result.failed++
             continue
           }
 
           await UserService.create(
             username,
-            password,
             firstName,
             lastName,
             departmentId,
@@ -332,6 +331,8 @@ export class ImportService {
             createdBy
           )
           result.success++
+          existingUsernames.add(username)
+          batchUsernames.add(username)
         } catch (error: any) {
           result.errors.push({
             row: rowNumber,
@@ -470,7 +471,7 @@ export class ImportService {
       }
 
       const headers = data[0] as string[]
-      const requiredColumns = ['Username', 'Password', 'First Name', 'Last Name', 'Department ID']
+      const requiredColumns = ['Username', 'First Name', 'Last Name', 'Department ID']
 
       for (const column of requiredColumns) {
         if (!headers.includes(column)) {
