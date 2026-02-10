@@ -4,6 +4,7 @@ import { useForm } from '@mantine/form';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
 import { useTranslation } from '@/lib/i18n';
+import { getRoleOptions, getStatusOptions } from '@/constants/options';
 import type { User, CreateUserRequest } from '@/types';
 
 interface Props {
@@ -16,15 +17,8 @@ export function UserForm({ initialData, onSubmit, isLoading }: Props) {
   const isEdit = !!initialData;
   const { t } = useTranslation(['users', 'validation', 'common']);
 
-  const ROLE_OPTIONS = [
-    { value: 'USER', label: t('common:role.USER') },
-    { value: 'ADMIN', label: t('common:role.ADMIN') },
-  ];
-
-  const STATUS_OPTIONS = [
-    { value: 'active', label: t('common:status.active') },
-    { value: 'inactive', label: t('common:status.inactive') },
-  ];
+  const ROLE_OPTIONS = getRoleOptions(t);
+  const STATUS_OPTIONS = getStatusOptions(t);
 
   const form = useForm({
     initialValues: {

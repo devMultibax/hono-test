@@ -131,7 +131,7 @@ export class ExportService {
 
     // Style header row with table-like appearance
     const headerRow = worksheet.getRow(1)
-    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.font = { bold: false, color: { argb: 'FFFFFFFF' } }
     headerRow.fill = {
       type: 'pattern',
       pattern: 'solid',

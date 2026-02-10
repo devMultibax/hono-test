@@ -3,6 +3,7 @@ import { SearchInput } from '@/components/common/SearchInput';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
 import { useTranslation } from '@/lib/i18n';
+import { getRoleOptions, getStatusOptions } from '@/constants/options';
 import type { UserQueryParams } from '@/types';
 
 interface Props {
@@ -14,15 +15,8 @@ export function UserFilters({ params, onChange }: Props) {
   const { t } = useTranslation(['users', 'common']);
   const update = (patch: Partial<UserQueryParams>) => onChange({ ...params, ...patch });
 
-  const ROLE_OPTIONS = [
-    { value: 'USER', label: t('users:role.user') },
-    { value: 'ADMIN', label: t('users:role.admin') },
-  ];
-
-  const STATUS_OPTIONS = [
-    { value: 'active', label: t('users:status.active') },
-    { value: 'inactive', label: t('users:status.inactive') },
-  ];
+  const ROLE_OPTIONS = getRoleOptions(t);
+  const STATUS_OPTIONS = getStatusOptions(t);
 
   return (
     <Paper p="md" mb={0} withBorder radius="md" style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}>

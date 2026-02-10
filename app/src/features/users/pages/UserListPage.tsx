@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useQueryClient } from '@tanstack/react-query';
@@ -6,8 +6,8 @@ import type { SortingState } from '@tanstack/react-table';
 import { useTranslation } from '@/lib/i18n';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable } from '@/components/common/DataTable/DataTable';
-import { ExportButton } from '@/components/common/ExportButton';
 import { ImportButton } from '@/components/common/ImportButton';
+import { ExportModal } from '../components/ExportModal';
 import { UserFilters } from '../components/UserFilters';
 import { useUsers, useDeleteUser, useUpdateUser, useBulkDeleteUsers, userKeys } from '../hooks/useUsers';
 import { useUserColumns } from '../hooks/useUserColumns';
@@ -24,6 +24,7 @@ export function UserListPage() {
   const isAdmin = useIsAdmin();
   const { confirm, confirmDelete } = useConfirm();
   const { t } = useTranslation(['users', 'common']);
+  const [exportOpened, setExportOpened] = useState(false);
 
   const {
     params,
@@ -104,7 +105,9 @@ export function UserListPage() {
 
   const headerActions = useMemo(() => (
     <>
-      <ExportButton onExport={() => userApi.exportExcel(params)} />
+      <Button variant="light" color="teal" size="xs" onClick={() => setExportOpened(true)}>
+        {t('common:button.downloadReport')}
+      </Button>
       {isAdmin && (
         <>
           <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} />
@@ -118,7 +121,7 @@ export function UserListPage() {
         </>
       )}
     </>
-  ), [params, isAdmin, handleImportSuccess, navigate, t]);
+  ), [isAdmin, handleImportSuccess, navigate, t]);
 
   return (
     <div>
@@ -128,6 +131,13 @@ export function UserListPage() {
       />
 
       <UserFilters params={params} onChange={handleFilterChange} />
+
+      <ExportModal
+        opened={exportOpened}
+        onClose={() => setExportOpened(false)}
+        initialParams={params}
+        onExport={(exportParams) => userApi.exportExcel(exportParams)}
+      />
 
       <DataTable
         data={data?.data ?? []}
