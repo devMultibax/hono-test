@@ -1,6 +1,7 @@
 import { createTheme, MantineProvider } from '@mantine/core';
 import type { MantineColorsTuple } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
+import { Notifications } from '@mantine/notifications';
 
 const primaryColor: MantineColorsTuple = [
   '#e7f5ff', '#d0ebff', '#a5d8ff', '#74c0fc', '#4dabf7',
@@ -55,6 +56,7 @@ interface Props {
 export function ThemeProvider({ children }: Props) {
   return (
     <MantineProvider theme={theme}>
+      <Notifications position="top-right" zIndex={1000} />
       <ModalsProvider>
         {children}
       </ModalsProvider>

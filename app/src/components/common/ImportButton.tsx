@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button, Modal, Text, List, Progress, Stack, Alert, Group, UnstyledButton } from '@mantine/core';
 import { apiClient } from '@/api/client';
-import { Report } from '@/utils/notiflix';
+import { Report } from '@/utils/alertUtils';
 import { useTranslation } from '@/lib/i18n';
 import type { AxiosError } from 'axios';
 

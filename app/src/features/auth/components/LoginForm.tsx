@@ -4,8 +4,8 @@ import { useForm } from '@mantine/form';
 import { User, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/lib/i18n';
-import { Report } from '@/utils/notiflix';
 import { extractErrorMessage } from '@/utils/errorHandlerUtils';
+import { Report } from '@/utils/alertUtils';
 
 const REMEMBER_KEY = 'remembered_username';
 

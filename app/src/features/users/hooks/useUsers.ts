@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/services/user.api';
-import { Report } from '@/utils/notiflix';
+import { Report } from '@/utils/alertUtils';
 import { t } from '@/lib/i18n/helpers';
 import type { UserQueryParams, UpdateUserRequest } from '@/types';
 

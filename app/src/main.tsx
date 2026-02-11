@@ -6,11 +6,9 @@ import App from './App.tsx'
 import './index.css'
 
 import '@mantine/core/styles.css'
+import '@mantine/notifications/styles.css'
 
 import '@/lib/i18n'
-import { setupNotiflix } from '@/utils/setupNotiflix'
-
-setupNotiflix()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

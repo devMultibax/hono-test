@@ -1,6 +1,5 @@
-import { modals } from '@mantine/modals';
-import { Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { Confirm } from '@/utils/alertUtils';
 
 interface ConfirmOptions {
   title?: string;
@@ -15,32 +14,27 @@ interface ConfirmOptions {
 export function useConfirm() {
   const { t } = useTranslation(['common']);
 
-  const confirm = ({
+  const confirm = async ({
     title = t('common:confirm.title'),
     message,
-    confirmLabel = t('common:confirm.confirm'),
-    cancelLabel = t('common:confirm.cancel'),
-    confirmColor = 'red',
     onConfirm,
     onCancel,
   }: ConfirmOptions) => {
-    modals.openConfirmModal({
-      title,
-      children: <Text size="sm">{message}</Text>,
-      labels: { confirm: confirmLabel, cancel: cancelLabel },
-      confirmProps: { color: confirmColor },
-      onConfirm,
-      onCancel,
-    });
+    const result = await Confirm.show(message, title);
+    if (result) {
+      await onConfirm();
+    } else if (onCancel) {
+      onCancel();
+    }
   };
 
-  const confirmDelete = (itemName: string, onConfirm: () => void | Promise<void>) => {
-    confirm({
+  const confirmDelete = async (itemName: string, onConfirm: () => void | Promise<void>) => {
+    const result = await Confirm.delete(itemName, {
       title: t('common:confirm.delete.title'),
-      message: t('common:confirm.delete.message', { itemName }),
-      confirmLabel: t('common:confirm.delete.confirm'),
-      onConfirm,
     });
+    if (result) {
+      await onConfirm();
+    }
   };
 
   return { confirm, confirmDelete };

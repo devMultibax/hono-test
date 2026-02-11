@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios';
-import { handleError } from '@/utils/notiflix';
+import { handleError } from '@/utils/alertUtils';
 
 export { handleError };
 
