@@ -1,23 +1,12 @@
-import type { ReactNode } from 'react';
-import { Drawer, LoadingOverlay, Alert, Stack, Grid, Text, Button, Group } from '@mantine/core';
-import { AlertCircle } from 'lucide-react';
+import { Stack, Grid, Button, Group } from '@mantine/core';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { RoleBadge } from '@/components/common/RoleBadge';
+import { DrawerForm } from '@/components/common/DrawerForm';
+import { InfoField } from '@/components/common/InfoField';
 import { useUser } from '../hooks/useUsers';
 import { useIsAdmin } from '@/stores/auth.store';
 import { useTranslation } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/date';
-
-function InfoField({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <Grid.Col span={{ base: 12, md: 6 }}>
-      <Stack gap="xs">
-        <Text size="sm" c="dimmed">{label}</Text>
-        <Text fw={500} component="div">{children}</Text>
-      </Stack>
-    </Grid.Col>
-  );
-}
 
 interface Props {
   opened: boolean;
@@ -32,20 +21,15 @@ export function UserDetailDrawer({ opened, onClose, userId, onEdit }: Props) {
   const { data: user, isLoading, error } = useUser(userId);
 
   return (
-    <Drawer
+    <DrawerForm
       opened={opened}
       onClose={onClose}
       title={t('users:page.detailTitle')}
-      position="right"
-      size="lg"
+      isLoading={isLoading}
+      error={error}
+      errorMessage={t('users:message.userNotFound')}
     >
-      <LoadingOverlay visible={isLoading} />
-
-      {error || (!isLoading && !user) ? (
-        <Alert icon={<AlertCircle size={16} />} color="red">
-          {t('users:message.userNotFound')}
-        </Alert>
-      ) : user && (
+      {user && (
         <Stack gap="md">
           <Grid>
             <InfoField label={t('users:field.username')}>{user.username}</InfoField>
@@ -91,6 +75,6 @@ export function UserDetailDrawer({ opened, onClose, userId, onEdit }: Props) {
           </Group>
         </Stack>
       )}
-    </Drawer>
+    </DrawerForm>
   );
 }

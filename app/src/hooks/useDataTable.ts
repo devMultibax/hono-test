@@ -5,6 +5,7 @@ import type { BaseQueryParams, SortOrder } from '@/types';
 interface UseDataTableOptions<TParams extends BaseQueryParams> {
   tableKey: string;
   defaultParams: TParams;
+  sortFieldMap?: Record<string, string>;
 }
 
 interface UseDataTableReturn<TParams extends BaseQueryParams> {
@@ -43,10 +44,17 @@ function saveVisibility(key: string, state: VisibilityState) {
 export function useDataTable<TParams extends BaseQueryParams>({
   tableKey,
   defaultParams,
+  sortFieldMap,
 }: UseDataTableOptions<TParams>): UseDataTableReturn<TParams> {
   const [params, setParams] = useState<TParams>(defaultParams);
   const [columnVisibility, setColumnVisibilityRaw] = useState<VisibilityState>(() => loadVisibility(tableKey));
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  // Build reverse map (DB field → column id) once
+  const sortFieldReverse = useMemo(() => {
+    if (!sortFieldMap) return undefined;
+    return Object.fromEntries(Object.entries(sortFieldMap).map(([k, v]) => [v, k]));
+  }, [sortFieldMap]);
 
   const setColumnVisibility: React.Dispatch<React.SetStateAction<VisibilityState>> = useCallback(
     (updater) => {
@@ -59,21 +67,34 @@ export function useDataTable<TParams extends BaseQueryParams>({
     [tableKey]
   );
 
+  // Map DB field back to column id for UI sort indicator
   const sorting: SortingState = useMemo(
-    () => (params.sort ? [{ id: params.sort, desc: params.order === 'desc' }] : []),
-    [params.sort, params.order]
+    () => {
+      if (!params.sort) return [];
+      const id = sortFieldReverse?.[params.sort] ?? params.sort;
+      return [{ id, desc: params.order === 'desc' }];
+    },
+    [params.sort, params.order, sortFieldReverse]
   );
 
   const handleSortingChange = useCallback(
     (newSorting: SortingState) => {
       if (newSorting.length > 0) {
         const { id, desc } = newSorting[0];
-        setParams((p) => ({ ...p, sort: id, order: (desc ? 'desc' : 'asc') as SortOrder, page: 1 }));
+        // Map column id → DB field
+        const dbField = sortFieldMap?.[id] ?? id;
+        setParams((p) => ({ ...p, sort: dbField, order: (desc ? 'desc' : 'asc') as SortOrder, page: 1 }));
       } else {
-        setParams((p) => ({ ...p, sort: undefined, order: undefined, page: 1 }));
+        // Fallback to default sort when cleared
+        setParams((p) => ({
+          ...p,
+          sort: defaultParams.sort,
+          order: defaultParams.order,
+          page: 1,
+        }));
       }
     },
-    []
+    [sortFieldMap, defaultParams.sort, defaultParams.order]
   );
 
   const handlePaginationChange = useCallback(

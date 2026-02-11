@@ -1,9 +1,9 @@
-import { Drawer, LoadingOverlay, Alert } from '@mantine/core';
-import { AlertCircle } from 'lucide-react';
+import { DrawerForm } from '@/components/common/DrawerForm';
 import { UserForm } from './UserForm';
 import { useUser, useUpdateUser } from '../hooks/useUsers';
 import { useTranslation } from '@/lib/i18n';
-import type { UpdateUserRequest } from '@/types';
+import { useConfirm } from '@/hooks/useConfirm';
+import type { UpdateUserRequest } from '../types';
 
 interface Props {
   opened: boolean;
@@ -12,31 +12,33 @@ interface Props {
 }
 
 export function UserEditDrawer({ opened, onClose, userId }: Props) {
-  const { t } = useTranslation(['users', 'common']);
+  const { t } = useTranslation(['users']);
+  const { confirm } = useConfirm();
   const { data: user, isLoading, error } = useUser(userId);
   const updateUser = useUpdateUser();
 
   const handleSubmit = (data: UpdateUserRequest) => {
-    updateUser.mutate({ id: userId, data }, { onSuccess: onClose });
+    confirm({
+      title: t('users:confirm.update.title'),
+      message: t('users:confirm.update.message', { name: `${user?.firstName} ${user?.lastName}` }),
+      onConfirm: () => {
+        updateUser.mutate({ id: userId, data }, { onSuccess: onClose });
+      },
+    });
   };
 
   return (
-    <Drawer
+    <DrawerForm
       opened={opened}
       onClose={onClose}
       title={t('users:page.editTitle')}
-      position="right"
-      size="lg"
+      isLoading={isLoading}
+      error={error}
+      errorMessage={t('users:message.userNotFound')}
     >
-      <LoadingOverlay visible={isLoading} />
-
-      {error || (!isLoading && !user) ? (
-        <Alert icon={<AlertCircle size={16} />} color="red">
-          {t('users:message.userNotFound')}
-        </Alert>
-      ) : user && (
+      {user && (
         <UserForm initialData={user} onSubmit={handleSubmit} onCancel={onClose} isLoading={updateUser.isPending} />
       )}
-    </Drawer>
+    </DrawerForm>
   );
 }

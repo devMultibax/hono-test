@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Group, Button } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/lib/i18n';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import type { User } from '@/types';
 

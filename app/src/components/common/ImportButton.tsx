@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
-import { Button, Modal, Text, List, Progress, Stack, Alert, Group, UnstyledButton } from '@mantine/core';
+import { Button, Drawer, Text, Stack, Alert, Group, UnstyledButton, RingProgress, ThemeIcon, ScrollArea, Divider } from '@mantine/core';
+import { IconCheck, IconX, IconAlertTriangle, IconFileSpreadsheet, IconUpload } from '@tabler/icons-react';
 import { apiClient } from '@/api/client';
-import { Report } from '@/utils/alertUtils';
+import { Toast } from '@/utils/alertUtils';
+import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from '@/lib/i18n';
 import type { AxiosError } from 'axios';
 
@@ -28,6 +30,7 @@ export function ImportButton({
   maxSize = 5,
 }: Props) {
   const { t } = useTranslation(['users', 'common']);
+  const { confirm } = useConfirm();
   const [opened, setOpened] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -89,7 +92,7 @@ export function ImportButton({
       setSelectedFile(null);
 
       if (response.data.success > 0) {
-        Report.success(t('users:import.successMessage', { count: response.data.success }));
+        Toast.success(t('users:import.successMessage', { count: response.data.success }));
       }
 
       // Always refresh the list after import (even if some rows failed)
@@ -116,65 +119,95 @@ export function ImportButton({
         {t('users:import.button')}
       </Button>
 
-      <Modal
+      <Drawer
         opened={opened}
         onClose={handleClose}
         title={result ? t('users:import.resultTitle') : t('users:import.modalTitle')}
+        position="right"
         size="md"
       >
         {result ? (
-          <Stack>
-            <Progress
-              value={successRate}
-              color={successRate === 100 ? 'green' : successRate > 0 ? 'yellow' : 'red'}
-              size="lg"
-            />
+          <Stack gap="md">
+            {/* Summary header */}
+            <Group justify="center" gap="xl">
+              <RingProgress
+                size={80}
+                thickness={8}
+                roundCaps
+                sections={[
+                  { value: successRate, color: 'teal' },
+                  { value: 100 - successRate, color: result.failed > 0 ? 'red.3' : 'gray.2' },
+                ]}
+                label={
+                  <ThemeIcon
+                    color={successRate === 100 ? 'teal' : successRate > 0 ? 'yellow' : 'red'}
+                    variant="light"
+                    radius="xl"
+                    size="xl"
+                  >
+                    {successRate === 100
+                      ? <IconCheck size={20} />
+                      : successRate > 0
+                        ? <IconAlertTriangle size={20} />
+                        : <IconX size={20} />
+                    }
+                  </ThemeIcon>
+                }
+              />
+              <Stack gap={4}>
+                <Group gap="xs">
+                  <div className="h-2.5 w-2.5 rounded-full bg-teal-500" />
+                  <Text size="sm">{t('users:import.success', { count: result.success })}</Text>
+                </Group>
+                {result.failed > 0 && (
+                  <Group gap="xs">
+                    <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                    <Text size="sm">{t('users:import.failed', { count: result.failed })}</Text>
+                  </Group>
+                )}
+              </Stack>
+            </Group>
 
-            <div className="flex gap-4">
-              <Alert color="green" className="flex-1">
-                <Text fw={500}>{t('users:import.success', { count: result.success })}</Text>
-              </Alert>
-              {result.failed > 0 && (
-                <Alert color="red" className="flex-1">
-                  <Text fw={500}>{t('users:import.failed', { count: result.failed })}</Text>
-                </Alert>
-              )}
-            </div>
-
+            {/* Error details */}
             {result.errors && result.errors.length > 0 && (
               <>
+                <Divider />
                 <Text fw={500} size="sm">{t('users:import.errorDetails')}</Text>
-                <List size="sm" className="max-h-48 overflow-auto">
-                  {result.errors.map((err, i) => (
-                    <List.Item key={i} c="red">{err}</List.Item>
-                  ))}
-                </List>
+                <ScrollArea.Autosize mah={160}>
+                  <Stack gap={4}>
+                    {result.errors.map((err, i) => (
+                      <Alert key={i} color="red" variant="light" py={6} px="sm">
+                        <Text size="xs">{err}</Text>
+                      </Alert>
+                    ))}
+                  </Stack>
+                </ScrollArea.Autosize>
               </>
             )}
 
             <Group justify="flex-end">
-              <Button variant="default" onClick={resetState}>
+              <Button variant='subtle' color='gray' size="sm" onClick={handleClose}>{t('common:button.close')}</Button>
+              <Button size="sm" onClick={resetState}>
                 {t('users:import.importAgain')}
               </Button>
-              <Button onClick={handleClose}>{t('common:button.close')}</Button>
             </Group>
           </Stack>
         ) : (
           <Stack>
             {/* Download template section */}
             {onDownloadTemplate && (
-              <Alert variant="light" color="blue">
-                <Group justify="space-between" align="center">
-                  <Text size="sm">{t('users:import.templateHint')}</Text>
-                  <Button
-                    variant="light"
-                    size="xs"
-                    onClick={onDownloadTemplate}
-                  >
-                    {t('users:import.downloadTemplate')}
-                  </Button>
-                </Group>
-              </Alert>
+              <Group gap="xs" justify="center" py={4}>
+                <Text size="xs" c="dimmed">{t('users:import.templateHint')}</Text>
+                <Text
+                  size="xs"
+                  c="blue"
+                  td="underline"
+                  style={{ cursor: 'pointer' }}
+                  onClick={onDownloadTemplate}
+                >
+                  {t('users:import.downloadTemplate')}
+                </Text>
+              </Group>
             )}
 
             {/* Drop zone */}
@@ -194,9 +227,10 @@ export function ImportButton({
                       : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                 }`}
               >
-                <Text size="lg" c="dimmed">
-                  {selectedFile ? '📄' : '📁'}
-                </Text>
+                {selectedFile
+                  ? <IconFileSpreadsheet size={28} className="text-green-500" />
+                  : <IconUpload size={28} className="text-gray-400" />
+                }
                 {selectedFile ? (
                   <>
                     <Text size="sm" fw={500}>{selectedFile.name}</Text>
@@ -227,11 +261,14 @@ export function ImportButton({
 
             {/* Actions */}
             <Group justify="flex-end">
-              <Button variant="default" onClick={handleClose}>
+              <Button variant="subtle" color='gray' onClick={handleClose}>
                 {t('common:button.cancel')}
               </Button>
               <Button
-                onClick={handleImport}
+                onClick={() => confirm({
+                  message: t('users:import.confirmMessage'),
+                  onConfirm: handleImport,
+                })}
                 loading={loading}
                 disabled={!selectedFile}
               >
@@ -240,7 +277,7 @@ export function ImportButton({
             </Group>
           </Stack>
         )}
-      </Modal>
+      </Drawer>
     </>
   );
 }

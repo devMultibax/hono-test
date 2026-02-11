@@ -8,10 +8,11 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  label?: string;
   debounce?: number;
 }
 
-export function SearchInput({ value, onChange, placeholder, debounce = 400 }: Props) {
+export function SearchInput({ value, onChange, placeholder, label, debounce = 400 }: Props) {
   const { t } = useTranslation('common');
   const [localValue, setLocalValue] = useState(value);
   const [debouncedValue] = useDebouncedValue(localValue, debounce);
@@ -27,6 +28,7 @@ export function SearchInput({ value, onChange, placeholder, debounce = 400 }: Pr
 
   return (
     <TextInput
+      label={label}
       placeholder={placeholder || t('placeholder.search')}
       leftSection={<Search size={16} />}
       rightSection={localValue && <CloseButton size="sm" onClick={() => setLocalValue('')} />}

@@ -1,15 +1,31 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/services/user.api';
-import { Report,Toast } from '@/utils/alertUtils';
-import { t } from '@/lib/i18n/helpers';
-import type { UserQueryParams, UpdateUserRequest } from '@/types';
+import { createQueryKeys } from '@/hooks/createQueryKeys';
+import { createCrudHooks } from '@/hooks/createCrudHooks';
+import type { UserQueryParams, CreateUserRequest, UpdateUserRequest } from '../types';
 
-export const userKeys = {
-  all: ['users'] as const,
-  lists: () => [...userKeys.all, 'list'] as const,
-  list: (params: UserQueryParams) => [...userKeys.lists(), params] as const,
-  details: () => [...userKeys.all, 'detail'] as const,
-  detail: (id: number) => [...userKeys.details(), id] as const,
+export const userKeys = createQueryKeys<UserQueryParams>('users');
+
+const { useCreate, useUpdate, useDelete, useBulkDelete } = createCrudHooks<CreateUserRequest, UpdateUserRequest>({
+  queryKeys: userKeys,
+  api: {
+    create: userApi.create,
+    update: userApi.update,
+    delete: userApi.delete,
+  },
+  messages: {
+    createSuccess: 'users:message.createSuccess',
+    updateSuccess: 'users:message.updateSuccess',
+    deleteSuccess: 'users:message.deleteSuccess',
+    bulkDeleteSuccess: 'users:message.bulkDeleteSuccess',
+  },
+});
+
+export {
+  useCreate as useCreateUser,
+  useUpdate as useUpdateUser,
+  useDelete as useDeleteUser,
+  useBulkDelete as useBulkDeleteUsers,
 };
 
 export function useUsers(params: UserQueryParams) {
@@ -28,51 +44,18 @@ export function useUser(id: number) {
   });
 }
 
-export function useCreateUser() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: userApi.create,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: userKeys.lists() });
-      Toast.success(t('users:message.createSuccess'));
-    },
-  });
-}
-
-export function useUpdateUser() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateUserRequest }) => userApi.update(id, data),
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: userKeys.lists() });
-      qc.invalidateQueries({ queryKey: userKeys.detail(id) });
-      Report.success(t('users:message.updateSuccess'));
-    },
-  });
-}
-
-export function useDeleteUser() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: userApi.delete,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: userKeys.lists() });
-      Toast.success(t('users:message.deleteSuccess'));
-    },
-  });
-}
-
-export function useBulkDeleteUsers() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (ids: number[]) => Promise.all(ids.map((id) => userApi.delete(id))),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: userKeys.lists() });
-      Report.success(t('users:message.bulkDeleteSuccess'));
-    },
-  });
-}
-
 export function useResetPassword() {
   return useMutation({ mutationFn: userApi.resetPassword });
+}
+
+export function useUpdateUserStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: 'active' | 'inactive' }) =>
+      userApi.update(id, { status }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
+    },
+  });
 }

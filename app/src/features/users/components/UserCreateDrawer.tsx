@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Drawer, Modal, Button, Text, TextInput, Group, Stack, CopyButton, ActionIcon, Tooltip } from '@mantine/core';
-import { Copy, Check } from 'lucide-react';
+import { Drawer, Modal, Button, Text, Stack } from '@mantine/core';
+import type { AxiosResponse } from 'axios';
+import { PasswordDisplay } from '@/components/common/PasswordDisplay';
 import { UserForm } from './UserForm';
 import { useCreateUser } from '../hooks/useUsers';
 import { useTranslation } from '@/lib/i18n';
-import type { CreateUserRequest } from '@/types';
+import { useConfirm } from '@/hooks/useConfirm';
+import type { CreateUserRequest } from '../types';
+import type { CreateUserResponse } from '@/types';
 
 interface Props {
   opened: boolean;
@@ -13,12 +16,22 @@ interface Props {
 
 export function UserCreateDrawer({ opened, onClose }: Props) {
   const { t } = useTranslation(['users', 'common']);
+  const { confirm } = useConfirm();
   const createUser = useCreateUser();
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
 
   const handleSubmit = (data: CreateUserRequest) => {
-    createUser.mutate(data, {
-      onSuccess: (res) => setCredentials({ username: data.username, password: res.data.password }),
+    confirm({
+      title: t('users:confirm.create.title'),
+      message: t('users:confirm.create.message', { username: data.username }),
+      onConfirm: () => {
+        createUser.mutate(data, {
+          onSuccess: (res) => {
+            const response = res as AxiosResponse<CreateUserResponse>;
+            setCredentials({ username: data.username, password: response.data.password });
+          },
+        });
+      },
     });
   };
 
@@ -51,23 +64,12 @@ export function UserCreateDrawer({ opened, onClose }: Props) {
         <Stack gap="md">
           <Text size="sm" c="dimmed">{t('users:message.savePasswordWarning')}</Text>
 
-          <TextInput label={t('users:field.username')} value={credentials?.username ?? ''} readOnly />
-
-          <div>
-            <Text size="sm" fw={500} mb={4}>{t('users:field.password')}</Text>
-            <Group gap="xs">
-              <TextInput value={credentials?.password ?? ''} readOnly style={{ flex: 1 }} />
-              <CopyButton value={credentials?.password ?? ''}>
-                {({ copied, copy }) => (
-                  <Tooltip label={copied ? t('common:action.copied') : t('common:action.copy')}>
-                    <ActionIcon color={copied ? 'teal' : 'gray'} variant="light" onClick={copy} size="lg">
-                      {copied ? <Check size={16} /> : <Copy size={16} />}
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-              </CopyButton>
-            </Group>
-          </div>
+          <PasswordDisplay
+            username={credentials?.username ?? ''}
+            password={credentials?.password ?? ''}
+            usernameLabel={t('users:field.username')}
+            passwordLabel={t('users:field.password')}
+          />
 
           <Button onClick={handleClose} fullWidth>{t('common:button.close')}</Button>
         </Stack>

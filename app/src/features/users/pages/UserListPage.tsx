@@ -1,117 +1,56 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@mantine/core';
-import { useQueryClient } from '@tanstack/react-query';
-import type { SortingState } from '@tanstack/react-table';
 import { useTranslation } from '@/lib/i18n';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { ImportButton } from '@/components/common/ImportButton';
-import { ExportModal } from '../components/ExportModal';
+import { UserExportDrawer } from '../components/UserExportDrawer';
 import { UserFilters } from '../components/UserFilters';
 import { UserCreateDrawer } from '../components/UserCreateDrawer';
 import { UserDetailDrawer } from '../components/UserDetailDrawer';
 import { UserEditDrawer } from '../components/UserEditDrawer';
-import { useUsers, useDeleteUser, useUpdateUser, useBulkDeleteUsers, userKeys } from '../hooks/useUsers';
+import { useUsers } from '../hooks/useUsers';
 import { useUserColumns } from '../hooks/useUserColumns';
-import { DEFAULT_PARAMS, SORT_FIELD_MAP, SORT_FIELD_REVERSE } from '../hooks/userTable.config';
-import { useConfirm } from '@/hooks/useConfirm';
+import { useUserDrawer } from '../hooks/useUserDrawer';
+import { useUserActions } from '../hooks/useUserActions';
+import { DEFAULT_PARAMS, SORT_FIELD_MAP } from '../hooks/userTable.config';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useIsAdmin } from '@/stores/auth.store';
 import { userApi } from '@/api/services/user.api';
-import type { User, UserQueryParams, Status } from '@/types';
-
-type DrawerState =
-  | { mode: 'closed' }
-  | { mode: 'create' }
-  | { mode: 'detail'; userId: number }
-  | { mode: 'edit'; userId: number };
+import type { UserQueryParams } from '../types';
 
 export function UserListPage() {
-  const queryClient = useQueryClient();
   const isAdmin = useIsAdmin();
-  const { confirm, confirmDelete } = useConfirm();
   const { t } = useTranslation(['users', 'common']);
   const [exportOpened, setExportOpened] = useState(false);
-  const [drawer, setDrawer] = useState<DrawerState>({ mode: 'closed' });
 
-  const closeDrawer = useCallback(() => setDrawer({ mode: 'closed' }), []);
+  const drawer = useUserDrawer();
+  const actions = useUserActions();
 
   const {
     params,
-    sorting: rawSorting,
+    sorting,
     columnVisibility,
     setColumnVisibility,
-    handleSortingChange: rawHandleSortingChange,
+    handleSortingChange,
     handlePaginationChange,
     handleFilterChange,
-  } = useDataTable<UserQueryParams>({ tableKey: 'users', defaultParams: DEFAULT_PARAMS });
-
-  // Map DB field back to column id for UI sort indicator
-  const sorting: SortingState = useMemo(
-    () => rawSorting.map((s) => ({ ...s, id: SORT_FIELD_REVERSE[s.id] ?? s.id })),
-    [rawSorting]
-  );
-
-  // Map column id to DB field before sending to API, fallback to default sort when cleared
-  const handleSortingChange = useCallback(
-    (newSorting: SortingState) => {
-      if (newSorting.length === 0) {
-        rawHandleSortingChange([
-          { id: DEFAULT_PARAMS.sort!, desc: DEFAULT_PARAMS.order === 'desc' },
-        ]);
-      } else {
-        rawHandleSortingChange(
-          newSorting.map((s) => ({ ...s, id: SORT_FIELD_MAP[s.id] ?? s.id }))
-        );
-      }
-    },
-    [rawHandleSortingChange]
-  );
+  } = useDataTable<UserQueryParams>({
+    tableKey: 'users',
+    defaultParams: DEFAULT_PARAMS,
+    sortFieldMap: SORT_FIELD_MAP,
+  });
 
   const { data, isLoading } = useUsers(params);
-  const deleteUser = useDeleteUser();
-  const updateUser = useUpdateUser();
-  const bulkDeleteUsers = useBulkDeleteUsers();
-
-  const handleDelete = useCallback(
-    (user: User) => {
-      confirmDelete(`${user.firstName} ${user.lastName}`, () => deleteUser.mutate(user.id));
-    },
-    [confirmDelete, deleteUser]
-  );
-
-  const handleStatusChange = useCallback(
-    (user: User, status: Status) => {
-      updateUser.mutate({ id: user.id, data: { status } });
-    },
-    [updateUser]
-  );
 
   const columns = useUserColumns({
-    onView: (user) => setDrawer({ mode: 'detail', userId: user.id }),
-    onEdit: (user) => setDrawer({ mode: 'edit', userId: user.id }),
-    onDelete: handleDelete,
-    onStatusChange: handleStatusChange,
+    onView: (user) => drawer.openDetail(user.id),
+    onEdit: (user) => drawer.openEdit(user.id),
+    onDelete: actions.handleDelete,
+    onStatusChange: actions.handleStatusChange,
     canEdit: isAdmin,
     canDelete: isAdmin,
   });
-
-  const handleBulkDelete = useCallback(
-    (selectedUsers: User[]) => {
-      confirm({
-        title: t('users:confirm.bulkDelete.title'),
-        message: t('users:confirm.bulkDelete.message', { count: selectedUsers.length }),
-        confirmLabel: t('users:confirm.bulkDelete.button'),
-        onConfirm: () => bulkDeleteUsers.mutate(selectedUsers.map((u) => u.id)),
-      });
-    },
-    [confirm, bulkDeleteUsers, t]
-  );
-
-  const handleImportSuccess = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: userKeys.lists() }),
-    [queryClient]
-  );
 
   const headerActions = useMemo(() => (
     <>
@@ -119,19 +58,13 @@ export function UserListPage() {
         {t('common:button.downloadReport')}
       </Button>
       {isAdmin && (
-        <>
-          <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} />
-          <Button
-            variant="filled"
-            size="xs"
-            onClick={() => setDrawer({ mode: 'create' })}
-          >
-            {t('users:action.addUser')}
-          </Button>
-        </>
+          <ImportButton endpoint="/users/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} />
       )}
+      <Button variant="filled" size="xs" onClick={drawer.openCreate}>
+        {t('users:action.addUser')}
+      </Button>
     </>
-  ), [isAdmin, handleImportSuccess, t]);
+  ), [isAdmin, actions.handleImportSuccess, drawer.openCreate, t]);
 
   return (
     <div>
@@ -142,7 +75,7 @@ export function UserListPage() {
 
       <UserFilters params={params} onChange={handleFilterChange} />
 
-      <ExportModal
+      <UserExportDrawer
         opened={exportOpened}
         onClose={() => setExportOpened(false)}
         initialParams={params}
@@ -150,21 +83,21 @@ export function UserListPage() {
       />
 
       <UserCreateDrawer
-        opened={drawer.mode === 'create'}
-        onClose={closeDrawer}
+        opened={drawer.drawer.mode === 'create'}
+        onClose={drawer.close}
       />
 
       <UserDetailDrawer
-        opened={drawer.mode === 'detail'}
-        onClose={closeDrawer}
-        userId={drawer.mode === 'detail' ? drawer.userId : 0}
-        onEdit={(userId) => setDrawer({ mode: 'edit', userId })}
+        opened={drawer.drawer.mode === 'detail'}
+        onClose={drawer.close}
+        userId={drawer.userId}
+        onEdit={drawer.openEdit}
       />
 
       <UserEditDrawer
-        opened={drawer.mode === 'edit'}
-        onClose={closeDrawer}
-        userId={drawer.mode === 'edit' ? drawer.userId : 0}
+        opened={drawer.drawer.mode === 'edit'}
+        onClose={drawer.close}
+        userId={drawer.userId}
       />
 
       <DataTable
@@ -186,7 +119,7 @@ export function UserListPage() {
               size="xs"
               variant="light"
               color="red"
-              onClick={() => handleBulkDelete(selectedRows)}
+              onClick={() => actions.handleBulkDelete(selectedRows)}
             >
               {t('common:table.deleteSelected')}
             </Button>

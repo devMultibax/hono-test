@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Modal, Stack, Button, Text, Alert, TextInput, Group, CopyButton, ActionIcon, Tooltip } from '@mantine/core';
-import { AlertTriangle, Copy, Check } from 'lucide-react';
+import { Modal, Stack, Button, Text, Alert, Group } from '@mantine/core';
+import { AlertTriangle } from 'lucide-react';
+import { PasswordDisplay } from '@/components/common/PasswordDisplay';
 import { useResetPassword } from '../hooks/useUsers';
 import { useTranslation } from '@/lib/i18n';
-import type { User } from '@/types';
+import type { User } from '../types';
 
 interface Props {
   user: User;
@@ -58,23 +59,11 @@ export function ResetPasswordModal({ user, opened, onClose }: Props) {
               <Text size="sm">{t('users:resetPassword.saveWarning')}</Text>
             </Alert>
 
-            <TextInput label={t('common:label.username')} value={user.username} readOnly />
-
-            <div>
-              <Text size="sm" fw={500} mb={4}>{t('users:resetPassword.newPassword')}</Text>
-              <Group gap="xs">
-                <TextInput value={newPassword} readOnly style={{ flex: 1 }} />
-                <CopyButton value={newPassword}>
-                  {({ copied, copy }) => (
-                    <Tooltip label={copied ? t('users:resetPassword.copy.success') : t('users:resetPassword.copy.label')}>
-                      <ActionIcon color={copied ? 'teal' : 'gray'} variant="light" onClick={copy} size="lg">
-                        {copied ? <Check size={16} /> : <Copy size={16} />}
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                </CopyButton>
-              </Group>
-            </div>
+            <PasswordDisplay
+              username={user.username}
+              password={newPassword}
+              passwordLabel={t('users:resetPassword.newPassword')}
+            />
 
             <Button onClick={handleClose} fullWidth>{t('users:resetPassword.button.close')}</Button>
           </>

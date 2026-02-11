@@ -5,7 +5,7 @@ import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
 import { useTranslation } from '@/lib/i18n';
 import { getRoleOptions, getStatusOptions } from '@/constants/options';
-import type { User, CreateUserRequest } from '@/types';
+import type { User, CreateUserRequest, UserFormValues } from '../types';
 
 interface Props {
   initialData?: User;
@@ -21,20 +21,20 @@ export function UserForm({ initialData, onSubmit, onCancel, isLoading }: Props) 
   const ROLE_OPTIONS = getRoleOptions(t);
   const STATUS_OPTIONS = getStatusOptions(t);
 
-  const form = useForm({
+  const form = useForm<UserFormValues>({
     initialValues: {
       username: '',
       firstName: '',
       lastName: '',
-      departmentId: null as number | null,
-      sectionId: null as number | null,
+      departmentId: null,
+      sectionId: null,
       email: '',
       tel: '',
-      role: 'USER' as 'USER' | 'ADMIN',
-      status: 'active' as 'active' | 'inactive',
+      role: 'USER',
+      status: 'active',
     },
     validate: {
-      username: (v) => (!v ? t('validation:required.username') : !/^\d{6}$/.test(v) ? t('validation:format.usernameDigits') : null),
+      username: (v) => (!v ? t('validation:required.employeeId') : !/^\d{6}$/.test(v) ? t('validation:format.employeeIdDigits') : null),
       firstName: (v) => (!v ? t('validation:required.firstName') : null),
       lastName: (v) => (!v ? t('validation:required.lastName') : null),
       departmentId: (v) => (!v ? t('validation:required.department') : null),

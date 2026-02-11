@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import { Switch } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useTranslation } from '@/lib/i18n';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { UserActionMenu } from '../components/UserActionMenu';
-import type { User, Status } from '@/types';
+import type { User, Status } from '../types';
 
 const columnHelper = createColumnHelper<User>();
 
@@ -18,13 +18,11 @@ interface UseUserColumnsOptions {
   canDelete: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useUserColumns({ onView, onEdit, onDelete, onStatusChange, canEdit, canDelete }: UseUserColumnsOptions): ColumnDef<User, any>[] {
+export function useUserColumns({ onView, onEdit, onDelete, onStatusChange, canEdit, canDelete }: UseUserColumnsOptions) {
   const { t } = useTranslation(['users']);
 
   return useMemo(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (): ColumnDef<User, any>[] => [
+    () => [
       columnHelper.accessor('username', {
         header: t('users:table.column.username'),
         enableHiding: false,
