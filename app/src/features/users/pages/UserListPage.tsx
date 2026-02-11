@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useQueryClient } from '@tanstack/react-query';
 import type { SortingState } from '@tanstack/react-table';
@@ -9,6 +8,9 @@ import { DataTable } from '@/components/common/DataTable/DataTable';
 import { ImportButton } from '@/components/common/ImportButton';
 import { ExportModal } from '../components/ExportModal';
 import { UserFilters } from '../components/UserFilters';
+import { UserCreateDrawer } from '../components/UserCreateDrawer';
+import { UserDetailDrawer } from '../components/UserDetailDrawer';
+import { UserEditDrawer } from '../components/UserEditDrawer';
 import { useUsers, useDeleteUser, useUpdateUser, useBulkDeleteUsers, userKeys } from '../hooks/useUsers';
 import { useUserColumns } from '../hooks/useUserColumns';
 import { DEFAULT_PARAMS, SORT_FIELD_MAP, SORT_FIELD_REVERSE } from '../hooks/userTable.config';
@@ -18,13 +20,21 @@ import { useIsAdmin } from '@/stores/auth.store';
 import { userApi } from '@/api/services/user.api';
 import type { User, UserQueryParams, Status } from '@/types';
 
+type DrawerState =
+  | { mode: 'closed' }
+  | { mode: 'create' }
+  | { mode: 'detail'; userId: number }
+  | { mode: 'edit'; userId: number };
+
 export function UserListPage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isAdmin = useIsAdmin();
   const { confirm, confirmDelete } = useConfirm();
   const { t } = useTranslation(['users', 'common']);
   const [exportOpened, setExportOpened] = useState(false);
+  const [drawer, setDrawer] = useState<DrawerState>({ mode: 'closed' });
+
+  const closeDrawer = useCallback(() => setDrawer({ mode: 'closed' }), []);
 
   const {
     params,
@@ -78,8 +88,8 @@ export function UserListPage() {
   );
 
   const columns = useUserColumns({
-    onView: (user) => navigate(`/users/${user.id}`),
-    onEdit: (user) => navigate(`/users/${user.id}/edit`),
+    onView: (user) => setDrawer({ mode: 'detail', userId: user.id }),
+    onEdit: (user) => setDrawer({ mode: 'edit', userId: user.id }),
     onDelete: handleDelete,
     onStatusChange: handleStatusChange,
     canEdit: isAdmin,
@@ -114,14 +124,14 @@ export function UserListPage() {
           <Button
             variant="filled"
             size="xs"
-            onClick={() => navigate('/users/create')}
+            onClick={() => setDrawer({ mode: 'create' })}
           >
             {t('users:action.addUser')}
           </Button>
         </>
       )}
     </>
-  ), [isAdmin, handleImportSuccess, navigate, t]);
+  ), [isAdmin, handleImportSuccess, t]);
 
   return (
     <div>
@@ -137,6 +147,24 @@ export function UserListPage() {
         onClose={() => setExportOpened(false)}
         initialParams={params}
         onExport={(exportParams) => userApi.exportExcel(exportParams)}
+      />
+
+      <UserCreateDrawer
+        opened={drawer.mode === 'create'}
+        onClose={closeDrawer}
+      />
+
+      <UserDetailDrawer
+        opened={drawer.mode === 'detail'}
+        onClose={closeDrawer}
+        userId={drawer.mode === 'detail' ? drawer.userId : 0}
+        onEdit={(userId) => setDrawer({ mode: 'edit', userId })}
+      />
+
+      <UserEditDrawer
+        opened={drawer.mode === 'edit'}
+        onClose={closeDrawer}
+        userId={drawer.mode === 'edit' ? drawer.userId : 0}
       />
 
       <DataTable

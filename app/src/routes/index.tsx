@@ -3,12 +3,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { AdminRoute } from '@/components/layout/AdminRoute';
-import {
-  UserListPage,
-  UserCreatePage,
-  UserEditPage,
-  UserDetailPage,
-} from '@/features/users';
+import { UserListPage } from '@/features/users';
 import {
   DashboardPage,
   ProfilePage,
@@ -52,18 +47,6 @@ export const router = createBrowserRouter([
           {
             path: 'users',
             element: <UserListPage />,
-          },
-          {
-            path: 'users/create',
-            element: <UserCreatePage />,
-          },
-          {
-            path: 'users/:id/edit',
-            element: <UserEditPage />,
-          },
-          {
-            path: 'users/:id',
-            element: <UserDetailPage />,
           },
           {
             path: 'departments',

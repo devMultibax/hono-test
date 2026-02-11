@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Modal, Button, Text, TextInput, Group, Stack, CopyButton, ActionIcon, Tooltip } from '@mantine/core';
+import { Drawer, Modal, Button, Text, TextInput, Group, Stack, CopyButton, ActionIcon, Tooltip } from '@mantine/core';
 import { Copy, Check } from 'lucide-react';
-import { PageHeader } from '@/components/common/PageHeader';
-import { UserForm } from '../components/UserForm';
+import { UserForm } from './UserForm';
 import { useCreateUser } from '../hooks/useUsers';
 import { useTranslation } from '@/lib/i18n';
 import type { CreateUserRequest } from '@/types';
 
-export function UserCreatePage() {
-  const { t } = useTranslation(['users', 'common', 'navigation']);
-  const navigate = useNavigate();
+interface Props {
+  opened: boolean;
+  onClose: () => void;
+}
+
+export function UserCreateDrawer({ opened, onClose }: Props) {
+  const { t } = useTranslation(['users', 'common']);
   const createUser = useCreateUser();
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
 
@@ -21,24 +23,31 @@ export function UserCreatePage() {
   };
 
   const handleClose = () => {
-    setCredentials(null);
-    navigate('/users');
+    if (credentials) {
+      setCredentials(null);
+    }
+    onClose();
   };
 
   return (
-    <div>
-      <PageHeader
+    <>
+      <Drawer
+        opened={opened}
+        onClose={handleClose}
         title={t('users:page.createTitle')}
-        breadcrumbs={[
-          { label: t('navigation:breadcrumb.home'), path: '/dashboard' },
-          { label: t('navigation:breadcrumb.users'), path: '/users' },
-          { label: t('navigation:breadcrumb.createUser') },
-        ]}
-      />
+        position="right"
+        size="lg"
+      >
+        <UserForm onSubmit={handleSubmit} onCancel={handleClose} isLoading={createUser.isPending} />
+      </Drawer>
 
-      <UserForm onSubmit={handleSubmit} isLoading={createUser.isPending} />
-
-      <Modal opened={!!credentials} onClose={handleClose} title={t('users:message.createSuccess')} centered closeOnClickOutside={false}>
+      <Modal
+        opened={!!credentials}
+        onClose={handleClose}
+        title={t('users:message.createSuccess')}
+        centered
+        closeOnClickOutside={false}
+      >
         <Stack gap="md">
           <Text size="sm" c="dimmed">{t('users:message.savePasswordWarning')}</Text>
 
@@ -63,6 +72,6 @@ export function UserCreatePage() {
           <Button onClick={handleClose} fullWidth>{t('common:button.close')}</Button>
         </Stack>
       </Modal>
-    </div>
+    </>
   );
 }

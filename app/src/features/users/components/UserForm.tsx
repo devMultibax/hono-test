@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { TextInput, Select, Button, Grid, Stack, Paper, Divider } from '@mantine/core';
+import { TextInput, Select, Button, Grid, Stack, Group } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
@@ -10,10 +10,11 @@ import type { User, CreateUserRequest } from '@/types';
 interface Props {
   initialData?: User;
   onSubmit: (data: CreateUserRequest) => void;
+  onCancel: () => void;
   isLoading?: boolean;
 }
 
-export function UserForm({ initialData, onSubmit, isLoading }: Props) {
+export function UserForm({ initialData, onSubmit, onCancel, isLoading }: Props) {
   const isEdit = !!initialData;
   const { t } = useTranslation(['users', 'validation', 'common']);
 
@@ -75,88 +76,73 @@ export function UserForm({ initialData, onSubmit, isLoading }: Props) {
   });
 
   return (
-    <Paper p="lg" withBorder>
-      <form onSubmit={handleSubmit}>
-        <Stack gap="lg">
-          <section>
-            <h3 className="text-lg font-medium mb-4">{t('users:form.section.account')}</h3>
-            <TextInput
-              label={t('users:form.username.label')}
-              placeholder={t('users:form.username.placeholder')}
-              disabled={isEdit}
-              maxLength={6}
+    <form onSubmit={handleSubmit}>
+      <Stack gap="md">
+        <TextInput
+          label={t('users:form.username.label')}
+          placeholder={t('users:form.username.placeholder')}
+          disabled={isEdit}
+          maxLength={6}
+          required
+          {...form.getInputProps('username')}
+        />
+
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput label={t('users:form.firstName.label')} placeholder={t('users:form.firstName.placeholder')} required {...form.getInputProps('firstName')} />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput label={t('users:form.lastName.label')} placeholder={t('users:form.lastName.placeholder')} required {...form.getInputProps('lastName')} />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput label={t('users:form.email.label')} placeholder={t('users:form.email.placeholder')} {...form.getInputProps('email')} />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput label={t('users:form.tel.label')} placeholder={t('users:form.tel.placeholder')} maxLength={10} {...form.getInputProps('tel')} />
+          </Grid.Col>
+        </Grid>
+
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <DepartmentSelect
+              label={t('common:label.department')}
               required
-              {...form.getInputProps('username')}
+              value={form.values.departmentId}
+              onChange={(value) => {
+                form.setFieldValue('departmentId', value);
+                form.setFieldValue('sectionId', null);
+              }}
+              error={form.errors.departmentId as string}
             />
-          </section>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <SectionSelect
+              label={t('common:label.section')}
+              departmentId={form.values.departmentId}
+              value={form.values.sectionId}
+              onChange={(value) => form.setFieldValue('sectionId', value)}
+            />
+          </Grid.Col>
+        </Grid>
 
-          <Divider />
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Select label={t('common:label.role')} data={ROLE_OPTIONS} required {...form.getInputProps('role')} />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Select label={t('common:label.status')} data={STATUS_OPTIONS} required {...form.getInputProps('status')} />
+          </Grid.Col>
+        </Grid>
 
-          <section>
-            <h3 className="text-lg font-medium mb-4">{t('users:form.section.personal')}</h3>
-            <Grid>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput label={t('users:form.firstName.label')} placeholder={t('users:form.firstName.placeholder')} required {...form.getInputProps('firstName')} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput label={t('users:form.lastName.label')} placeholder={t('users:form.lastName.placeholder')} required {...form.getInputProps('lastName')} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput label={t('users:form.email.label')} placeholder={t('users:form.email.placeholder')} {...form.getInputProps('email')} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput label={t('users:form.tel.label')} placeholder={t('users:form.tel.placeholder')} maxLength={10} {...form.getInputProps('tel')} />
-              </Grid.Col>
-            </Grid>
-          </section>
-
-          <Divider />
-
-          <section>
-            <h3 className="text-lg font-medium mb-4">{t('users:form.section.affiliation')}</h3>
-            <Grid>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <DepartmentSelect
-                  label={t('common:label.department')}
-                  required
-                  value={form.values.departmentId}
-                  onChange={(value) => {
-                    form.setFieldValue('departmentId', value);
-                    form.setFieldValue('sectionId', null);
-                  }}
-                  error={form.errors.departmentId as string}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <SectionSelect
-                  label={t('common:label.section')}
-                  departmentId={form.values.departmentId}
-                  value={form.values.sectionId}
-                  onChange={(value) => form.setFieldValue('sectionId', value)}
-                />
-              </Grid.Col>
-            </Grid>
-          </section>
-
-          <Divider />
-
-          <section>
-            <h3 className="text-lg font-medium mb-4">{t('users:form.section.permissions')}</h3>
-            <Grid>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select label={t('common:label.role')} data={ROLE_OPTIONS} required {...form.getInputProps('role')} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select label={t('common:label.status')} data={STATUS_OPTIONS} required {...form.getInputProps('status')} />
-              </Grid.Col>
-            </Grid>
-          </section>
-
-          <Button type="submit" loading={isLoading} size="md">
-            {isEdit ? t('users:form.button.update') : t('users:form.button.create')}
+        <Group justify="flex-end" mt="md">
+          <Button variant="subtle" color="gray" onClick={onCancel}>
+            {t('common:button.cancel')}
           </Button>
-        </Stack>
-      </form>
-    </Paper>
+          <Button type="submit" loading={isLoading}>
+            {t('common:button.confirm')}
+          </Button>
+        </Group>
+      </Stack>
+    </form>
   );
 }

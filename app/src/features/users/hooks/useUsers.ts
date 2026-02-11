@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/services/user.api';
-import { Report } from '@/utils/alertUtils';
+import { Report,Toast } from '@/utils/alertUtils';
 import { t } from '@/lib/i18n/helpers';
 import type { UserQueryParams, UpdateUserRequest } from '@/types';
 
@@ -34,7 +34,7 @@ export function useCreateUser() {
     mutationFn: userApi.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: userKeys.lists() });
-      Report.success(t('users:message.createSuccess'));
+      Toast.success(t('users:message.createSuccess'));
     },
   });
 }
@@ -57,7 +57,7 @@ export function useDeleteUser() {
     mutationFn: userApi.delete,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: userKeys.lists() });
-      Report.success(t('users:message.deleteSuccess'));
+      Toast.success(t('users:message.deleteSuccess'));
     },
   });
 }
