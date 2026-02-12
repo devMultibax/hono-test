@@ -1,4 +1,4 @@
-import { Confirm } from '@/utils/alertUtils';
+import { Confirm } from '@/utils/mantineAlertUtils';
 
 interface ConfirmOptions {
   title?: string;

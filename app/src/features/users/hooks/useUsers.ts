@@ -6,7 +6,7 @@ import type { UserQueryParams, CreateUserRequest, UpdateUserRequest } from '../t
 
 export const userKeys = createQueryKeys<UserQueryParams>('users');
 
-const { useCreate, useUpdate, useDelete, useBulkDelete } = createCrudHooks<CreateUserRequest, UpdateUserRequest>({
+const { useUpdate, useDelete, useBulkDelete } = createCrudHooks<CreateUserRequest, UpdateUserRequest>({
   queryKeys: userKeys,
   api: {
     create: userApi.create,
@@ -22,11 +22,20 @@ const { useCreate, useUpdate, useDelete, useBulkDelete } = createCrudHooks<Creat
 });
 
 export {
-  useCreate as useCreateUser,
   useUpdate as useUpdateUser,
   useDelete as useDeleteUser,
   useBulkDelete as useBulkDeleteUsers,
 };
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: userApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+  });
+}
 
 export function useUsers(params: UserQueryParams) {
   return useQuery({

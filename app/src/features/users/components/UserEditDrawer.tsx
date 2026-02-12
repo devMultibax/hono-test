@@ -13,23 +13,20 @@ interface Props {
 
 export function UserEditDrawer({ opened, onClose, userId }: Props) {
   const { t } = useTranslation(['users']);
-  const { confirmWarning } = useConfirm();
+  const { confirm } = useConfirm();
   const { data: user, isLoading, error } = useUser(userId);
   const updateUser = useUpdateUser();
 
   const handleSubmit = (data: UpdateUserRequest) => {
     const userName = `${user?.firstName} ${user?.lastName}`;
 
-    confirmWarning(
-      '',
-      () => {
+    confirm({
+      title: t('users:confirm.update.title'),
+      message: t('users:confirm.update.message', { name: userName }),
+      onConfirm: () => {
         updateUser.mutate({ id: userId, data }, { onSuccess: onClose });
       },
-      {
-        title: t('users:confirm.update.title'),
-        message: `คุณต้องการบันทึกการแก้ไขข้อมูลผู้ใช้ "${userName}" หรือไม่?`,
-      }
-    );
+    });
   };
 
   return (

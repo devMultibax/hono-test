@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { Button, Drawer, Text, Stack, Alert, Group, UnstyledButton, RingProgress, ThemeIcon, ScrollArea, Divider } from '@mantine/core';
 import { IconCheck, IconX, IconAlertTriangle, IconFileSpreadsheet, IconUpload } from '@tabler/icons-react';
 import { apiClient } from '@/api/client';
-import { Toast } from '@/utils/alertUtils';
+import { Report } from '@/utils/mantineAlertUtils';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from '@/lib/i18n';
 import type { AxiosError } from 'axios';
@@ -92,7 +92,7 @@ export function ImportButton({
       setSelectedFile(null);
 
       if (response.data.success > 0) {
-        Toast.success(t('users:import.successMessage', { count: response.data.success }));
+        Report.success(t('users:import.successMessage', { count: response.data.success }));
       }
 
       // Always refresh the list after import (even if some rows failed)

@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios';
-import { handleError } from '@/utils/alertUtils';
+import { handleError } from '@/utils/mantineAlertUtils';
 
 export { handleError };
 

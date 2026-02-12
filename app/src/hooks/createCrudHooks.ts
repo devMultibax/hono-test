@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Report, Toast } from '@/utils/alertUtils';
+import { Report } from '@/utils/mantineAlertUtils';
 import { t } from '@/lib/i18n/helpers';
 
 interface CrudQueryKeys {
@@ -31,7 +31,7 @@ export function createCrudHooks<TCreate, TUpdate>(config: CrudApiConfig<TCreate,
       mutationFn: api.create,
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: queryKeys.lists() });
-        Toast.success(t(messages.createSuccess));
+        Report.success(t(messages.createSuccess));
       },
     });
   }
@@ -43,7 +43,7 @@ export function createCrudHooks<TCreate, TUpdate>(config: CrudApiConfig<TCreate,
       onSuccess: (_, { id }) => {
         qc.invalidateQueries({ queryKey: queryKeys.lists() });
         qc.invalidateQueries({ queryKey: queryKeys.detail(id) });
-        Toast.success(t(messages.updateSuccess));
+        Report.success(t(messages.updateSuccess));
       },
     });
   }
@@ -54,7 +54,7 @@ export function createCrudHooks<TCreate, TUpdate>(config: CrudApiConfig<TCreate,
       mutationFn: api.delete,
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: queryKeys.lists() });
-        Toast.success(t(messages.deleteSuccess));
+        Report.success(t(messages.deleteSuccess));
       },
     });
   }

@@ -23,7 +23,7 @@ export function UserCreateDrawer({ opened, onClose }: Props) {
   const handleSubmit = (data: CreateUserRequest) => {
     confirm({
       title: t('users:confirm.create.title'),
-      message: t('users:confirm.create.message', { username: data.username }),
+      message: t('users:confirm.create.message', { name: `${data.firstName} ${data.lastName}` }),
       onConfirm: () => {
         createUser.mutate(data, {
           onSuccess: (res) => {

@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
-import { Toast } from '@/utils/alertUtils';
+import { Report } from '@/utils/mantineAlertUtils';
 import { useDeleteUser, useBulkDeleteUsers, useUpdateUserStatus, userKeys } from './useUsers';
 import type { User, Status } from '../types';
 
@@ -35,7 +35,7 @@ export function useUserActions() {
             { id: user.id, status },
             {
               onSuccess: () => {
-                Toast.success(t('users:message.statusChangeSuccess'));
+                Report.success(t('users:message.statusChangeSuccess'));
               },
             }
           );

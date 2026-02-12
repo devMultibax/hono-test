@@ -5,7 +5,7 @@ import { User, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/lib/i18n';
 import { extractErrorMessage } from '@/utils/errorHandlerUtils';
-import { Report } from '@/utils/alertUtils';
+import { Report } from '@/utils/mantineAlertUtils';
 
 const REMEMBER_KEY = 'remembered_username';
 
