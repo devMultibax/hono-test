@@ -92,7 +92,7 @@ export function useUserActions() {
   const handleDelete = useCallback((user: User) => {
     confirm({
       title: t('users:confirm.delete.title'),
-      message: t('users:confirm.delete.message', { name: `${user.firstName} ${user.lastName}` }),
+      message: t('users:confirm.delete.user', { name: `${user.firstName} ${user.lastName}` }),
       note: t('users:confirm.irreversibleNote'),
       onConfirm: () => deleteUser.mutate(user.id),
     });
