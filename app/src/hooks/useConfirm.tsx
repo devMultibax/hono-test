@@ -4,9 +4,6 @@ import { Confirm } from '@/utils/alertUtils';
 interface ConfirmOptions {
   title?: string;
   message: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  confirmColor?: string;
   onConfirm: () => void | Promise<void>;
   onCancel?: () => void;
 }
@@ -15,7 +12,7 @@ export function useConfirm() {
   const { t } = useTranslation(['common']);
 
   const confirm = async ({
-    title = t('common:confirm.title'),
+    title,
     message,
     onConfirm,
     onCancel,
@@ -28,14 +25,44 @@ export function useConfirm() {
     }
   };
 
-  const confirmDelete = async (itemName: string, onConfirm: () => void | Promise<void>) => {
-    const result = await Confirm.delete(itemName, {
-      title: t('common:confirm.delete.title'),
-    });
+  const confirmDelete = async (
+    itemName: string,
+    onConfirm: () => void | Promise<void>,
+    options?: {
+      title?: string;
+      message?: string;
+      description?: string;
+    }
+  ) => {
+    const msg = options?.message
+      || `${t('common:confirm.delete.messagePrefix')} ${itemName} ${t('common:confirm.delete.messageSuffix')}`;
+    const result = await Confirm.show(
+      msg,
+      options?.title || t('common:confirm.delete.title'),
+    );
     if (result) {
       await onConfirm();
     }
   };
 
-  return { confirm, confirmDelete };
+  const confirmWarning = async (
+    itemName: string,
+    onConfirm: () => void | Promise<void>,
+    options?: {
+      title?: string;
+      message?: string;
+      description?: string;
+    }
+  ) => {
+    const msg = options?.message || itemName;
+    const result = await Confirm.show(
+      msg,
+      options?.title || t('common:confirm.title'),
+    );
+    if (result) {
+      await onConfirm();
+    }
+  };
+
+  return { confirm, confirmDelete, confirmWarning };
 }

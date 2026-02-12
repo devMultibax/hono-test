@@ -14,12 +14,11 @@ export function useUserActions() {
   const updateUserStatus = useUpdateUserStatus();
   const bulkDeleteUsers = useBulkDeleteUsers();
 
-  const handleDelete = useCallback(
-    (user: User) => {
-      confirmDelete(`${user.firstName} ${user.lastName}`, () => deleteUser.mutate(user.id));
-    },
-    [confirmDelete, deleteUser],
-  );
+  const handleDelete = useCallback((user: User) => {
+    confirmDelete(`${user.firstName} ${user.lastName}`, () =>
+      deleteUser.mutate(user.id)
+    );
+  }, [confirmDelete, deleteUser],);
 
   const handleStatusChange = useCallback(
     (user: User, status: Status) => {
