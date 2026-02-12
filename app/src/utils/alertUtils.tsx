@@ -49,7 +49,7 @@ export const Confirm = {
   show: (message: string, title?: string): Promise<boolean> =>
     new Promise((resolve) => {
       Notiflix.Confirm.show(
-        title || t('common:notiflix.confirmTitle'),
+        title || t('common:confirm.confirm'),
         message,
         t('common:button.confirm'),
         t('common:button.cancel'),

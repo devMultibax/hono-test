@@ -18,12 +18,10 @@ import { useDataTable } from '@/hooks/useDataTable';
 import { useIsAdmin } from '@/stores/auth.store';
 import { userApi } from '@/api/services/user.api';
 import type { UserQueryParams } from '../types';
-import { useConfirm } from '@/hooks/useConfirm';
 
 export function UserListPage() {
   const isAdmin = useIsAdmin();
   const { t } = useTranslation(['users', 'common']);
-  const { confirm } = useConfirm();
   const [exportOpened, setExportOpened] = useState(false);
 
   const drawer = useUserDrawer();
@@ -56,9 +54,6 @@ export function UserListPage() {
 
   const headerActions = useMemo(() => (
     <>
-      <Button variant="light" size="xs" onClick={() => confirm({ title: 'ยืนยัน', message: 'คุณต้องการลบผู้ใช้ ดิษกรณ์ นิสกุลทอง ใช่หรือไม่?', onConfirm: () => {} })}>
-        TEST
-      </Button>
       <Button variant="light" color="teal" size="xs" onClick={() => setExportOpened(true)}>
         {t('common:button.downloadReport')}
       </Button>
@@ -69,7 +64,7 @@ export function UserListPage() {
         {t('users:action.addUser')}
       </Button>
     </>
-  ), [isAdmin, actions.handleImportSuccess, drawer.openCreate, t, confirm]);
+  ), [isAdmin, actions.handleImportSuccess, drawer.openCreate, t]);
 
   return (
     <div>

@@ -9,16 +9,18 @@ import type { User, Status } from '../types';
 export function useUserActions() {
   const { t } = useTranslation(['users']);
   const queryClient = useQueryClient();
-  const { confirm, confirmDelete } = useConfirm();
+  const { confirm } = useConfirm();
   const deleteUser = useDeleteUser();
   const updateUserStatus = useUpdateUserStatus();
   const bulkDeleteUsers = useBulkDeleteUsers();
 
   const handleDelete = useCallback((user: User) => {
-    confirmDelete(`${user.firstName} ${user.lastName}`, () =>
-      deleteUser.mutate(user.id)
-    );
-  }, [confirmDelete, deleteUser],);
+    confirm({
+      title: t('users:confirm.delete.title'),
+      message: t('users:confirm.delete.message', { name: `${user.firstName} ${user.lastName}` }),
+      onConfirm: () => deleteUser.mutate(user.id),
+    });
+  }, [confirm, deleteUser, t]);
 
   const handleStatusChange = useCallback(
     (user: User, status: Status) => {
@@ -48,7 +50,6 @@ export function useUserActions() {
       confirm({
         title: t('users:confirm.bulkDelete.title'),
         message: t('users:confirm.bulkDelete.message', { count: selectedUsers.length }),
-        confirmLabel: t('users:confirm.bulkDelete.button'),
         onConfirm: () => bulkDeleteUsers.mutate(selectedUsers.map((u) => u.id)),
       });
     },
