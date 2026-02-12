@@ -18,6 +18,7 @@ export function useUserActions() {
     confirm({
       title: t('users:confirm.delete.title'),
       message: t('users:confirm.delete.message', { name: `${user.firstName} ${user.lastName}` }),
+      note: t('users:confirm.irreversibleNote'),
       onConfirm: () => deleteUser.mutate(user.id),
     });
   }, [confirm, deleteUser, t]);
@@ -50,6 +51,7 @@ export function useUserActions() {
       confirm({
         title: t('users:confirm.bulkDelete.title'),
         message: t('users:confirm.bulkDelete.message', { count: selectedUsers.length }),
+        note: t('users:confirm.irreversibleNote'),
         onConfirm: () => bulkDeleteUsers.mutate(selectedUsers.map((u) => u.id)),
       });
     },

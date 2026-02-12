@@ -1,4 +1,4 @@
-import { Text, Button, Group, Stack, ThemeIcon } from '@mantine/core';
+import { Text, Button, Group, Stack, ThemeIcon, Alert } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import {
   IconCircleCheck,
@@ -102,9 +102,19 @@ export function handleError(error: unknown): void {
   }
 }
 
+interface ConfirmShowOptions {
+  message: string;
+  title?: string;
+  note?: string;
+}
+
 export const Confirm = {
-  show: (message: string, title?: string): Promise<boolean> =>
-    new Promise((resolve) => {
+  show: (options: ConfirmShowOptions | string, title?: string): Promise<boolean> => {
+    const opts = typeof options === 'string'
+      ? { message: options, title }
+      : options;
+
+    return new Promise((resolve) => {
       modals.open({
         withCloseButton: false,
         closeOnClickOutside: false,
@@ -116,14 +126,25 @@ export const Confirm = {
               <IconInfoCircle size={64} stroke={1.5} />
             </ThemeIcon>
             <Text fw={600} size="lg">
-              {title || t('common:confirm.confirm')}
+              {opts.title || t('common:confirm.confirm')}
             </Text>
             <Text
               c="gray.7"
               ta="center"
               size="sm"
-              dangerouslySetInnerHTML={{ __html: boldQuoted(message, '#1c7ed6') }}
+              dangerouslySetInnerHTML={{ __html: boldQuoted(opts.message, '#1c7ed6') }}
             />
+            {opts.note && (
+              <Alert
+                variant="light"
+                color="orange"
+                icon={<IconAlertTriangle size={18} />}
+                w="100%"
+                py="xs"
+              >
+                <Text size="xs">{opts.note}</Text>
+              </Alert>
+            )}
             <Group w="100%" grow mt="xs">
               <Button
                 variant="default"
@@ -147,5 +168,6 @@ export const Confirm = {
           </Stack>
         ),
       });
-    }),
+    });
+  },
 };
