@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
-import { PageHeader } from '@/components/common/PageHeader';
+
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { ImportButton } from '@/components/common/ImportButton';
 import { UserExportDrawer } from '../components/UserExportDrawer';
@@ -68,10 +68,6 @@ export function UserListPage() {
 
   return (
     <div>
-      <PageHeader
-        title={t('users:page.title')}
-        breadcrumbs={[{ label: t('common:breadcrumb.home'), path: '/dashboard' }, { label: t('users:breadcrumb.users') }]}
-      />
 
       <UserFilters params={params} onChange={handleFilterChange} />
 

@@ -6,9 +6,12 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from '@/components/common/ErrorFallback';
+import { PageHeader } from '@/components/common/PageHeader';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 export function MainLayout() {
   const [opened, { toggle, close }] = useDisclosure();
+  const { title, breadcrumbs } = usePageMeta();
 
   return (
     <AppShell
@@ -31,6 +34,7 @@ export function MainLayout() {
       <AppShell.Main>
         <ErrorBoundary FallbackComponent={ErrorFallback}>
           <Suspense fallback={<LoadingOverlay visible />}>
+            {title && <PageHeader title={title} breadcrumbs={breadcrumbs} />}
             <Outlet />
           </Suspense>
         </ErrorBoundary>
