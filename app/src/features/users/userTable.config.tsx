@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { createColumnHelper } from '@tanstack/react-table';
-import { Switch } from '@mantine/core';
-import { IconCheck, IconX } from '@tabler/icons-react';
 import { useTranslation } from '@/lib/i18n';
 import { RoleBadge } from '@/components/common/RoleBadge';
+import { StatusSwitch } from '@/components/common/StatusSwitch';
 import { UserActionMenu } from './components/UserActionMenu';
 import type { User, UserQueryParams, Status } from './types';
 
@@ -62,21 +61,9 @@ export function useUserColumns({ onView, onEdit, onDelete, onStatusChange, canEd
       columnHelper.accessor('status', {
         header: t('users:table.column.status'),
         cell: ({ row }) => (
-          <Switch
-            checked={row.original.status === 'active'}
-            onChange={(event) => {
-              const newStatus: Status = event.currentTarget.checked ? 'active' : 'inactive';
-              onStatusChange(row.original, newStatus);
-            }}
-            color="teal"
-            size="sm"
-            thumbIcon={
-              row.original.status === 'active' ? (
-                <IconCheck size={12} color="var(--mantine-color-teal-6)" stroke={3} />
-              ) : (
-                <IconX size={12} color="var(--mantine-color-red-6)" stroke={3} />
-              )
-            }
+          <StatusSwitch
+            status={row.original.status}
+            onChange={(status) => onStatusChange(row.original, status)}
             disabled={!canEdit}
           />
         ),

@@ -18,7 +18,7 @@ export function RoleBadge({ role }: Props) {
 
   return (
     <Group gap={8} wrap="nowrap">
-      <ThemeIcon variant="light" color={color} size="sm" radius="xl">
+      <ThemeIcon variant="light" color={color} size="sm">
         <Icon size={14} />
       </ThemeIcon>
       <Text size="sm" fw={500} c={color}>
