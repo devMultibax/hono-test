@@ -30,7 +30,7 @@
   "label": {
     "status": "สถานะ",
     "role": "สิทธิ์",
-    "department": "แผนก",
+    "department": "ฝ่าย",
     "section": "หน่วยงาน",
     "username": "Username",
     "password": "รหัสผ่าน",
@@ -44,7 +44,7 @@
   },
   "placeholder": {
     "search": "ค้นหา...",
-    "selectDepartment": "เลือกแผนก",
+    "selectDepartment": "เลือกฝ่าย",
     "selectSection": "เลือกหน่วยงาน",
     "enterUsername": "กรอก username",
     "enterPassword": "กรอกรหัสผ่าน",
