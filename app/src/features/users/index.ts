@@ -1,4 +1,3 @@
-export * from './components';
-export * from './pages';
-export * from './hooks/useUsers';
+export { UserListPage } from './pages/UserListPage';
+export { useUsers, useUserActions, userKeys } from './hooks/useUsers';
 export type { UserDrawerState, UserFormValues, UserExportParams } from './types';

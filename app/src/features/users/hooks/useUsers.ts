@@ -1,10 +1,18 @@
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/services/user.api';
 import { createQueryKeys } from '@/hooks/createQueryKeys';
 import { createCrudHooks } from '@/hooks/createCrudHooks';
-import type { UserQueryParams, CreateUserRequest, UpdateUserRequest } from '../types';
+import { useTranslation } from '@/lib/i18n';
+import { useConfirm } from '@/hooks/useConfirm';
+import { Report } from '@/utils/mantineAlertUtils';
+import type { UserQueryParams, CreateUserRequest, UpdateUserRequest, User, Status } from '../types';
+
+// === Query Keys ===
 
 export const userKeys = createQueryKeys<UserQueryParams>('users');
+
+// === CRUD Mutations (factory) ===
 
 const { useUpdate, useDelete, useBulkDelete } = createCrudHooks<CreateUserRequest, UpdateUserRequest>({
   queryKeys: userKeys,
@@ -26,6 +34,8 @@ export {
   useDelete as useDeleteUser,
   useBulkDelete as useBulkDeleteUsers,
 };
+
+// === Queries ===
 
 export function useCreateUser() {
   const queryClient = useQueryClient();
@@ -67,4 +77,71 @@ export function useUpdateUserStatus() {
       queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
     },
   });
+}
+
+// === Action Handlers (with confirmation dialogs) ===
+
+export function useUserActions() {
+  const { t } = useTranslation(['users']);
+  const queryClient = useQueryClient();
+  const { confirm } = useConfirm();
+  const deleteUser = useDelete();
+  const updateUserStatus = useUpdateUserStatus();
+  const bulkDeleteUsers = useBulkDelete();
+
+  const handleDelete = useCallback((user: User) => {
+    confirm({
+      title: t('users:confirm.delete.title'),
+      message: t('users:confirm.delete.message', { name: `${user.firstName} ${user.lastName}` }),
+      note: t('users:confirm.irreversibleNote'),
+      onConfirm: () => deleteUser.mutate(user.id),
+    });
+  }, [confirm, deleteUser, t]);
+
+  const handleStatusChange = useCallback(
+    (user: User, status: Status) => {
+      confirm({
+        title: t('users:confirm.statusChange.title'),
+        message: t('users:confirm.statusChange.message', {
+          name: `${user.firstName} ${user.lastName}`,
+          status: t(`users:status.${status}`),
+        }),
+        onConfirm: () => {
+          updateUserStatus.mutate(
+            { id: user.id, status },
+            {
+              onSuccess: () => {
+                Report.success(t('users:message.statusChangeSuccess'));
+              },
+            }
+          );
+        },
+      });
+    },
+    [confirm, updateUserStatus, t],
+  );
+
+  const handleBulkDelete = useCallback(
+    (selectedUsers: User[]) => {
+      confirm({
+        title: t('users:confirm.bulkDelete.title'),
+        message: t('users:confirm.bulkDelete.message', { count: selectedUsers.length }),
+        note: t('users:confirm.irreversibleNote'),
+        onConfirm: () => bulkDeleteUsers.mutate(selectedUsers.map((u) => u.id)),
+      });
+    },
+    [confirm, bulkDeleteUsers, t],
+  );
+
+  const handleImportSuccess = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: userKeys.lists() }),
+    [queryClient],
+  );
+
+  return {
+    handleDelete,
+    handleStatusChange,
+    handleBulkDelete,
+    handleImportSuccess,
+  };
 }

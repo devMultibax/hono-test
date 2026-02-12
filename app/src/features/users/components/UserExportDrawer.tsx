@@ -1,5 +1,5 @@
 import { ExportDrawer } from '@/components/common/ExportDrawer';
-import { UserFilterFields } from './UserFilterFields';
+import { UserFilterFields } from './UserFilters';
 import { useTranslation } from '@/lib/i18n';
 import type { UserQueryParams, UserExportParams } from '../types';
 

@@ -4,8 +4,21 @@ import { Switch } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useTranslation } from '@/lib/i18n';
 import { RoleBadge } from '@/components/common/RoleBadge';
-import { UserActionMenu } from '../components/UserActionMenu';
-import type { User, Status } from '../types';
+import { UserActionMenu } from './components/UserActionMenu';
+import type { User, UserQueryParams, Status } from './types';
+
+// === Table Config ===
+
+export const DEFAULT_PARAMS: UserQueryParams = {
+  page: 1,
+  limit: 10,
+  sort: 'createdAt',
+  order: 'desc',
+};
+
+export const SORT_FIELD_MAP: Record<string, string> = { fullName: 'firstName' };
+
+// === Column Definitions ===
 
 const columnHelper = createColumnHelper<User>();
 

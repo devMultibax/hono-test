@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Group, Button } from '@mantine/core';
+import { Group, Button, Modal, Stack, Text, Alert } from '@mantine/core';
+import { PasswordDisplay } from '@/components/common/PasswordDisplay';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useResetPassword } from '../hooks/useUsers';
-import { ResetPasswordModal } from './ResetPasswordModal';
 import type { User } from '@/types';
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDelete }: Props) {
-  const { t } = useTranslation(['users']);
+  const { t } = useTranslation(['users', 'common']);
   const { confirm } = useConfirm();
   const resetPassword = useResetPassword();
   const [resetResult, setResetResult] = useState<{ username: string; password: string } | null>(null);
@@ -25,6 +25,7 @@ export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDel
     confirm({
       title: t('users:resetPassword.title'),
       message: t('users:resetPassword.confirmMessage', { name: `${user.firstName} ${user.lastName}` }),
+      note: t('users:resetPassword.autoGenerate'),
       onConfirm: () => {
         resetPassword.mutate(user.id, {
           onSuccess: (res) => {
@@ -62,12 +63,29 @@ export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDel
         )}
       </Group>
 
-      <ResetPasswordModal
-        username={resetResult?.username ?? ''}
-        password={resetResult?.password ?? ''}
+      <Modal
         opened={!!resetResult}
         onClose={() => setResetResult(null)}
-      />
+        title={t('users:resetPassword.successTitle')}
+        centered
+        closeOnClickOutside={false}
+      >
+        <Stack gap="md">
+          <Alert color="green" variant="light">
+            <Text size="sm">{t('users:resetPassword.saveWarning')}</Text>
+          </Alert>
+
+          <PasswordDisplay
+            username={resetResult?.username ?? ''}
+            password={resetResult?.password ?? ''}
+            passwordLabel={t('users:resetPassword.newPassword')}
+          />
+
+          <Button onClick={() => setResetResult(null)} fullWidth>
+            {t('users:resetPassword.button.close')}
+          </Button>
+        </Stack>
+      </Modal>
     </>
   );
 }
