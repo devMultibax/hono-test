@@ -5,11 +5,11 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { AdminRoute } from '@/components/layout/AdminRoute';
 import { UserListPage, UserLogPage } from '@/features/users';
 import { DepartmentListPage } from '@/features/departments';
+import { SectionListPage } from '@/features/sections';
 import {
   DashboardPage,
   ProfilePage,
   ChangePasswordPage,
-  SectionsPage,
   UserLogsPage,
   SystemLogsPage,
   BackupsPage,
@@ -84,8 +84,8 @@ export const router = createBrowserRouter([
           },
           {
             path: 'sections',
-            element: <SectionsPage />,
-            handle: { title: 'navigation:page.sections', breadcrumb: 'navigation:menu.sections' },
+            element: <SectionListPage />,
+            handle: { title: 'sections:page.title', breadcrumb: 'navigation:menu.sections' },
           },
           {
             path: 'admin',

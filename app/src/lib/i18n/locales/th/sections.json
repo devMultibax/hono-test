@@ -1,0 +1,86 @@
+{
+  "page": {
+    "title": "จัดการหน่วยงาน",
+    "createTitle": "เพิ่มหน่วยงาน",
+    "editTitle": "แก้ไขหน่วยงาน",
+    "detailTitle": "ข้อมูลหน่วยงาน"
+  },
+  "table": {
+    "column": {
+      "name": "ชื่อหน่วยงาน",
+      "department": "ฝ่าย",
+      "status": "สถานะ"
+    }
+  },
+  "form": {
+    "name": {
+      "label": "ชื่อหน่วยงาน",
+      "placeholder": "กรอกชื่อหน่วยงาน"
+    },
+    "department": {
+      "label": "ฝ่าย",
+      "placeholder": "เลือกฝ่าย"
+    }
+  },
+  "field": {
+    "name": "ชื่อหน่วยงาน",
+    "department": "ฝ่าย",
+    "status": "สถานะ"
+  },
+  "action": {
+    "addSection": "เพิ่มหน่วยงาน",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "viewDetails": "ดูรายละเอียด"
+  },
+  "filter": {
+    "title": "ตัวกรอง",
+    "searchLabel": "ค้นหา",
+    "searchPlaceholder": "ค้นหาชื่อหน่วยงาน...",
+    "allStatuses": "ทุกสถานะ",
+    "allDepartments": "ทุกฝ่าย"
+  },
+  "export": {
+    "modalTitle": "ดาวน์โหลดรายงานหน่วยงาน"
+  },
+  "message": {
+    "empty": "ไม่พบข้อมูลหน่วยงาน",
+    "createSuccess": "สร้างหน่วยงานสำเร็จ",
+    "updateSuccess": "แก้ไขข้อมูลหน่วยงานสำเร็จ",
+    "deleteSuccess": "ลบหน่วยงานสำเร็จ",
+    "bulkDeleteSuccess": "ลบหน่วยงานที่เลือกสำเร็จ",
+    "statusChangeSuccess": "เปลี่ยนสถานะหน่วยงานสำเร็จ",
+    "sectionNotFound": "ไม่พบข้อมูลหน่วยงาน"
+  },
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน"
+  },
+  "confirm": {
+    "irreversibleNote": "การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "delete": {
+      "title": "ยืนยันการลบ",
+      "message": "คุณต้องการลบหน่วยงาน \"{{name}}\" หรือไม่?"
+    },
+    "bulkDelete": {
+      "title": "ยืนยันการลบหลายรายการ",
+      "message": "คุณต้องการลบหน่วยงานที่เลือก {{count}} รายการหรือไม่?"
+    },
+    "statusChange": {
+      "title": "ยืนยันเปลี่ยนสถานะ",
+      "message": "คุณต้องการเปลี่ยนสถานะ \"{{name}}\" เป็น{{status}} หรือไม่?"
+    },
+    "create": {
+      "title": "ยืนยันการสร้างหน่วยงาน",
+      "message": "คุณต้องการสร้างหน่วยงาน \"{{name}}\" หรือไม่?"
+    },
+    "update": {
+      "title": "ยืนยันการแก้ไข",
+      "message": "คุณต้องการแก้ไขข้อมูลหน่วยงาน \"{{name}}\" หรือไม่?"
+    },
+    "export": {
+      "title": "ยืนยันการดาวน์โหลด",
+      "message": "คุณต้องการดาวน์โหลดรายงานหน่วยงานตามเงื่อนไขที่เลือกหรือไม่?"
+    }
+  }
+}

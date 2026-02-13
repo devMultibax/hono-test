@@ -174,6 +174,12 @@ export interface CreateSectionRequest {
   status?: Status;
 }
 
+export interface UpdateSectionRequest {
+  name?: string;
+  departmentId?: number;
+  status?: Status;
+}
+
 // ============ User Log ============
 export interface UserLog {
   id: number;
