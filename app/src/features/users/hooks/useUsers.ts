@@ -89,46 +89,44 @@ export function useUserActions() {
   const updateUserStatus = useUpdateUserStatus();
   const bulkDeleteUsers = useBulkDelete();
 
-  const handleDelete = useCallback((user: User) => {
-    confirm({
+  const handleDelete = useCallback(async (user: User) => {
+    const confirmed = await confirm({
       title: t('users:confirm.delete.title'),
       message: t('users:confirm.delete.user', { name: `${user.firstName} ${user.lastName}` }),
       note: t('users:confirm.irreversibleNote'),
-      onConfirm: () => deleteUser.mutate(user.id),
     });
+    if (!confirmed) return;
+
+    deleteUser.mutate(user.id);
   }, [confirm, deleteUser, t]);
 
   const handleStatusChange = useCallback(
-    (user: User, status: Status) => {
-      confirm({
+    async (user: User, status: Status) => {
+      const confirmed = await confirm({
         title: t('users:confirm.statusChange.title'),
         message: t('users:confirm.statusChange.message', {
           name: `${user.firstName} ${user.lastName}`,
           status: t(`users:status.${status}`),
         }),
-        onConfirm: () => {
-          updateUserStatus.mutate(
-            { id: user.id, status },
-            {
-              onSuccess: () => {
-                Report.success(t('users:message.statusChangeSuccess'));
-              },
-            }
-          );
-        },
       });
+      if (!confirmed) return;
+
+      await updateUserStatus.mutateAsync({ id: user.id, status });
+      Report.success(t('users:message.statusChangeSuccess'));
     },
     [confirm, updateUserStatus, t],
   );
 
   const handleBulkDelete = useCallback(
-    (selectedUsers: User[]) => {
-      confirm({
+    async (selectedUsers: User[]) => {
+      const confirmed = await confirm({
         title: t('users:confirm.bulkDelete.title'),
         message: t('users:confirm.bulkDelete.message', { count: selectedUsers.length }),
         note: t('users:confirm.irreversibleNote'),
-        onConfirm: () => bulkDeleteUsers.mutate(selectedUsers.map((u) => u.id)),
       });
+      if (!confirmed) return;
+
+      bulkDeleteUsers.mutate(selectedUsers.map((u) => u.id));
     },
     [confirm, bulkDeleteUsers, t],
   );

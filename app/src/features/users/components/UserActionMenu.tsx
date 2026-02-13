@@ -58,19 +58,16 @@ export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView
   const resetPassword = useResetPassword();
   const [resetResult, setResetResult] = useState<{ username: string; password: string } | null>(null);
 
-  const handleResetPassword = () => {
-    confirm({
+  const handleResetPassword = async () => {
+    const confirmed = await confirm({
       title: t('users:resetPassword.title'),
       message: t('users:resetPassword.confirmMessage', { name: `${user.firstName} ${user.lastName}` }),
       note: t('users:resetPassword.autoGenerate'),
-      onConfirm: () => {
-        resetPassword.mutate(user.id, {
-          onSuccess: (res) => {
-            setResetResult({ username: user.username, password: res.data.password });
-          },
-        });
-      },
     });
+    if (!confirmed) return;
+
+    const res = await resetPassword.mutateAsync(user.id);
+    setResetResult({ username: user.username, password: res.data.password });
   };
 
   const actionHandlers: Record<Action, (() => void) | undefined> = {

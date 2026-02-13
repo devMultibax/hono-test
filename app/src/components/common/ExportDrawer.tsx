@@ -43,24 +43,17 @@ export function ExportDrawer<TParams>({
   );
 
   const handleExport = useCallback(async () => {
-    const doExport = async () => {
-      setLoading(true);
-      try {
-        await onExport(params);
-        onClose();
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (confirmTitle && confirmMessage) {
-      confirm({
-        title: confirmTitle,
-        message: confirmMessage,
-        onConfirm: doExport,
-      });
-    } else {
-      await doExport();
+      const confirmed = await confirm({ title: confirmTitle, message: confirmMessage });
+      if (!confirmed) return;
+    }
+
+    setLoading(true);
+    try {
+      await onExport(params);
+      onClose();
+    } finally {
+      setLoading(false);
     }
   }, [params, onExport, onClose, confirm, confirmTitle, confirmMessage]);
 

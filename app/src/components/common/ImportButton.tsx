@@ -122,11 +122,14 @@ export function ImportButton({
             onFileSelect={handleFileSelect}
             onDragOverChange={setDragOver}
             onClose={handleClose}
-            onImport={() => confirm({
-              title: t('users:import.confirmTitle'),
-              message: t('users:import.confirmMessage'),
-              onConfirm: handleImport
-            })}
+            onImport={async () => {
+              const confirmed = await confirm({
+                title: t('users:import.confirmTitle'),
+                message: t('users:import.confirmMessage'),
+              });
+              if (!confirmed) return;
+              await handleImport();
+            }}
           />
         )}
       </Drawer>

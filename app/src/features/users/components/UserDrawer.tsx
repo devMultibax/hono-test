@@ -49,19 +49,16 @@ function CreateContent({ opened, onClose }: { opened: boolean; onClose: () => vo
   const createUser = useCreateUser();
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
 
-  const handleSubmit = (data: CreateUserRequest) => {
-    confirm({
+  const handleSubmit = async (data: CreateUserRequest) => {
+    const confirmed = await confirm({
       title: t('users:confirm.create.title'),
       message: t('users:confirm.create.message', { name: `${data.firstName} ${data.lastName}` }),
-      onConfirm: () => {
-        createUser.mutate(data, {
-          onSuccess: (res) => {
-            const response = res as AxiosResponse<CreateUserResponse>;
-            setCredentials({ username: data.username, password: response.data.password });
-          },
-        });
-      },
     });
+    if (!confirmed) return;
+
+    const res = await createUser.mutateAsync(data);
+    const response = res as AxiosResponse<CreateUserResponse>;
+    setCredentials({ username: data.username, password: response.data.password });
   };
 
   const handleClose = () => {
@@ -115,16 +112,17 @@ function EditContent({ opened, userId, onClose }: { opened: boolean; userId: num
   const { data: user, isLoading, error } = useUser(userId);
   const updateUser = useUpdateUser();
 
-  const handleSubmit = (data: UpdateUserRequest) => {
+  const handleSubmit = async (data: UpdateUserRequest) => {
     const userName = `${user?.firstName} ${user?.lastName}`;
 
-    confirm({
+    const confirmed = await confirm({
       title: t('users:confirm.update.title'),
       message: t('users:confirm.update.message', { name: userName }),
-      onConfirm: () => {
-        updateUser.mutate({ id: userId, data }, { onSuccess: onClose });
-      },
     });
+    if (!confirmed) return;
+
+    await updateUser.mutateAsync({ id: userId, data });
+    onClose();
   };
 
   return (
