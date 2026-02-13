@@ -4,6 +4,8 @@ import { useTranslation } from '@/lib/i18n';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { StatusSwitch } from '@/components/common/StatusSwitch';
 import { UserActionMenu } from './components/UserActionMenu';
+import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
+import { hasRole } from '@/utils/roleUtils';
 import type { User, UserQueryParams, Status } from './types';
 
 // === Table Config ===
@@ -26,12 +28,13 @@ interface UseUserColumnsOptions {
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
   onStatusChange: (user: User, status: Status) => void;
-  canEdit: boolean;
-  canDelete: boolean;
+  currentUserRole: RoleId;
 }
 
-export function useUserColumns({ onView, onEdit, onDelete, onStatusChange, canEdit, canDelete }: UseUserColumnsOptions) {
+export function useUserColumns({ onView, onEdit, onDelete, onStatusChange, currentUserRole }: UseUserColumnsOptions) {
   const { t } = useTranslation(['users']);
+
+  const canEdit = hasRole([ROLE_ID.ADMIN], currentUserRole);
 
   return useMemo(
     () => [
@@ -76,15 +79,14 @@ export function useUserColumns({ onView, onEdit, onDelete, onStatusChange, canEd
         cell: ({ row }) => (
           <UserActionMenu
             user={row.original}
+            currentUserRole={currentUserRole}
             onView={() => onView(row.original)}
             onEdit={() => onEdit(row.original)}
             onDelete={() => onDelete(row.original)}
-            canEdit={canEdit}
-            canDelete={canDelete}
           />
         ),
       }),
     ],
-    [onView, onEdit, onDelete, onStatusChange, canEdit, canDelete, t]
+    [onView, onEdit, onDelete, onStatusChange, currentUserRole, canEdit, t]
   );
 }

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
 import type { User } from '@/types';
 
 interface AuthState {
@@ -42,4 +43,4 @@ export const useAuthStore = create<AuthState>()(
 
 export const useUser = () => useAuthStore((s) => s.user);
 export const useIsAuthenticated = () => useAuthStore((s) => s.isAuthenticated);
-export const useIsAdmin = () => useAuthStore((s) => s.user?.role === 'ADMIN');
+export const useUserRole = (): RoleId => useAuthStore((s) => s.user?.role ?? ROLE_ID.USER);

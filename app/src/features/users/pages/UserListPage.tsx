@@ -10,17 +10,20 @@ import { UserDrawer } from '../components/UserDrawer';
 import { useUsers, useUserActions } from '../hooks/useUsers';
 import { useUserColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../userTable.config';
 import { useDataTable } from '@/hooks/useDataTable';
-import { useIsAdmin } from '@/stores/auth.store';
+import { useUserRole } from '@/stores/auth.store';
+import { ROLE_ID } from '@/constants/roleConstants';
+import { hasRole } from '@/utils/roleUtils';
 import { userApi } from '@/api/services/user.api';
 import type { UserQueryParams, UserDrawerState } from '../types';
 
 export function UserListPage() {
-  const isAdmin = useIsAdmin();
+  const userRole = useUserRole();
   const { t } = useTranslation(['users', 'common']);
   const [exportOpened, setExportOpened] = useState(false);
   const [drawer, setDrawer] = useState<UserDrawerState>({ mode: 'closed' });
 
   const actions = useUserActions();
+  const isAdmin = hasRole([ROLE_ID.ADMIN], userRole);
 
   const openCreate = useCallback(() => setDrawer({ mode: 'create' }), []);
   const openDetail = useCallback((userId: number) => setDrawer({ mode: 'detail', userId }), []);
@@ -48,8 +51,7 @@ export function UserListPage() {
     onEdit: (user) => openEdit(user.id),
     onDelete: actions.handleDelete,
     onStatusChange: actions.handleStatusChange,
-    canEdit: isAdmin,
-    canDelete: isAdmin,
+    currentUserRole: userRole,
   });
 
   const headerActions = useMemo(() => (

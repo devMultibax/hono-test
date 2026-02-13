@@ -10,13 +10,26 @@ import {
   Database,
   Server,
 } from 'lucide-react';
-import { useIsAdmin } from '@/stores/auth.store';
+import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
+import { hasRole } from '@/utils/roleUtils';
+import { useUserRole } from '@/stores/auth.store';
 import { useTranslation } from '@/lib/i18n';
 
-interface NavItem {
+interface SubMenuItem {
   path: string;
   label: string;
   icon: React.ElementType;
+  allowedRoles: readonly RoleId[];
+}
+
+interface MenuItem {
+  id: string;
+  path?: string;
+  label: string;
+  icon: React.ElementType;
+  allowedRoles: readonly RoleId[];
+  hasSubmenu: boolean;
+  children?: SubMenuItem[];
 }
 
 interface Props {
@@ -26,22 +39,58 @@ interface Props {
 export function Sidebar({ onNavigate }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
-  const isAdmin = useIsAdmin();
+  const userRole = useUserRole();
   const { t } = useTranslation('navigation');
 
-  const mainMenuItems: NavItem[] = [
-    { path: '/dashboard', label: t('menu.dashboard'), icon: Home },
-    { path: '/users', label: t('menu.users'), icon: Users },
-    { path: '/departments', label: t('menu.departments'), icon: Building2 },
-    { path: '/sections', label: t('menu.sections'), icon: Folders },
+  const MENUS: MenuItem[] = [
+    {
+      id: 'dashboard',
+      path: '/dashboard',
+      label: t('menu.dashboard'),
+      icon: Home,
+      allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER],
+      hasSubmenu: false,
+    },
+    {
+      id: 'users',
+      path: '/users',
+      label: t('menu.users'),
+      icon: Users,
+      allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER],
+      hasSubmenu: false,
+    },
+    {
+      id: 'departments',
+      path: '/departments',
+      label: t('menu.departments'),
+      icon: Building2,
+      allowedRoles: [ROLE_ID.ADMIN],
+      hasSubmenu: false,
+    },
+    {
+      id: 'sections',
+      path: '/sections',
+      label: t('menu.sections'),
+      icon: Folders,
+      allowedRoles: [ROLE_ID.ADMIN],
+      hasSubmenu: false,
+    },
+    {
+      id: 'admin',
+      label: t('menu.admin.title'),
+      icon: Server,
+      allowedRoles: [ROLE_ID.ADMIN],
+      hasSubmenu: true,
+      children: [
+        { path: '/admin/user-logs', label: t('menu.admin.userLogs'), icon: ClipboardList, allowedRoles: [ROLE_ID.ADMIN] },
+        { path: '/admin/system-logs', label: t('menu.admin.systemLogs'), icon: Terminal, allowedRoles: [ROLE_ID.ADMIN] },
+        { path: '/admin/backups', label: t('menu.admin.backups'), icon: Database, allowedRoles: [ROLE_ID.ADMIN] },
+        { path: '/admin/database', label: t('menu.admin.database'), icon: Server, allowedRoles: [ROLE_ID.ADMIN] },
+      ],
+    },
   ];
 
-  const adminMenuItems: NavItem[] = [
-    { path: '/admin/user-logs', label: t('menu.admin.userLogs'), icon: ClipboardList },
-    { path: '/admin/system-logs', label: t('menu.admin.systemLogs'), icon: Terminal },
-    { path: '/admin/backups', label: t('menu.admin.backups'), icon: Database },
-    { path: '/admin/database', label: t('menu.admin.database'), icon: Server },
-  ];
+  const filteredMenus = filterMenuItemsByRole(MENUS, userRole);
 
   const isActive = (path: string) => {
     if (path === '/dashboard') return location.pathname === path;
@@ -53,7 +102,7 @@ export function Sidebar({ onNavigate }: Props) {
     onNavigate?.();
   };
 
-  const renderNavItem = (item: NavItem) => (
+  const renderNavItem = (item: { path: string; label: string; icon: React.ElementType }) => (
     <NavLink
       key={item.path}
       label={item.label}
@@ -73,18 +122,40 @@ export function Sidebar({ onNavigate }: Props) {
   return (
     <ScrollArea className="h-full">
       <Stack p="md" gap="xs">
-        {mainMenuItems.map(renderNavItem)}
+        {filteredMenus.map((item) => {
+          if (!item.hasSubmenu && item.path) {
+            return renderNavItem({ path: item.path, label: item.label, icon: item.icon });
+          }
 
-        {isAdmin && (
-          <>
-            <Divider my="sm" />
-            <Text size="xs" c="dimmed" fw={600} px="sm" tt="uppercase">
-              {t('menu.admin.title')}
-            </Text>
-            {adminMenuItems.map(renderNavItem)}
-          </>
-        )}
+          return (
+            <div key={item.id}>
+              <Divider my="sm" />
+              <Text size="xs" c="dimmed" fw={600} px="sm" tt="uppercase">
+                {item.label}
+              </Text>
+              {item.children?.map(renderNavItem)}
+            </div>
+          );
+        })}
       </Stack>
     </ScrollArea>
   );
+}
+
+function filterMenuItemsByRole(items: MenuItem[], role: RoleId): MenuItem[] {
+  return items
+    .map((item) => {
+      if (!hasRole(item.allowedRoles, role)) return null;
+
+      if (!item.hasSubmenu) return item;
+
+      const filteredChildren = (item.children ?? []).filter((child) =>
+        hasRole(child.allowedRoles, role)
+      );
+
+      if (filteredChildren.length === 0) return null;
+
+      return { ...item, children: filteredChildren };
+    })
+    .filter((item): item is MenuItem => item !== null);
 }

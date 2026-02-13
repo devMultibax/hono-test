@@ -8,7 +8,9 @@ import { RoleBadge } from '@/components/common/RoleBadge';
 import { InfoField } from '@/components/common/InfoField';
 import { UserForm } from './UserForm';
 import { useUser, useCreateUser, useUpdateUser } from '../hooks/useUsers';
-import { useIsAdmin } from '@/stores/auth.store';
+import { useUserRole } from '@/stores/auth.store';
+import { ROLE_ID } from '@/constants/roleConstants';
+import { hasRole } from '@/utils/roleUtils';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
 import { formatDateTime } from '@/lib/date';
@@ -145,7 +147,8 @@ function EditContent({ opened, userId, onClose }: { opened: boolean; userId: num
 
 function DetailContent({ opened, userId, onClose, onEdit }: { opened: boolean; userId: number; onClose: () => void; onEdit: (userId: number) => void }) {
   const { t } = useTranslation(['users', 'common']);
-  const isAdmin = useIsAdmin();
+  const userRole = useUserRole();
+  const canEdit = hasRole([ROLE_ID.ADMIN], userRole);
   const { data: user, isLoading, error } = useUser(userId);
 
   return (
@@ -195,7 +198,7 @@ function DetailContent({ opened, userId, onClose, onEdit }: { opened: boolean; u
             <Button variant="subtle" color="gray" onClick={onClose}>
               {t('common:button.close')}
             </Button>
-            {isAdmin && (
+            {canEdit && (
               <Button onClick={() => onEdit(userId)}>
                 {t('common:button.edit')}
               </Button>

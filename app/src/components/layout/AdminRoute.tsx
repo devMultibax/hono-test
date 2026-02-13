@@ -1,10 +1,12 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useIsAdmin } from '@/stores/auth.store';
+import { useUserRole } from '@/stores/auth.store';
+import { ROLE_ID } from '@/constants/roleConstants';
+import { hasRole } from '@/utils/roleUtils';
 
 export function AdminRoute() {
-  const isAdmin = useIsAdmin();
+  const userRole = useUserRole();
 
-  if (!isAdmin) {
+  if (!hasRole([ROLE_ID.ADMIN], userRole)) {
     return <Navigate to="/dashboard" replace />;
   }
 

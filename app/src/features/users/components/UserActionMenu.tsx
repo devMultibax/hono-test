@@ -4,18 +4,55 @@ import { PasswordDisplay } from '@/components/common/PasswordDisplay';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useResetPassword } from '../hooks/useUsers';
+import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
+import { hasRole } from '@/utils/roleUtils';
 import type { User } from '@/types';
+
+type Action = 'view' | 'edit' | 'resetPassword' | 'delete';
+
+interface ActionButtonConfig {
+  action: Action;
+  allowedRoles: readonly RoleId[];
+  color: string;
+  labelKey: string;
+}
 
 interface Props {
   user: User;
+  currentUserRole: RoleId;
   onEdit: () => void;
   onDelete: () => void;
   onView?: () => void;
-  canEdit?: boolean;
-  canDelete?: boolean;
 }
 
-export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDelete }: Props) {
+const ACTION_BUTTONS: ActionButtonConfig[] = [
+  {
+    action: 'view',
+    allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER],
+    color: 'blue',
+    labelKey: 'users:action.viewDetails',
+  },
+  {
+    action: 'edit',
+    allowedRoles: [ROLE_ID.ADMIN],
+    color: 'yellow',
+    labelKey: 'users:action.edit',
+  },
+  {
+    action: 'resetPassword',
+    allowedRoles: [ROLE_ID.ADMIN],
+    color: 'violet',
+    labelKey: 'users:action.resetPassword',
+  },
+  {
+    action: 'delete',
+    allowedRoles: [ROLE_ID.ADMIN],
+    color: 'red',
+    labelKey: 'users:action.delete',
+  },
+];
+
+export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView }: Props) {
   const { t } = useTranslation(['users', 'common']);
   const { confirm } = useConfirm();
   const resetPassword = useResetPassword();
@@ -36,56 +73,73 @@ export function UserActionMenu({ user, onEdit, onDelete, onView, canEdit, canDel
     });
   };
 
+  const actionHandlers: Record<Action, (() => void) | undefined> = {
+    view: onView,
+    edit: onEdit,
+    resetPassword: handleResetPassword,
+    delete: onDelete,
+  };
+
+  const visibleButtons = ACTION_BUTTONS.filter((button) => {
+    if (button.action === 'view' && !onView) return false;
+    return hasRole(button.allowedRoles, currentUserRole);
+  });
+
+  if (visibleButtons.length === 0) return null;
+
   return (
     <>
       <Group gap={6} wrap="nowrap">
-        {onView && (
-          <Button variant="light" size="xs" onClick={onView}>
-            {t('users:action.viewDetails')}
+        {visibleButtons.map((button) => (
+          <Button
+            key={button.action}
+            variant="light"
+            size="xs"
+            color={button.color}
+            onClick={() => actionHandlers[button.action]?.()}
+          >
+            {t(button.labelKey)}
           </Button>
-        )}
-
-        {canEdit && (
-          <>
-            <Button variant="light" size="xs" color='yellow' onClick={onEdit}>
-              {t('users:action.edit')}
-            </Button>
-            <Button variant="light" size="xs" color='violet' onClick={handleResetPassword}>
-              {t('users:action.resetPassword')}
-            </Button>
-          </>
-        )}
-
-        {canDelete && (
-          <Button variant="light" size="xs" color='red' onClick={onDelete}>
-            {t('users:action.delete')}
-          </Button>
-        )}
+        ))}
       </Group>
 
-      <Modal
-        opened={!!resetResult}
-        onClose={() => setResetResult(null)}
-        title={t('users:resetPassword.successTitle')}
-        centered
-        closeOnClickOutside={false}
-      >
-        <Stack gap="md">
-          <Alert color="green" variant="light">
-            <Text size="sm">{t('users:resetPassword.saveWarning')}</Text>
-          </Alert>
-
-          <PasswordDisplay
-            username={resetResult?.username ?? ''}
-            password={resetResult?.password ?? ''}
-            passwordLabel={t('users:resetPassword.newPassword')}
-          />
-
-          <Button onClick={() => setResetResult(null)} fullWidth>
-            {t('users:resetPassword.button.close')}
-          </Button>
-        </Stack>
-      </Modal>
+      <ResetPasswordModal result={resetResult} onClose={() => setResetResult(null)} />
     </>
+  );
+}
+
+function ResetPasswordModal({
+  result,
+  onClose,
+}: {
+  result: { username: string; password: string } | null;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation(['users']);
+
+  return (
+    <Modal
+      opened={!!result}
+      onClose={onClose}
+      title={t('users:resetPassword.successTitle')}
+      centered
+      closeOnClickOutside={false}
+    >
+      <Stack gap="md">
+        <Alert color="green" variant="light">
+          <Text size="sm">{t('users:resetPassword.saveWarning')}</Text>
+        </Alert>
+
+        <PasswordDisplay
+          username={result?.username ?? ''}
+          password={result?.password ?? ''}
+          passwordLabel={t('users:resetPassword.newPassword')}
+        />
+
+        <Button onClick={onClose} fullWidth>
+          {t('users:resetPassword.button.close')}
+        </Button>
+      </Stack>
+    </Modal>
   );
 }
