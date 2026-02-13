@@ -6,6 +6,7 @@ import validation from './locales/th/validation.json';
 import errors from './locales/th/errors.json';
 import auth from './locales/th/auth.json';
 import users from './locales/th/users.json';
+import departments from './locales/th/departments.json';
 import navigation from './locales/th/navigation.json';
 
 const resources = {
@@ -15,6 +16,7 @@ const resources = {
     errors,
     auth,
     users,
+    departments,
     navigation,
   },
 };

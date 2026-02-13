@@ -1,0 +1,79 @@
+{
+  "page": {
+    "title": "จัดการฝ่าย",
+    "createTitle": "เพิ่มฝ่าย",
+    "editTitle": "แก้ไขฝ่าย",
+    "detailTitle": "ข้อมูลฝ่าย"
+  },
+  "table": {
+    "column": {
+      "name": "ชื่อฝ่าย",
+      "status": "สถานะ"
+    }
+  },
+  "form": {
+    "name": {
+      "label": "ชื่อฝ่าย",
+      "placeholder": "กรอกชื่อฝ่าย"
+    }
+  },
+  "field": {
+    "name": "ชื่อฝ่าย",
+    "status": "สถานะ"
+  },
+  "action": {
+    "addDepartment": "เพิ่มฝ่าย",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "viewDetails": "ดูรายละเอียด"
+  },
+  "filter": {
+    "title": "ตัวกรอง",
+    "searchLabel": "ค้นหา",
+    "searchPlaceholder": "ค้นหาชื่อฝ่าย...",
+    "allStatuses": "ทุกสถานะ"
+  },
+  "export": {
+    "modalTitle": "ดาวน์โหลดรายงานฝ่าย"
+  },
+  "message": {
+    "empty": "ไม่พบข้อมูลฝ่าย",
+    "createSuccess": "สร้างฝ่ายสำเร็จ",
+    "updateSuccess": "แก้ไขข้อมูลฝ่ายสำเร็จ",
+    "deleteSuccess": "ลบฝ่ายสำเร็จ",
+    "bulkDeleteSuccess": "ลบฝ่ายที่เลือกสำเร็จ",
+    "statusChangeSuccess": "เปลี่ยนสถานะฝ่ายสำเร็จ",
+    "departmentNotFound": "ไม่พบข้อมูลฝ่าย"
+  },
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน"
+  },
+  "confirm": {
+    "irreversibleNote": "การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "delete": {
+      "title": "ยืนยันการลบ",
+      "message": "คุณต้องการลบฝ่าย \"{{name}}\" หรือไม่?"
+    },
+    "bulkDelete": {
+      "title": "ยืนยันการลบหลายรายการ",
+      "message": "คุณต้องการลบฝ่ายที่เลือก {{count}} รายการหรือไม่?"
+    },
+    "statusChange": {
+      "title": "ยืนยันเปลี่ยนสถานะ",
+      "message": "คุณต้องการเปลี่ยนสถานะ \"{{name}}\" เป็น{{status}} หรือไม่?"
+    },
+    "create": {
+      "title": "ยืนยันการสร้างฝ่าย",
+      "message": "คุณต้องการสร้างฝ่าย \"{{name}}\" หรือไม่?"
+    },
+    "update": {
+      "title": "ยืนยันการแก้ไข",
+      "message": "คุณต้องการแก้ไขข้อมูลฝ่าย \"{{name}}\" หรือไม่?"
+    },
+    "export": {
+      "title": "ยืนยันการดาวน์โหลด",
+      "message": "คุณต้องการดาวน์โหลดรายงานฝ่ายตามเงื่อนไขที่เลือกหรือไม่?"
+    }
+  }
+}

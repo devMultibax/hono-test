@@ -4,11 +4,11 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { AdminRoute } from '@/components/layout/AdminRoute';
 import { UserListPage, UserLogPage } from '@/features/users';
+import { DepartmentListPage } from '@/features/departments';
 import {
   DashboardPage,
   ProfilePage,
   ChangePasswordPage,
-  DepartmentsPage,
   SectionsPage,
   UserLogsPage,
   SystemLogsPage,
@@ -79,8 +79,8 @@ export const router = createBrowserRouter([
           },
           {
             path: 'departments',
-            element: <DepartmentsPage />,
-            handle: { title: 'navigation:page.departments', breadcrumb: 'navigation:menu.departments' },
+            element: <DepartmentListPage />,
+            handle: { title: 'departments:page.title', breadcrumb: 'navigation:menu.departments' },
           },
           {
             path: 'sections',

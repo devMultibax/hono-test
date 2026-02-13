@@ -147,6 +147,11 @@ export interface CreateDepartmentRequest {
   status?: Status;
 }
 
+export interface UpdateDepartmentRequest {
+  name?: string;
+  status?: Status;
+}
+
 // ============ Section ============
 export interface Section {
   id: number;

@@ -28,10 +28,6 @@ export function ChangePasswordPage() {
   return <div />;
 }
 
-export function DepartmentsPage() {
-  return <div />;
-}
-
 export function SectionsPage() {
   return <div />;
 }
