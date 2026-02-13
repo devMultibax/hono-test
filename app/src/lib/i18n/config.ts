@@ -9,6 +9,7 @@ import users from './locales/th/users.json';
 import departments from './locales/th/departments.json';
 import sections from './locales/th/sections.json';
 import navigation from './locales/th/navigation.json';
+import database from './locales/th/database.json';
 
 const resources = {
   th: {
@@ -20,6 +21,7 @@ const resources = {
     departments,
     sections,
     navigation,
+    database,
   },
 };
 

@@ -208,11 +208,24 @@ export interface BackupFile {
 }
 
 // ============ Database ============
-export interface DatabaseStats {
-  databaseSize: string;
-  tables: Array<{
-    name: string;
-    rowCount: number;
-    size: string;
-  }>;
+export interface TableStat {
+  tableName: string;
+  rowCount: number;
+  totalSize: string;
+  indexSize: string;
+  totalSizeBytes: number;
+}
+
+export interface DatabaseStatistics {
+  databaseName: string;
+  totalTables: number;
+  totalRows: number;
+  totalSize: string;
+  tables: TableStat[];
+}
+
+export interface AnalyzeResult {
+  message: string;
+  analyzedTables: string[];
+  timestamp: string;
 }

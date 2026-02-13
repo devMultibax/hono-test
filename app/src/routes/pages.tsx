@@ -40,6 +40,4 @@ export function BackupsPage() {
   return <div />;
 }
 
-export function DatabasePage() {
-  return <div />;
-}
+

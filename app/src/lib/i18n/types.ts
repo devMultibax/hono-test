@@ -5,6 +5,7 @@ import errors from './locales/th/errors.json';
 import auth from './locales/th/auth.json';
 import users from './locales/th/users.json';
 import navigation from './locales/th/navigation.json';
+import database from './locales/th/database.json';
 
 declare module 'react-i18next' {
   interface CustomTypeOptions {
@@ -16,6 +17,7 @@ declare module 'react-i18next' {
       auth: typeof auth;
       users: typeof users;
       navigation: typeof navigation;
+      database: typeof database;
     };
   }
 }

@@ -13,8 +13,8 @@ import {
   UserLogsPage,
   SystemLogsPage,
   BackupsPage,
-  DatabasePage,
 } from './pages';
+import { DatabasePage } from '@/features/database';
 
 export const router = createBrowserRouter([
   {

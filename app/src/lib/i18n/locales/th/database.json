@@ -1,0 +1,24 @@
+{
+  "page": {
+    "title": "จัดการฐานข้อมูล"
+  },
+  "stats": {
+    "databaseName": "ชื่อฐานข้อมูล",
+    "databaseSize": "ขนาดฐานข้อมูล",
+    "totalRows": "จำนวนแถวทั้งหมด",
+    "totalTables": "จำนวนตาราง"
+  },
+  "table": {
+    "tableName": "ชื่อตาราง",
+    "rowCount": "จำนวนแถว",
+    "totalSize": "ขนาด",
+    "indexSize": "ขนาด Index"
+  },
+  "action": {
+    "analyze": "วิเคราะห์ฐานข้อมูล"
+  },
+  "message": {
+    "analyzeSuccess": "วิเคราะห์ฐานข้อมูลสำเร็จ",
+    "noTables": "ไม่พบข้อมูลตาราง"
+  }
+}
