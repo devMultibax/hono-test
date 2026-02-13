@@ -163,6 +163,14 @@ export interface UserLogResponse {
   lastName: string
   department: string
   section: string
+  email: string | null
+  tel: string | null
+  role: Role
+  status: Status
+  createdAt: Date
+  createdBy: string
+  updatedAt: Date | null
+  updatedBy: string | null
   actionType: ActionType
   actionAt: Date
 }

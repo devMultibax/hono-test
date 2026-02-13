@@ -1,6 +1,6 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError } from '../lib/errors'
-import type { ActionType, UserLogResponse } from '../types'
+import type { ActionType, Role, Status, UserLogResponse } from '../types'
 import {
   calculatePagination,
   formatPaginationResponse,
@@ -28,6 +28,10 @@ export class UserLogService {
     tel: string | null
     role: string
     status: string
+    createdAt: Date
+    createdBy: string
+    updatedAt: Date | null
+    updatedBy: string | null
     actionType: string
     actionAt: Date
   }): UserLogResponse {
@@ -38,6 +42,14 @@ export class UserLogService {
       lastName: log.lastName,
       department: log.department,
       section: log.section,
+      email: log.email,
+      tel: log.tel,
+      role: log.role as Role,
+      status: log.status as Status,
+      createdAt: log.createdAt,
+      createdBy: log.createdBy,
+      updatedAt: log.updatedAt,
+      updatedBy: log.updatedBy,
       actionType: log.actionType as ActionType,
       actionAt: log.actionAt
     }

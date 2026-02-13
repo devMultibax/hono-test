@@ -5,6 +5,7 @@ import type { Role } from '@/types';
 
 interface Props {
   role: Role;
+  size?: 'xs' | 'sm' | 'md';
 }
 
 const roleConfig: Record<Role, { color: MantineColor; icon: typeof IconUser }> = {
@@ -12,16 +13,17 @@ const roleConfig: Record<Role, { color: MantineColor; icon: typeof IconUser }> =
   USER: { color: 'blue', icon: IconUser },
 };
 
-export function RoleBadge({ role }: Props) {
+export function RoleBadge({ role, size = 'sm' }: Props) {
   const { t } = useTranslation('common');
   const { color, icon: Icon } = roleConfig[role];
+  const iconSize = size === 'xs' ? 12 : 14;
 
   return (
-    <Group gap={8} wrap="nowrap">
-      <ThemeIcon variant="light" color={color} size="sm">
-        <Icon size={14} />
+    <Group gap={6} wrap="nowrap">
+      <ThemeIcon variant="light" color={color} size={size}>
+        <Icon size={iconSize} />
       </ThemeIcon>
-      <Text size="sm" fw={500} c={color}>
+      <Text size={size} fw={500} c={color}>
         {t(`role.${role.toLowerCase()}`)}
       </Text>
     </Group>

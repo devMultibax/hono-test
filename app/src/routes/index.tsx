@@ -3,7 +3,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { AdminRoute } from '@/components/layout/AdminRoute';
-import { UserListPage } from '@/features/users';
+import { UserListPage, UserLogPage } from '@/features/users';
 import {
   DashboardPage,
   ProfilePage,
@@ -59,8 +59,23 @@ export const router = createBrowserRouter([
           },
           {
             path: 'users',
-            element: <UserListPage />,
-            handle: { title: 'users:page.title', breadcrumb: 'navigation:menu.users' },
+            element: <Outlet />,
+            handle: { breadcrumb: 'navigation:menu.users' },
+            children: [
+              {
+                index: true,
+                element: <UserListPage />,
+                handle: { title: 'users:page.title' },
+              },
+              {
+                path: ':username/logs',
+                element: <UserLogPage />,
+                handle: {
+                  title: 'navigation:page.userLogs',
+                  breadcrumb: 'navigation:breadcrumb.userLogs',
+                },
+              },
+            ],
           },
           {
             path: 'departments',

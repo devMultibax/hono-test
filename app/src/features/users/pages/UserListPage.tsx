@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
 
@@ -14,6 +15,7 @@ import { useUserRole } from '@/stores/auth.store';
 import { ROLE_ID } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
 import { userApi } from '@/api/services/user.api';
+import type { User } from '@/types';
 import type { UserQueryParams, UserDrawerState } from '../types';
 
 export function UserListPage() {
@@ -21,6 +23,7 @@ export function UserListPage() {
   const { t } = useTranslation(['users', 'common']);
   const [exportOpened, setExportOpened] = useState(false);
   const [drawer, setDrawer] = useState<UserDrawerState>({ mode: 'closed' });
+  const navigate = useNavigate();
 
   const actions = useUserActions();
   const isAdmin = hasRole([ROLE_ID.ADMIN], userRole);
@@ -46,10 +49,13 @@ export function UserListPage() {
 
   const { data, isLoading } = useUsers(params);
 
+  const openLogs = useCallback((user: User) => navigate(`/users/${user.username}/logs`), [navigate]);
+
   const columns = useUserColumns({
     onView: (user) => openDetail(user.id),
     onEdit: (user) => openEdit(user.id),
     onDelete: actions.handleDelete,
+    onViewLogs: openLogs,
     onStatusChange: actions.handleStatusChange,
     currentUserRole: userRole,
   });
@@ -67,6 +73,19 @@ export function UserListPage() {
       </Button>
     </>
   ), [isAdmin, actions.handleImportSuccess, openCreate, t]);
+
+  const toolbarActions = useCallback((selectedRows: User[]) =>
+    isAdmin && (
+      <Button
+        size="xs"
+        variant="light"
+        color="red"
+        onClick={() => actions.handleBulkDelete(selectedRows)}
+      >
+        {t('common:table.deleteSelected')}
+      </Button>
+    ),
+  [isAdmin, actions, t]);
 
   return (
     <div>
@@ -99,19 +118,9 @@ export function UserListPage() {
         onSortingChange={handleSortingChange}
         onColumnVisibilityChange={setColumnVisibility}
         onPaginationChange={handlePaginationChange}
-        toolbarActions={(selectedRows) =>
-          isAdmin && (
-            <Button
-              size="xs"
-              variant="light"
-              color="red"
-              onClick={() => actions.handleBulkDelete(selectedRows)}
-            >
-              {t('common:table.deleteSelected')}
-            </Button>
-          )
-        }
+        toolbarActions={toolbarActions}
         headerActions={headerActions}
+        compact
       />
     </div>
   );

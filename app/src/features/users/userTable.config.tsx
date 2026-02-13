@@ -27,11 +27,12 @@ interface UseUserColumnsOptions {
   onView: (user: User) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onViewLogs: (user: User) => void;
   onStatusChange: (user: User, status: Status) => void;
   currentUserRole: RoleId;
 }
 
-export function useUserColumns({ onView, onEdit, onDelete, onStatusChange, currentUserRole }: UseUserColumnsOptions) {
+export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusChange, currentUserRole }: UseUserColumnsOptions) {
   const { t } = useTranslation(['users']);
 
   const canEdit = hasRole([ROLE_ID.ADMIN], currentUserRole);
@@ -81,12 +82,13 @@ export function useUserColumns({ onView, onEdit, onDelete, onStatusChange, curre
             user={row.original}
             currentUserRole={currentUserRole}
             onView={() => onView(row.original)}
+            onViewLogs={() => onViewLogs(row.original)}
             onEdit={() => onEdit(row.original)}
             onDelete={() => onDelete(row.original)}
           />
         ),
       }),
     ],
-    [onView, onEdit, onDelete, onStatusChange, currentUserRole, canEdit, t]
+    [onView, onEdit, onDelete, onViewLogs, onStatusChange, currentUserRole, canEdit, t]
   );
 }

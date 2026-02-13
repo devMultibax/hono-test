@@ -36,6 +36,9 @@ interface DataTableProps<T> {
   onSelectionChange?: (rows: T[]) => void;
   toolbarActions?: (selectedRows: T[]) => ReactNode;
   headerActions?: ReactNode;
+  scrollMinWidth?: number;
+  compact?: boolean;
+  withTopBorder?: boolean;
 }
 
 export function DataTable<T>({
@@ -54,6 +57,9 @@ export function DataTable<T>({
   onSelectionChange,
   toolbarActions,
   headerActions,
+  scrollMinWidth = 800,
+  compact,
+  withTopBorder,
 }: DataTableProps<T>) {
   const { t } = useTranslation(['common']);
   const [internalColumnVisibility, setInternalColumnVisibility] = useState<VisibilityState>({});
@@ -144,14 +150,14 @@ export function DataTable<T>({
 
   if (isLoading) {
     return (
-      <Paper withBorder radius="md" style={{ borderTop: 'none', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+      <Paper withBorder radius="md" style={withTopBorder ? undefined : { borderTop: 'none', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
         <TableSkeleton columns={tableColumns.length} rows={5} />
       </Paper>
     );
   }
 
   return (
-    <Paper withBorder radius="md" style={{ borderTop: 'none', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+    <Paper withBorder radius="md" style={withTopBorder ? undefined : { borderTop: 'none', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
       {showToolbar && (
         <DataTableToolbar
           table={table}
@@ -166,8 +172,14 @@ export function DataTable<T>({
         <EmptyState message={emptyMessage || t('common:empty.noData')} />
       ) : (
         <>
-          <Table.ScrollContainer minWidth={800}>
-            <Table horizontalSpacing="md" verticalSpacing="sm" striped={false} withTableBorder={false}>
+          <Table.ScrollContainer minWidth={scrollMinWidth}>
+            <Table
+              horizontalSpacing={compact ? 8 : 'md'}
+              verticalSpacing={compact ? 6 : 'sm'}
+              fz={compact ? 'sm' : undefined}
+              striped={false}
+              withTableBorder={false}
+            >
               <Table.Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <Table.Tr key={headerGroup.id}>

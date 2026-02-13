@@ -8,7 +8,7 @@ import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
 import type { User } from '@/types';
 
-type Action = 'view' | 'edit' | 'resetPassword' | 'delete';
+type Action = 'view' | 'edit' | 'viewLogs' | 'resetPassword' | 'delete';
 
 interface ActionButtonConfig {
   action: Action;
@@ -23,6 +23,7 @@ interface Props {
   onEdit: () => void;
   onDelete: () => void;
   onView?: () => void;
+  onViewLogs?: () => void;
 }
 
 const ACTION_BUTTONS: ActionButtonConfig[] = [
@@ -31,6 +32,12 @@ const ACTION_BUTTONS: ActionButtonConfig[] = [
     allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER],
     color: 'blue',
     labelKey: 'users:action.viewDetails',
+  },
+  {
+    action: 'viewLogs',
+    allowedRoles: [ROLE_ID.ADMIN],
+    color: 'cyan',
+    labelKey: 'users:action.viewLogs',
   },
   {
     action: 'edit',
@@ -52,7 +59,7 @@ const ACTION_BUTTONS: ActionButtonConfig[] = [
   },
 ];
 
-export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView }: Props) {
+export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView, onViewLogs }: Props) {
   const { t } = useTranslation(['users', 'common']);
   const { confirm } = useConfirm();
   const resetPassword = useResetPassword();
@@ -72,6 +79,7 @@ export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView
 
   const actionHandlers: Record<Action, (() => void) | undefined> = {
     view: onView,
+    viewLogs: onViewLogs,
     edit: onEdit,
     resetPassword: handleResetPassword,
     delete: onDelete,
@@ -79,6 +87,7 @@ export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView
 
   const visibleButtons = ACTION_BUTTONS.filter((button) => {
     if (button.action === 'view' && !onView) return false;
+    if (button.action === 'viewLogs' && !onViewLogs) return false;
     return hasRole(button.allowedRoles, currentUserRole);
   });
 

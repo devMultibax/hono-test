@@ -97,7 +97,36 @@
     "delete": "ลบ",
     "view": "ดู",
     "viewDetails": "ดูรายละเอียด",
+    "viewLogs": "ดูประวัติ",
     "resetPassword": "รีเซ็ตรหัสผ่าน"
+  },
+  "logs": {
+    "title": "ประวัติการใช้งาน - {{name}}",
+    "empty": "ไม่พบประวัติการใช้งาน",
+    "backToUsers": "กลับไปหน้าผู้ใช้งาน",
+    "column": {
+      "actionType": "กิจกรรม",
+      "username": "รหัสพนักงาน",
+      "fullName": "ชื่อ-นามสกุล",
+      "department": "ฝ่าย",
+      "section": "หน่วยงาน",
+      "email": "อีเมล",
+      "tel": "เบอร์โทร",
+      "role": "สิทธิ์",
+      "status": "สถานะ",
+      "createdAt": "วันที่สร้าง",
+      "createdBy": "สร้างโดย",
+      "updatedAt": "วันที่แก้ไข",
+      "updatedBy": "แก้ไขโดย",
+      "actionAt": "วันที่/เวลา"
+    },
+    "actionType": {
+      "CREATE": "สร้าง",
+      "UPDATE": "แก้ไข",
+      "DELETE": "ลบ",
+      "LOGIN": "เข้าสู่ระบบ",
+      "LOGOUT": "ออกจากระบบ"
+    }
   },
   "message": {
     "empty": "ไม่พบผู้ใช้งาน",
