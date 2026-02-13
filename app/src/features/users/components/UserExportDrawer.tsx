@@ -1,6 +1,7 @@
 import { ExportDrawer } from '@/components/common/ExportDrawer';
 import { UserFilterFields } from './UserFilters';
 import { useTranslation } from '@/lib/i18n';
+import { useUserRole } from '@/stores/auth.store';
 import type { UserQueryParams, UserExportParams } from '../types';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 
 export function UserExportDrawer({ opened, onClose, initialParams, onExport }: Props) {
   const { t } = useTranslation(['users']);
+  const currentUserRole = useUserRole();
 
   const exportInitialParams: UserExportParams = {
     departmentId: initialParams.departmentId,
@@ -31,7 +33,7 @@ export function UserExportDrawer({ opened, onClose, initialParams, onExport }: P
       confirmMessage={t('users:confirm.export.message')}
     >
       {(params, update) => (
-        <UserFilterFields values={params} onUpdate={update} />
+        <UserFilterFields values={params} onUpdate={update} currentUserRole={currentUserRole} />
       )}
     </ExportDrawer>
   );

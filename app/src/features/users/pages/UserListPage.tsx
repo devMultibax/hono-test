@@ -71,7 +71,7 @@ export function UserListPage() {
   return (
     <div>
 
-      <UserFilters params={params} onChange={handleFilterChange} />
+      <UserFilters params={params} onChange={handleFilterChange} currentUserRole={userRole} />
 
       <UserExportDrawer
         opened={exportOpened}
