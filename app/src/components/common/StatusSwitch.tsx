@@ -23,6 +23,19 @@ export function StatusSwitch({ status, onChange, disabled }: Props) {
           : <IconX size={12} color="var(--mantine-color-red-6)" stroke={3} />
       }
       disabled={disabled}
+      styles={
+        disabled
+          ? {
+              track: {
+                opacity: 1,
+                backgroundColor: checked
+                  ? 'var(--mantine-color-teal-6)'
+                  : undefined,
+                cursor: 'not-allowed',
+              },
+            }
+          : undefined
+      }
     />
   );
 }
