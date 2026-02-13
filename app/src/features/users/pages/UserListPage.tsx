@@ -11,7 +11,7 @@ import { UserDrawer } from '../components/UserDrawer';
 import { useUsers, useUserActions } from '../hooks/useUsers';
 import { useUserColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../userTable.config';
 import { useDataTable } from '@/hooks/useDataTable';
-import { useUserRole } from '@/stores/auth.store';
+import { useUser, useUserRole } from '@/stores/auth.store';
 import { ROLE_ID } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
 import { userApi } from '@/api/services/user.api';
@@ -19,6 +19,7 @@ import type { User } from '@/types';
 import type { UserQueryParams, UserDrawerState } from '../types';
 
 export function UserListPage() {
+  const currentUser = useUser();
   const userRole = useUserRole();
   const { t } = useTranslation(['users', 'common']);
   const [exportOpened, setExportOpened] = useState(false);
@@ -47,7 +48,9 @@ export function UserListPage() {
     sortFieldMap: SORT_FIELD_MAP,
   });
 
-  const { data, isLoading } = useUsers(params);
+  const { data, isLoading } = useUsers(
+    isAdmin ? params : { ...params, departmentId: currentUser?.departmentId },
+  );
 
   const openLogs = useCallback((user: User) => navigate(`/users/${user.username}/logs`), [navigate]);
 
@@ -90,7 +93,7 @@ export function UserListPage() {
   return (
     <div>
 
-      <UserFilters params={params} onChange={handleFilterChange} currentUserRole={userRole} />
+      <UserFilters params={params} onChange={handleFilterChange} currentUserRole={userRole} userDepartmentId={currentUser?.departmentId} />
 
       <UserExportDrawer
         opened={exportOpened}

@@ -37,9 +37,10 @@ interface UserFilterFieldsProps {
   values: FilterValues;
   onUpdate: (patch: Partial<FilterValues>) => void;
   currentUserRole: RoleId;
+  userDepartmentId?: number;
 }
 
-export function UserFilterFields({ values, onUpdate, currentUserRole }: UserFilterFieldsProps) {
+export function UserFilterFields({ values, onUpdate, currentUserRole, userDepartmentId }: UserFilterFieldsProps) {
   const { t } = useTranslation(['users', 'common']);
 
   const visibleFilters = FILTER_FIELDS.filter((field) =>
@@ -64,7 +65,7 @@ export function UserFilterFields({ values, onUpdate, currentUserRole }: UserFilt
       {visible.has('section') && (
         <SectionSelect
           label={t('common:label.section')}
-          departmentId={values.departmentId ?? null}
+          departmentId={values.departmentId ?? userDepartmentId ?? null}
           value={values.sectionId ?? null}
           onChange={(sectionId) => onUpdate({ sectionId: sectionId ?? undefined })}
           placeholder={t('users:filter.allSections')}
@@ -102,9 +103,10 @@ interface Props {
   params: UserQueryParams;
   onChange: (params: UserQueryParams) => void;
   currentUserRole: RoleId;
+  userDepartmentId?: number;
 }
 
-export function UserFilters({ params, onChange, currentUserRole }: Props) {
+export function UserFilters({ params, onChange, currentUserRole, userDepartmentId }: Props) {
   const { t } = useTranslation(['users']);
   const update = (patch: Partial<UserQueryParams>) => onChange({ ...params, ...patch });
 
@@ -119,7 +121,7 @@ export function UserFilters({ params, onChange, currentUserRole }: Props) {
           placeholder={t('users:filter.searchPlaceholder')}
         />
 
-        <UserFilterFields values={params} onUpdate={update} currentUserRole={currentUserRole} />
+        <UserFilterFields values={params} onUpdate={update} currentUserRole={currentUserRole} userDepartmentId={userDepartmentId} />
       </SimpleGrid>
     </Paper>
   );
