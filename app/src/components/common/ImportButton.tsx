@@ -95,6 +95,15 @@ export function ImportButton({
     }
   }, [selectedFile, endpoint, onSuccess, t]);
 
+  const handleConfirmImport = useCallback(async () => {
+    const confirmed = await confirm({
+      title: t('users:import.confirmTitle'),
+      message: t('users:import.confirmMessage'),
+    });
+    if (!confirmed) return;
+    await handleImport();
+  }, [confirm, handleImport, t]);
+
   return (
     <>
       <Button variant="light" size="xs" onClick={() => setOpened(true)}>
@@ -122,14 +131,7 @@ export function ImportButton({
             onFileSelect={handleFileSelect}
             onDragOverChange={setDragOver}
             onClose={handleClose}
-            onImport={async () => {
-              const confirmed = await confirm({
-                title: t('users:import.confirmTitle'),
-                message: t('users:import.confirmMessage'),
-              });
-              if (!confirmed) return;
-              await handleImport();
-            }}
+            onImport={handleConfirmImport}
           />
         )}
       </Drawer>
@@ -139,9 +141,16 @@ export function ImportButton({
 
 // --- Result View ---
 
-function ResultView({ result, onClose, onRetry }: { result: ImportResult; onClose: () => void; onRetry: () => void }) {
+interface ResultViewProps {
+  result: ImportResult;
+  onClose: () => void;
+  onRetry: () => void;
+}
+
+function ResultView({ result, onClose, onRetry }: ResultViewProps) {
   const { t } = useTranslation(['users', 'common']);
   const successRate = Math.round((result.success / result.total) * 100);
+  const hasErrors = result.errors && result.errors.length > 0;
 
   return (
     <Stack gap="md">
@@ -161,13 +170,13 @@ function ResultView({ result, onClose, onRetry }: { result: ImportResult; onClos
         </Stack>
       </Group>
 
-      {result.errors && result.errors.length > 0 && (
+      {hasErrors && (
         <>
           <Divider />
           <Text fw={500} size="sm">{t('users:import.errorDetails')}</Text>
           <ScrollArea.Autosize mah={160}>
             <Stack gap={4}>
-              {result.errors.map((err, i) => (
+              {result.errors?.map((err, i) => (
                 <Alert key={i} color="red" variant="light" py={6} px="sm">
                   <Text size="xs">{err}</Text>
                 </Alert>
@@ -178,16 +187,30 @@ function ResultView({ result, onClose, onRetry }: { result: ImportResult; onClos
       )}
 
       <Group justify="flex-end">
-        <Button variant="subtle" color="gray" size="sm" onClick={onClose}>{t('common:button.close')}</Button>
-        <Button size="sm" onClick={onRetry}>{t('users:import.importAgain')}</Button>
+        <Button variant="subtle" color="gray" size="sm" onClick={onClose}>
+          {t('common:button.close')}
+        </Button>
+        <Button size="sm" onClick={onRetry}>
+          {t('users:import.importAgain')}
+        </Button>
       </Group>
     </Stack>
   );
 }
 
-function ResultRing({ successRate, hasFailed }: { successRate: number; hasFailed: boolean }) {
-  const color = successRate === 100 ? 'teal' : successRate > 0 ? 'yellow' : 'red';
-  const Icon = successRate === 100 ? IconCheck : successRate > 0 ? IconAlertTriangle : IconX;
+interface ResultRingProps {
+  successRate: number;
+  hasFailed: boolean;
+}
+
+function getResultIndicator(rate: number) {
+  if (rate === 100) return { color: 'teal', Icon: IconCheck } as const;
+  if (rate > 0) return { color: 'yellow', Icon: IconAlertTriangle } as const;
+  return { color: 'red', Icon: IconX } as const;
+}
+
+function ResultRing({ successRate, hasFailed }: ResultRingProps) {
+  const { color, Icon } = getResultIndicator(successRate);
 
   return (
     <RingProgress
@@ -223,7 +246,16 @@ interface UploadViewProps {
   onImport: () => void;
 }
 
-function UploadView({ file, dragOver, loading, fileRef, accept, maxSize, onDownloadTemplate, onFileSelect, onDragOverChange, onClose, onImport }: UploadViewProps) {
+function getDropZoneClass(isDragOver: boolean, hasFile: boolean) {
+  if (isDragOver) return 'border-blue-400 bg-blue-50';
+  if (hasFile) return 'border-green-400 bg-green-50';
+  return 'border-gray-300 hover:border-gray-400 hover:bg-gray-50';
+}
+
+function UploadView({
+  file, dragOver, loading, fileRef, accept, maxSize,
+  onDownloadTemplate, onFileSelect, onDragOverChange, onClose, onImport,
+}: UploadViewProps) {
   const { t } = useTranslation(['users', 'common']);
 
   const handleDrop = (e: React.DragEvent) => {
@@ -238,11 +270,7 @@ function UploadView({ file, dragOver, loading, fileRef, accept, maxSize, onDownl
     if (selected) onFileSelect(selected);
   };
 
-  const dropZoneClass = dragOver
-    ? 'border-blue-400 bg-blue-50'
-    : file
-      ? 'border-green-400 bg-green-50'
-      : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50';
+  const dropZoneClass = getDropZoneClass(dragOver, !!file);
 
   return (
     <Stack>
@@ -284,8 +312,12 @@ function UploadView({ file, dragOver, loading, fileRef, accept, maxSize, onDownl
       <input ref={fileRef} type="file" accept={accept} className="hidden" onChange={handleFileChange} />
 
       <Group justify="flex-end">
-        <Button variant="subtle" color="gray" onClick={onClose}>{t('common:button.cancel')}</Button>
-        <Button onClick={onImport} loading={loading} disabled={!file}>{t('users:import.uploadFile')}</Button>
+        <Button variant="subtle" color="gray" onClick={onClose}>
+          {t('common:button.cancel')}
+        </Button>
+        <Button onClick={onImport} loading={loading} disabled={!file}>
+          {t('users:import.uploadFile')}
+        </Button>
       </Group>
     </Stack>
   );
