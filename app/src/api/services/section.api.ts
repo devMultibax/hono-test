@@ -32,6 +32,9 @@ export const sectionApi = {
     exportExcel: (params?: SectionQueryParams) =>
         downloadFile(`/sections/export/excel?${buildQueryString(params)}`, `sections-${Date.now()}.xlsx`),
 
+    downloadTemplate: () =>
+        downloadFile('/sections/template', 'section-import-template.xlsx'),
+
     import: (file: File) => {
         const formData = new FormData();
         formData.append('file', file);

@@ -61,7 +61,7 @@ export function SectionListPage() {
         {t('common:button.downloadReport')}
       </Button>
       {isAdmin && (
-        <ImportButton endpoint="/sections/import" onSuccess={actions.handleImportSuccess} />
+        <ImportButton endpoint="/sections/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => sectionApi.downloadTemplate()} />
       )}
       <Button variant="filled" size="xs" onClick={openCreate}>
         {t('sections:action.addSection')}

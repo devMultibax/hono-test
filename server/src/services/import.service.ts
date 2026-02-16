@@ -93,20 +93,30 @@ export class ImportService {
       const worksheet = workbook.Sheets[sheetName]
 
       const data = XLSX.utils.sheet_to_json<{
-        'Department ID': number
+        Department: string
         Name: string
         Status?: string
       }>(worksheet)
+
+      // Pre-load departments for name lookup
+      const allDepartments = await prisma.department.findMany({
+        select: { id: true, name: true, status: true }
+      })
+      const departmentMap = new Map(
+        allDepartments
+          .filter(d => d.status === 'active')
+          .map(d => [d.name.trim().toLowerCase(), d.id])
+      )
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i]
         const rowNumber = i + 2
 
         try {
-          if (!row['Department ID']) {
+          if (!row.Department || String(row.Department).trim() === '') {
             result.errors.push({
               row: rowNumber,
-              error: 'Department ID is required'
+              error: 'Department name is required'
             })
             result.failed++
             continue
@@ -121,13 +131,15 @@ export class ImportService {
             continue
           }
 
-          const departmentId = Number(row['Department ID'])
+          const departmentName = String(row.Department).trim()
           const name = row.Name.trim()
 
-          if (isNaN(departmentId) || departmentId <= 0) {
+          const departmentId = departmentMap.get(departmentName.toLowerCase())
+
+          if (!departmentId) {
             result.errors.push({
               row: rowNumber,
-              error: 'Department ID must be a positive number'
+              error: `Department "${departmentName}" not found or inactive`
             })
             result.failed++
             continue
@@ -422,8 +434,8 @@ export class ImportService {
 
       const headers = data[0] as string[]
 
-      if (!headers.includes('Department ID')) {
-        errors.push('Missing required column: Department ID')
+      if (!headers.includes('Department')) {
+        errors.push('Missing required column: Department')
       }
 
       if (!headers.includes('Name')) {

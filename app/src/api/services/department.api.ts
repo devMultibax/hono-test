@@ -32,6 +32,9 @@ export const departmentApi = {
   exportExcel: (params?: DepartmentQueryParams) =>
     downloadFile(`/departments/export/excel?${buildQueryString(params)}`, `departments-${Date.now()}.xlsx`),
 
+  downloadTemplate: () =>
+    downloadFile('/departments/template', 'department-import-template.xlsx'),
+
   import: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
