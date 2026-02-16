@@ -10,6 +10,7 @@ import departments from './locales/th/departments.json';
 import sections from './locales/th/sections.json';
 import navigation from './locales/th/navigation.json';
 import database from './locales/th/database.json';
+import backup from './locales/th/backup.json';
 
 const resources = {
   th: {
@@ -22,6 +23,7 @@ const resources = {
     sections,
     navigation,
     database,
+    backup,
   },
 };
 

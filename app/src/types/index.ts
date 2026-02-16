@@ -209,10 +209,16 @@ export interface UserLog {
 }
 
 // ============ Backup ============
+export type BackupType = 'yearly' | 'daily' | 'manual';
+
 export interface BackupFile {
   filename: string;
+  type: BackupType;
+  date: string;
+  modifiedAt: string;
+  restoredAt: string | null;
   size: number;
-  createdAt: string;
+  sizeFormatted: string;
 }
 
 // ============ Database ============

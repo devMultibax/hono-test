@@ -3,7 +3,6 @@ import {
   Users,
   Building2,
   Folders,
-  ClipboardList,
   Terminal,
   Database,
   Server,
@@ -68,7 +67,6 @@ export const getMenuItems = (t: TFunction): MenuItem[] => [
     allowedRoles: [ROLE_ID.ADMIN],
     hasSubmenu: true,
     children: [
-      { path: '/admin/user-logs', label: t('menu.admin.userLogs'), icon: ClipboardList, allowedRoles: [ROLE_ID.ADMIN] },
       { path: '/admin/system-logs', label: t('menu.admin.systemLogs'), icon: Terminal, allowedRoles: [ROLE_ID.ADMIN] },
       { path: '/admin/backups', label: t('menu.admin.backups'), icon: Database, allowedRoles: [ROLE_ID.ADMIN] },
       { path: '/admin/database', label: t('menu.admin.database'), icon: Server, allowedRoles: [ROLE_ID.ADMIN] },

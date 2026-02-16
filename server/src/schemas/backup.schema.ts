@@ -1,8 +1,13 @@
 import { z } from 'zod'
 
+export const backupTypeEnum = z.enum(['yearly', 'daily', 'manual'])
+
 export const backupFileSchema = z.object({
   filename: z.string(),
+  type: backupTypeEnum,
   date: z.string(),
+  modifiedAt: z.string(),
+  restoredAt: z.string().nullable(),
   size: z.number().int().nonnegative(),
   sizeFormatted: z.string()
 })

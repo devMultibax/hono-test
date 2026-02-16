@@ -28,15 +28,7 @@ export function ChangePasswordPage() {
   return <div />;
 }
 
-export function UserLogsPage() {
-  return <div />;
-}
-
 export function SystemLogsPage() {
-  return <div />;
-}
-
-export function BackupsPage() {
   return <div />;
 }
 

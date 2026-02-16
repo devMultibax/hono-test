@@ -1,6 +1,6 @@
 import { spawn } from 'child_process'
 import fs from 'fs/promises'
-import { existsSync, mkdirSync, statSync, readdirSync } from 'fs'
+import { existsSync, mkdirSync, statSync, readdirSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import { env } from '../config/env'
 import { NotFoundError } from '../lib/errors'
@@ -8,6 +8,17 @@ import type { BackupFile } from '../schemas/backup.schema'
 
 const BACKUP_DIR = path.resolve(process.cwd(), 'storage/backups')
 const BACKUP_EXTENSIONS = ['.backup', '.sql', '.dump']
+const METADATA_FILE = path.join(BACKUP_DIR, '.backup-metadata.json')
+
+// Filename patterns for type inference (same as old express system)
+const DAILY_PATTERN = /_backup_\d{8}\.\w+$/   // 8 digits = YYYYMMDD
+const YEARLY_PATTERN = /_backup_\d{4}\.\w+$/  // 4 digits = YYYY
+
+interface BackupMetadata {
+  [filename: string]: {
+    restoredAt?: string
+  }
+}
 
 function getPgCommand(command: string): string {
   if (env.PG_BIN_PATH) {
@@ -32,6 +43,41 @@ if (!existsSync(BACKUP_DIR)) {
 }
 
 export class BackupService {
+  // === Metadata Management ===
+
+  private static loadMetadata(): BackupMetadata {
+    try {
+      if (existsSync(METADATA_FILE)) {
+        const data = readFileSync(METADATA_FILE, 'utf-8')
+        return JSON.parse(data)
+      }
+    } catch {
+      // Ignore parse errors, return empty
+    }
+    return {}
+  }
+
+  private static saveMetadata(metadata: BackupMetadata): void {
+    writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2), 'utf-8')
+  }
+
+  static setRestoredAt(filename: string): void {
+    const metadata = this.loadMetadata()
+    if (!metadata[filename]) {
+      metadata[filename] = {}
+    }
+    metadata[filename].restoredAt = new Date().toISOString()
+    this.saveMetadata(metadata)
+  }
+
+  private static inferType(filename: string): 'daily' | 'yearly' | 'manual' {
+    if (DAILY_PATTERN.test(filename)) return 'daily'
+    if (YEARLY_PATTERN.test(filename)) return 'yearly'
+    return 'manual'
+  }
+
+  // === CRUD Operations ===
+
   static async getBackups(): Promise<BackupFile[]> {
     if (!existsSync(BACKUP_DIR)) {
       return []
@@ -42,14 +88,20 @@ export class BackupService {
       BACKUP_EXTENSIONS.some(ext => file.endsWith(ext))
     )
 
+    const metadata = this.loadMetadata()
+
     const files = await Promise.all(
       backupFiles.map(async (filename) => {
         const filePath = path.join(BACKUP_DIR, filename)
         const stats = statSync(filePath)
+        const fileMeta = metadata[filename]
 
         return {
           filename,
+          type: this.inferType(filename),
           date: stats.birthtime.toISOString(),
+          modifiedAt: stats.mtime.toISOString(),
+          restoredAt: fileMeta?.restoredAt ?? null,
           size: stats.size,
           sizeFormatted: this.formatBytes(stats.size)
         }
@@ -59,12 +111,14 @@ export class BackupService {
     return files.sort((a, b) => b.date.localeCompare(a.date))
   }
 
-  static async createBackup(prefix?: string): Promise<{ filename: string; path: string }> {
+  static async createBackup(prefix?: string, type: 'daily' | 'yearly' = 'yearly'): Promise<{ filename: string; path: string }> {
     const db = getDbConnectionArgs()
-    const currentYear = new Date().getFullYear()
-    const filename = prefix
-      ? `${prefix}_backup_${currentYear}.backup`
-      : `${db.database}_backup_${currentYear}.backup`
+    const now = new Date()
+    const dateSuffix = type === 'daily'
+      ? `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+      : `${now.getFullYear()}`
+    const namePrefix = prefix || db.database
+    const filename = `${namePrefix}_backup_${dateSuffix}.backup`
     const filePath = path.join(BACKUP_DIR, filename)
 
     return new Promise((resolve, reject) => {
@@ -185,6 +239,9 @@ export class BackupService {
             console.log('Restore warnings:', restoreStderr)
           }
 
+          // Track restore timestamp
+          this.setRestoredAt(filename)
+
           console.log(`Database restored successfully to "${targetDbName}"`)
           resolve()
         })
@@ -205,6 +262,13 @@ export class BackupService {
   static async deleteBackup(filename: string): Promise<void> {
     const filePath = await this.validateBackupExists(filename)
     await fs.unlink(filePath)
+
+    // Clean up metadata for deleted file
+    const metadata = this.loadMetadata()
+    if (metadata[filename]) {
+      delete metadata[filename]
+      this.saveMetadata(metadata)
+    }
   }
 
   static async getBackupInfo(filename: string): Promise<{ filePath: string; size: number }> {

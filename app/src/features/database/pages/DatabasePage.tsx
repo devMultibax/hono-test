@@ -65,7 +65,6 @@ export function DatabasePage() {
       <Group justify="flex-end" mb="md">
         <Button
           leftSection={<RefreshCcw size={ICON_SIZE} strokeWidth={3} />}
-          size="xs"
           onClick={handleAnalyze}
           loading={isAnalyzing}
         >

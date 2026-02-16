@@ -10,11 +10,10 @@ import {
   DashboardPage,
   ProfilePage,
   ChangePasswordPage,
-  UserLogsPage,
   SystemLogsPage,
-  BackupsPage,
 } from './pages';
 import { DatabasePage } from '@/features/database';
+import { BackupListPage } from '@/features/backup';
 
 export const router = createBrowserRouter([
   {
@@ -93,18 +92,13 @@ export const router = createBrowserRouter([
             handle: { breadcrumb: 'navigation:menu.admin.title' },
             children: [
               {
-                path: 'user-logs',
-                element: <UserLogsPage />,
-                handle: { title: 'navigation:page.userLogs', breadcrumb: 'navigation:menu.admin.userLogs' },
-              },
-              {
                 path: 'system-logs',
                 element: <SystemLogsPage />,
                 handle: { title: 'navigation:page.systemLogs', breadcrumb: 'navigation:menu.admin.systemLogs' },
               },
               {
                 path: 'backups',
-                element: <BackupsPage />,
+                element: <BackupListPage />,
                 handle: { title: 'navigation:page.backups', breadcrumb: 'navigation:menu.admin.backups' },
               },
               {

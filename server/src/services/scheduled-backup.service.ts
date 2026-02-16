@@ -16,7 +16,7 @@ export class ScheduledBackupService {
     logger.info('Starting scheduled daily backup...')
 
     try {
-      const { filename } = await BackupService.createBackup('auto')
+      const { filename } = await BackupService.createBackup('auto', 'daily')
       logger.info(`Scheduled backup created: ${filename}`)
 
       await this.cleanupOldBackups()
