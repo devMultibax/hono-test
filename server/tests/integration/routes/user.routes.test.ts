@@ -194,7 +194,7 @@ describe('User Routes', () => {
 
   describe('POST /users', () => {
     it('should create user (admin only)', async () => {
-      vi.mocked(UserService.create).mockResolvedValue(mockUserResponse)
+      vi.mocked(UserService.create).mockResolvedValue({ user: mockUserResponse, password: 'mock-password' })
 
       const res = await app.request('/users', {
         method: 'POST',
@@ -350,7 +350,7 @@ describe('User Routes', () => {
 
   describe('PATCH /users/:id/password/reset', () => {
     it('should reset password (admin only)', async () => {
-      vi.mocked(UserService.resetPassword).mockResolvedValue(mockUserResponse)
+      vi.mocked(UserService.resetPassword).mockResolvedValue({ user: mockUserResponse, password: 'mock-password' })
 
       const res = await app.request('/users/1/password/reset', {
         method: 'PATCH',
