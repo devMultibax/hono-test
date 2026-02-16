@@ -4,6 +4,7 @@ import { NotFoundError } from '../lib/errors'
 import { ActionType, Role, type UserResponse, type UserWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { generateDefaultPassword } from '../lib/password'
+import { getUserFullName } from '../utils/audit.utils'
 import type { Prisma } from '@prisma/client'
 
 const SALT_ROUNDS = 10
@@ -31,8 +32,10 @@ export class UserService {
       status: user.status as Status,
       createdAt: user.createdAt,
       createdBy: user.createdBy,
+      createdByName: user.createdByName,
       updatedAt: user.updatedAt,
       updatedBy: user.updatedBy,
+      updatedByName: user.updatedByName,
       lastLoginAt: user.lastLoginAt
     }
   }
@@ -78,7 +81,11 @@ export class UserService {
             name: true,
             status: true,
             createdAt: true,
-            updatedAt: true
+            createdBy: true,
+            createdByName: true,
+            updatedAt: true,
+            updatedBy: true,
+            updatedByName: true
           }
         },
         section: {
@@ -88,7 +95,11 @@ export class UserService {
             name: true,
             status: true,
             createdAt: true,
-            updatedAt: true
+            createdBy: true,
+            createdByName: true,
+            updatedAt: true,
+            updatedBy: true,
+            updatedByName: true
           }
         }
       }
@@ -197,6 +208,7 @@ export class UserService {
     // Generate default password
     const password = generateDefaultPassword()
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+    const createdByName = await getUserFullName(createdBy)
 
     // Create user
     const user = await prisma.user.create({
@@ -211,6 +223,7 @@ export class UserService {
         tel,
         role,
         createdBy,
+        createdByName,
         updatedAt: null,
         updatedBy: null
       },
@@ -239,7 +252,11 @@ export class UserService {
               name: true,
               status: true,
               createdAt: true,
-              updatedAt: true
+              createdBy: true,
+              createdByName: true,
+              updatedAt: true,
+              updatedBy: true,
+              updatedByName: true
             }
           },
           section: {
@@ -249,7 +266,11 @@ export class UserService {
               name: true,
               status: true,
               createdAt: true,
-              updatedAt: true
+              createdBy: true,
+              createdByName: true,
+              updatedAt: true,
+              updatedBy: true,
+              updatedByName: true
             }
           }
         }
@@ -318,10 +339,13 @@ export class UserService {
       }
     }
 
+    const updatedByName = await getUserFullName(updatedBy)
+
     const updateData: any = {
       ...data,
       updatedAt: new Date(),
-      updatedBy
+      updatedBy,
+      updatedByName
     }
 
     if (data.password) {
@@ -392,6 +416,7 @@ export class UserService {
     // Generate new default password
     const password = generateDefaultPassword()
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+    const updatedByName = await getUserFullName(updatedBy)
 
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -400,7 +425,8 @@ export class UserService {
         isDefaultPassword: true,
         tokenVersion: { increment: 1 },
         updatedAt: new Date(),
-        updatedBy
+        updatedBy,
+        updatedByName
       },
       include: {
         department: true,
@@ -439,6 +465,7 @@ export class UserService {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS)
+    const updatedByName = `${user.firstName} ${user.lastName}`
 
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -446,7 +473,8 @@ export class UserService {
         password: hashedPassword,
         isDefaultPassword: false,
         updatedAt: new Date(),
-        updatedBy: user.username
+        updatedBy: user.username,
+        updatedByName
       },
       include: {
         department: true,
@@ -473,8 +501,10 @@ export class UserService {
         status: user.status as 'active' | 'inactive',
         createdAt: user.createdAt,
         createdBy: user.createdBy,
+        createdByName: user.createdByName || '',
         updatedAt: user.updatedAt,
         updatedBy: user.updatedBy,
+        updatedByName: user.updatedByName,
         actionType
       }
     })

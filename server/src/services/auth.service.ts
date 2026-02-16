@@ -21,8 +21,10 @@ export class AuthService {
     status: string
     createdAt: Date
     createdBy: string
+    createdByName: string
     updatedAt: Date | null
     updatedBy: string | null
+    updatedByName: string | null
     lastLoginAt: Date | null
     department?: {
       id: number
@@ -30,8 +32,10 @@ export class AuthService {
       status: string
       createdAt: Date
       createdBy: string
+      createdByName: string
       updatedAt: Date | null
       updatedBy: string | null
+      updatedByName: string | null
     }
     section?: {
       id: number
@@ -40,8 +44,10 @@ export class AuthService {
       status: string
       createdAt: Date
       createdBy: string
+      createdByName: string
       updatedAt: Date | null
       updatedBy: string | null
+      updatedByName: string | null
     } | null
   }): UserWithRelations {
     return {
@@ -57,8 +63,10 @@ export class AuthService {
       status: user.status as Status,
       createdAt: user.createdAt,
       createdBy: user.createdBy,
+      createdByName: user.createdByName,
       updatedAt: user.updatedAt,
       updatedBy: user.updatedBy,
+      updatedByName: user.updatedByName,
       lastLoginAt: user.lastLoginAt,
       department: user.department ? {
         id: user.department.id,
@@ -66,8 +74,10 @@ export class AuthService {
         status: user.department.status as Status,
         createdAt: user.department.createdAt,
         createdBy: user.department.createdBy,
+        createdByName: user.department.createdByName,
         updatedAt: user.department.updatedAt,
-        updatedBy: user.department.updatedBy
+        updatedBy: user.department.updatedBy,
+        updatedByName: user.department.updatedByName
       } : undefined,
       section: user.section ? {
         id: user.section.id,
@@ -76,8 +86,10 @@ export class AuthService {
         status: user.section.status as Status,
         createdAt: user.section.createdAt,
         createdBy: user.section.createdBy,
+        createdByName: user.section.createdByName,
         updatedAt: user.section.updatedAt,
-        updatedBy: user.section.updatedBy
+        updatedBy: user.section.updatedBy,
+        updatedByName: user.section.updatedByName
       } : null
     }
   }
@@ -215,7 +227,8 @@ export class AuthService {
       where: { id: userId },
       data: {
         ...data,
-        updatedBy: user.username
+        updatedBy: user.username,
+        updatedByName: `${user.firstName} ${user.lastName}`
       },
       include: {
         department: true,
@@ -239,8 +252,10 @@ export class AuthService {
       status: string
       createdAt: Date
       createdBy: string
+      createdByName: string
       updatedAt: Date | null
       updatedBy: string | null
+      updatedByName: string | null
       department: { name: string }
       section: { name: string } | null
     },
@@ -259,8 +274,10 @@ export class AuthService {
         status: user.status as Status,
         createdAt: user.createdAt,
         createdBy: user.createdBy,
+        createdByName: user.createdByName || '',
         updatedAt: user.updatedAt,
         updatedBy: user.updatedBy,
+        updatedByName: user.updatedByName,
         actionType
       }
     })

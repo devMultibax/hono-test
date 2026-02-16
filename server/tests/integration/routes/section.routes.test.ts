@@ -65,7 +65,11 @@ describe('Section Routes', () => {
         name: s.name,
         status: s.status as Status,
         createdAt: s.createdAt,
-        updatedAt: s.updatedAt
+        createdBy: 'admin',
+        createdByName: 'Admin User',
+        updatedAt: s.updatedAt,
+        updatedBy: null,
+        updatedByName: null
       }))
       vi.mocked(SectionService.getAll).mockResolvedValue(mockSections)
 

@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError } from '../lib/errors'
 import type { DepartmentResponse, DepartmentWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
+import { getUserFullName } from '../utils/audit.utils'
 import type { Prisma } from '@prisma/client'
 
 export interface DepartmentFilters {
@@ -16,8 +17,10 @@ export class DepartmentService {
     status: string
     createdAt: Date
     createdBy: string
+    createdByName: string
     updatedAt: Date | null
     updatedBy: string | null
+    updatedByName: string | null
   }): DepartmentResponse {
     return {
       id: department.id,
@@ -25,8 +28,10 @@ export class DepartmentService {
       status: department.status as Status,
       createdAt: department.createdAt,
       createdBy: department.createdBy,
+      createdByName: department.createdByName,
       updatedAt: department.updatedAt,
-      updatedBy: department.updatedBy
+      updatedBy: department.updatedBy,
+      updatedByName: department.updatedByName
     }
   }
 
@@ -56,7 +61,11 @@ export class DepartmentService {
               name: true,
               status: true,
               createdAt: true,
-              updatedAt: true
+              createdBy: true,
+              createdByName: true,
+              updatedAt: true,
+              updatedBy: true,
+              updatedByName: true
             }
           },
           users: {
@@ -138,7 +147,11 @@ export class DepartmentService {
               name: true,
               status: true,
               createdAt: true,
-              updatedAt: true
+              createdBy: true,
+              createdByName: true,
+              updatedAt: true,
+              updatedBy: true,
+              updatedByName: true
             }
           },
           users: {
@@ -185,10 +198,13 @@ export class DepartmentService {
       throw new ConflictError('Department name already exists')
     }
 
+    const createdByName = await getUserFullName(createdBy)
+
     const department = await prisma.department.create({
       data: {
         name,
         createdBy,
+        createdByName,
         updatedAt: null,
         updatedBy: null
       }
@@ -215,13 +231,16 @@ export class DepartmentService {
       }
     }
 
+    const updatedByName = await getUserFullName(updatedBy)
+
     try {
       const department = await prisma.department.update({
         where: { id },
         data: {
           ...data,
           updatedAt: new Date(),
-          updatedBy
+          updatedBy,
+          updatedByName
         }
       })
 

@@ -77,6 +77,11 @@ describe('User Routes', () => {
         role: u.role as Role,
         status: u.status as Status,
         createdAt: u.createdAt,
+        createdBy: 'admin',
+        createdByName: 'Admin User',
+        updatedAt: null,
+        updatedBy: null,
+        updatedByName: null,
         lastLoginAt: u.lastLoginAt
       }))
       vi.mocked(UserService.getAll).mockResolvedValue(mockUsers)

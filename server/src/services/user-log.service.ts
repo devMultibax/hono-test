@@ -30,8 +30,10 @@ export class UserLogService {
     status: string
     createdAt: Date
     createdBy: string
+    createdByName: string
     updatedAt: Date | null
     updatedBy: string | null
+    updatedByName: string | null
     actionType: string
     actionAt: Date
   }): UserLogResponse {
@@ -48,8 +50,10 @@ export class UserLogService {
       status: log.status as Status,
       createdAt: log.createdAt,
       createdBy: log.createdBy,
+      createdByName: log.createdByName,
       updatedAt: log.updatedAt,
       updatedBy: log.updatedBy,
+      updatedByName: log.updatedByName,
       actionType: log.actionType as ActionType,
       actionAt: log.actionAt
     }

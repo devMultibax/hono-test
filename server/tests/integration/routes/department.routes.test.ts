@@ -64,7 +64,11 @@ describe('Department Routes', () => {
         name: d.name,
         status: d.status as Status,
         createdAt: d.createdAt,
-        updatedAt: d.updatedAt
+        createdBy: 'admin',
+        createdByName: 'Admin User',
+        updatedAt: d.updatedAt,
+        updatedBy: null,
+        updatedByName: null
       }))
       vi.mocked(DepartmentService.getAll).mockResolvedValue(mockDepts)
 

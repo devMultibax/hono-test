@@ -1,11 +1,10 @@
 import type { ExportColumn } from '../types/export'
-import type { SectionResponse } from '../types'
+import type { SectionWithRelations } from '../types'
+import { mapValue, statusMap, auditColumns } from '../lib/export-helpers'
 
-export const sectionExcelColumns: ExportColumn<SectionResponse>[] = [
-  { key: 'id', label: 'ID', width: 10 },
-  { key: 'departmentId', label: 'Department ID', width: 15 },
-  { key: 'name', label: 'Name', width: 30 },
-  { key: 'status', label: 'Status', width: 12 },
-  { key: 'createdAt', label: 'Created At', width: 20, value: (v) => new Date(v as string).toLocaleString('th-TH') },
-  { key: 'updatedAt', label: 'Updated At', width: 20, value: (v) => v ? new Date(v as string).toLocaleString('th-TH') : '' }
+export const sectionExcelColumns: ExportColumn<SectionWithRelations>[] = [
+  { key: 'department', label: 'ชื่อฝ่าย', width: 20, value: (_v, item) => item.department?.name ?? '' },
+  { key: 'name', label: 'ชื่อหน่วยงาน', width: 30 },
+  { key: 'status', label: 'สถานะ', width: 12, value: mapValue(statusMap) },
+  ...auditColumns
 ]

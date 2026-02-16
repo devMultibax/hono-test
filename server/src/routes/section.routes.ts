@@ -5,7 +5,7 @@ import { requireAdmin } from '../middleware/permission'
 import { SectionService } from '../services/section.service'
 import { createSectionSchema, updateSectionSchema, listSectionsQuerySchema } from '../schemas/section'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
-import type { HonoContext, SectionResponse } from '../types'
+import type { HonoContext, SectionWithRelations } from '../types'
 import { ExportService } from '../services/export.service'
 import { ImportService } from '../services/import.service'
 import { sectionExcelColumns } from '../controllers/section.controller'
@@ -119,10 +119,10 @@ sections.get('/export/excel', async (c) => {
     status: queryParams.status
   }
 
-  const sectionList = await SectionService.getAll(false, undefined, filters)
+  const sectionList = await SectionService.getAll(true, undefined, filters)
   const sectionData = Array.isArray(sectionList) ? sectionList : []
 
-  const result = await ExportService.exportToExcel(sectionData as SectionResponse[], {
+  const result = await ExportService.exportToExcel(sectionData as SectionWithRelations[], {
     columns: sectionExcelColumns
   })
 

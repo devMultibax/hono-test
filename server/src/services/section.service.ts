@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError } from '../lib/errors'
 import type { SectionResponse, SectionWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
+import { getUserFullName } from '../utils/audit.utils'
 import type { Prisma } from '@prisma/client'
 
 export interface SectionFilters {
@@ -18,8 +19,10 @@ export class SectionService {
     status: string
     createdAt: Date
     createdBy: string
+    createdByName: string
     updatedAt: Date | null
     updatedBy: string | null
+    updatedByName: string | null
   }): SectionResponse {
     return {
       id: section.id,
@@ -28,8 +31,10 @@ export class SectionService {
       status: section.status as Status,
       createdAt: section.createdAt,
       createdBy: section.createdBy,
+      createdByName: section.createdByName,
       updatedAt: section.updatedAt,
-      updatedBy: section.updatedBy
+      updatedBy: section.updatedBy,
+      updatedByName: section.updatedByName
     }
   }
 
@@ -62,7 +67,11 @@ export class SectionService {
               name: true,
               status: true,
               createdAt: true,
-              updatedAt: true
+              createdBy: true,
+              createdByName: true,
+              updatedAt: true,
+              updatedBy: true,
+              updatedByName: true
             }
           },
           users: {
@@ -143,7 +152,11 @@ export class SectionService {
               name: true,
               status: true,
               createdAt: true,
-              updatedAt: true
+              createdBy: true,
+              createdByName: true,
+              updatedAt: true,
+              updatedBy: true,
+              updatedByName: true
             }
           },
           users: {
@@ -214,11 +227,14 @@ export class SectionService {
       throw new ConflictError('Section name already exists in this department')
     }
 
+    const createdByName = await getUserFullName(createdBy)
+
     const section = await prisma.section.create({
       data: {
         departmentId,
         name,
         createdBy,
+        createdByName,
         updatedAt: null,
         updatedBy: null
       }
@@ -256,13 +272,16 @@ export class SectionService {
       }
     }
 
+    const updatedByName = await getUserFullName(updatedBy)
+
     try {
       const section = await prisma.section.update({
         where: { id },
         data: {
           ...data,
           updatedAt: new Date(),
-          updatedBy
+          updatedBy,
+          updatedByName
         }
       })
 

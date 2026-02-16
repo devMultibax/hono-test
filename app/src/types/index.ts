@@ -67,8 +67,10 @@ export interface User {
   status: Status;
   createdAt: string;
   createdBy: string;
+  createdByName: string;
   updatedAt: string | null;
   updatedBy: string | null;
+  updatedByName: string | null;
   lastLoginAt: string | null;
   isDefaultPassword: boolean;
   department?: Department;
@@ -133,8 +135,10 @@ export interface Department {
   status: Status;
   createdAt: string;
   createdBy: string;
+  createdByName: string;
   updatedAt: string | null;
   updatedBy: string | null;
+  updatedByName: string | null;
   sections?: Section[];
   _count?: {
     users: number;
@@ -160,8 +164,10 @@ export interface Section {
   status: Status;
   createdAt: string;
   createdBy: string;
+  createdByName: string;
   updatedAt: string | null;
   updatedBy: string | null;
+  updatedByName: string | null;
   department?: Department;
   _count?: {
     users: number;
@@ -196,8 +202,10 @@ export interface UserLog {
   actionAt: string;
   createdAt: string;
   createdBy: string;
+  createdByName: string;
   updatedAt: string | null;
   updatedBy: string | null;
+  updatedByName: string | null;
 }
 
 // ============ Backup ============

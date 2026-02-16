@@ -128,11 +128,11 @@ function DetailContent({ opened, departmentId, onClose, onEdit }: { opened: bool
 
           <Grid>
             <InfoField label={t('common:field.createdAt')}>{formatDateTime(department.createdAt)}</InfoField>
-            <InfoField label={t('common:field.createdBy')}>{department.createdBy}</InfoField>
+            <InfoField label={t('common:field.createdBy')}>{department.createdByName || department.createdBy}</InfoField>
             {department.updatedAt && (
               <>
                 <InfoField label={t('common:field.updatedAt')}>{formatDateTime(department.updatedAt)}</InfoField>
-                <InfoField label={t('common:field.updatedBy')}>{department.updatedBy || '-'}</InfoField>
+                <InfoField label={t('common:field.updatedBy')}>{department.updatedByName || department.updatedBy || '-'}</InfoField>
               </>
             )}
           </Grid>

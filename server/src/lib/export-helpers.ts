@@ -21,10 +21,10 @@ export const statusMap: Record<string, string> = {
   inactive: 'ไม่ใช้งาน'
 }
 
-// Reusable audit columns (createdAt, createdBy, updatedAt, updatedBy)
+// Reusable audit columns (createdAt, createdByName, updatedAt, updatedByName)
 export const auditColumns: ExportColumn[] = [
   { key: 'createdAt', label: 'วันที่สร้าง', width: 20, value: formatDate },
-  { key: 'createdBy', label: 'สร้างโดย', width: 15, value: formatOptionalString },
+  { key: 'createdByName', label: 'สร้างโดย', width: 20, value: formatOptionalString },
   { key: 'updatedAt', label: 'วันที่แก้ไข', width: 20, value: formatDate },
-  { key: 'updatedBy', label: 'แก้ไขโดย', width: 15, value: formatOptionalString }
+  { key: 'updatedByName', label: 'แก้ไขโดย', width: 20, value: formatOptionalString }
 ]

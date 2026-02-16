@@ -43,8 +43,10 @@ export interface DepartmentResponse {
   status: Status
   createdAt: Date
   createdBy: string
+  createdByName: string
   updatedAt: Date | null
   updatedBy: string | null
+  updatedByName: string | null
 }
 
 export interface DepartmentWithRelations extends DepartmentResponse {
@@ -71,8 +73,10 @@ export interface SectionResponse {
   status: Status
   createdAt: Date
   createdBy: string
+  createdByName: string
   updatedAt: Date | null
   updatedBy: string | null
+  updatedByName: string | null
 }
 
 export interface SectionWithRelations extends SectionResponse {
@@ -113,8 +117,10 @@ export interface UserResponse {
   status: Status
   createdAt: Date
   createdBy: string
+  createdByName: string
   updatedAt: Date | null
   updatedBy: string | null
+  updatedByName: string | null
   lastLoginAt: Date | null
 }
 
@@ -150,8 +156,10 @@ export interface UserLog {
   status: Status
   createdAt: Date
   createdBy: string
+  createdByName: string
   updatedAt: Date | null
   updatedBy: string | null
+  updatedByName: string | null
   actionType: ActionType
   actionAt: Date
 }
@@ -169,8 +177,10 @@ export interface UserLogResponse {
   status: Status
   createdAt: Date
   createdBy: string
+  createdByName: string
   updatedAt: Date | null
   updatedBy: string | null
+  updatedByName: string | null
   actionType: ActionType
   actionAt: Date
 }

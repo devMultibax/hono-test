@@ -28,7 +28,11 @@ export const mockDepartmentResponse: DepartmentResponse = {
   name: 'IT Department',
   status: Status.ACTIVE,
   createdAt: new Date('2024-01-01'),
-  updatedAt: null
+  createdBy: 'admin',
+  createdByName: 'Admin User',
+  updatedAt: null,
+  updatedBy: null,
+  updatedByName: null
 }
 
 export const mockSection: Section = {
@@ -48,7 +52,11 @@ export const mockSectionResponse: SectionResponse = {
   name: 'Development',
   status: Status.ACTIVE,
   createdAt: new Date('2024-01-01'),
-  updatedAt: null
+  createdBy: 'admin',
+  createdByName: 'Admin User',
+  updatedAt: null,
+  updatedBy: null,
+  updatedByName: null
 }
 
 export const mockUser: User = {
@@ -82,6 +90,11 @@ export const mockUserResponse: UserResponse = {
   role: Role.USER,
   status: Status.ACTIVE,
   createdAt: new Date('2024-01-01'),
+  createdBy: 'admin',
+  createdByName: 'Admin User',
+  updatedAt: null,
+  updatedBy: null,
+  updatedByName: null,
   lastLoginAt: null
 }
 
@@ -128,8 +141,10 @@ export const mockUserLog: UserLog = {
   status: Status.ACTIVE,
   createdAt: new Date('2024-01-01'),
   createdBy: 'admin',
+  createdByName: 'Admin User',
   updatedAt: null,
   updatedBy: null,
+  updatedByName: null,
   actionType: ActionType.CREATE,
   actionAt: new Date('2024-01-01')
 }

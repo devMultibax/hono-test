@@ -183,11 +183,11 @@ function DetailContent({ opened, userId, onClose, onEdit }: { opened: boolean; u
 
           <Grid>
             <InfoField label={t('common:field.createdAt')}>{formatDateTime(user.createdAt)}</InfoField>
-            <InfoField label={t('common:field.createdBy')}>{user.createdBy}</InfoField>
+            <InfoField label={t('common:field.createdBy')}>{user.createdByName || user.createdBy}</InfoField>
             {user.updatedAt && (
               <>
                 <InfoField label={t('common:field.updatedAt')}>{formatDateTime(user.updatedAt)}</InfoField>
-                <InfoField label={t('common:field.updatedBy')}>{user.updatedBy || '-'}</InfoField>
+                <InfoField label={t('common:field.updatedBy')}>{user.updatedByName || user.updatedBy || '-'}</InfoField>
               </>
             )}
           </Grid>
