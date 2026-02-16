@@ -251,12 +251,29 @@ export class DepartmentService {
   }
 
   static async delete(id: number): Promise<void> {
-    try {
-      await prisma.department.delete({
-        where: { id }
-      })
-    } catch {
-      throw new NotFoundError('Department not found or has related records')
+    const department = await prisma.department.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { sections: true, users: true }
+        }
+      }
+    })
+
+    if (!department) {
+      throw new NotFoundError('Department not found')
     }
+
+    if (department._count.users > 0) {
+      throw new ConflictError(`ไม่สามารถลบได้ เนื่องจากมีผู้ใช้งานอยู่ ${department._count.users} คน`)
+    }
+
+    if (department._count.sections > 0) {
+      throw new ConflictError(`ไม่สามารถลบได้ เนื่องจากมีหน่วยงานอยู่ ${department._count.sections} หน่วยงาน`)
+    }
+
+    await prisma.department.delete({
+      where: { id }
+    })
   }
 }

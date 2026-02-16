@@ -292,12 +292,25 @@ export class SectionService {
   }
 
   static async delete(id: number): Promise<void> {
-    try {
-      await prisma.section.delete({
-        where: { id }
-      })
-    } catch {
-      throw new NotFoundError('Section not found or has related records')
+    const section = await prisma.section.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { users: true }
+        }
+      }
+    })
+
+    if (!section) {
+      throw new NotFoundError('Section not found')
     }
+
+    if (section._count.users > 0) {
+      throw new ConflictError(`ไม่สามารถลบได้ เนื่องจากมีผู้ใช้งานอยู่ ${section._count.users} คน`)
+    }
+
+    await prisma.section.delete({
+      where: { id }
+    })
   }
 }
