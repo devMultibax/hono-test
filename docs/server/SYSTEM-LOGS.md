@@ -44,6 +44,7 @@
 |-------|-------|---------|
 | `Login successful` | INFO | Login สำเร็จ |
 | `Login failed: <reason>` | WARN | Login ล้มเหลว (username/password ผิด, account disabled) |
+| `Rate limit exceeded: too many login attempts` | WARN | เกิน 5 ครั้ง / 15 นาที (ต่อ IP) |
 | `Logout successful` | INFO | Logout สำเร็จ |
 | `Unhandled error` | ERROR | Error ที่ไม่คาดคิดใน global error handler |
 
@@ -96,6 +97,17 @@
 | `Restored backup "<filename>"` | INFO | Restore backup สำเร็จ |
 | `Deleted backup "<filename>"` | INFO | ลบ backup สำเร็จ |
 | `Unhandled error` | ERROR | Error ที่ไม่คาดคิด (ผ่าน global error handler) |
+
+---
+
+### Rate Limiting (Global)
+
+| Event | Level | Limiter | เงื่อนไข |
+|-------|-------|---------|---------|
+| `Rate limit exceeded: too many API requests` | WARN | `generalApiRateLimiter` | เกิน 100 ครั้ง / 15 นาที (ทุก route) |
+| `Rate limit exceeded: strict limit reached` | WARN | `strictRateLimiter` | เกิน 10 ครั้ง / 15 นาที (routes เฉพาะ) |
+
+> **หมายเหตุ:** `loginRateLimiter` อยู่ภายใต้หัวข้อ Authentication ด้านบน
 
 ---
 
