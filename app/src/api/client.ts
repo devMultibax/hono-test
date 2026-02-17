@@ -2,6 +2,8 @@ import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
 import { handleApiError } from './error-handler';
+import { Report } from '@/utils/mantineAlertUtils';
+import { t } from '@/lib/i18n/helpers';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 30000;
@@ -65,9 +67,16 @@ apiClient.interceptors.response.use(
 
     // Redirect to login on 401
     if (err.response?.status === 401) {
+      const isSessionReplaced = (err.response?.data as { error?: string })?.error === 'SESSION_REPLACED';
       useAuthStore.getState().logout();
       if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        if (isSessionReplaced) {
+          Report.warning(t('auth:sessionReplaced'), () => {
+            window.location.href = '/login';
+          });
+        } else {
+          window.location.href = '/login';
+        }
       }
     }
 

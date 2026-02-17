@@ -143,6 +143,7 @@ export interface AuthPayload {
 export interface LoginResponse {
   token: string
   user: UserWithRelations
+  previousSessionTerminated: boolean
 }
 
 // User Log Types

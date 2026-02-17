@@ -33,6 +33,13 @@ auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
       path: '/'
     })
 
+    if (result.previousSessionTerminated) {
+      c.get('logWarn')('Session replaced: user logged in from another device', {
+        username: validated.username,
+        fullName: '-',
+      })
+    }
+
     c.get('logInfo')('Login successful', { username: validated.username })
 
     return successResponse(c, { user: result.user, message: MESSAGES.AUTH.LOGIN_SUCCESS })

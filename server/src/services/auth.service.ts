@@ -117,9 +117,19 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials')
     }
 
-    await prisma.user.update({
+    // Detect active session before incrementing tokenVersion
+    const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000
+    const previousSessionTerminated =
+      !!user.lastLoginAt &&
+      Date.now() - user.lastLoginAt.getTime() < TOKEN_EXPIRY_MS
+
+    // Increment tokenVersion to invalidate previous sessions + update lastLoginAt
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() }
+      data: {
+        lastLoginAt: new Date(),
+        tokenVersion: { increment: 1 }
+      }
     })
 
     const payload: AuthPayload = {
@@ -128,7 +138,7 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role as Role,
-      tokenVersion: user.tokenVersion
+      tokenVersion: updatedUser.tokenVersion
     }
 
     const token = jwt.sign(payload, env.JWT_SECRET, {
@@ -144,7 +154,8 @@ export class AuthService {
         lastLoginAt: new Date(),
         department: user.department,
         section: user.section
-      })
+      }),
+      previousSessionTerminated
     }
   }
 
@@ -159,7 +170,7 @@ export class AuthService {
         })
 
         if (!user || user.tokenVersion !== decoded.tokenVersion) {
-          throw new UnauthorizedError('Invalid token')
+          throw new UnauthorizedError('SESSION_REPLACED')
         }
       }
 

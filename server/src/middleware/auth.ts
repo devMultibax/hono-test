@@ -19,6 +19,9 @@ export const authMiddleware = async (c: Context<HonoContext>, next: Next) => {
     c.set('user', decoded as AuthPayload)
     await next()
   } catch (error) {
+    if (error instanceof UnauthorizedError && error.message === 'SESSION_REPLACED') {
+      return errorResponse(c, { error: 'SESSION_REPLACED' }, 401)
+    }
     if (error instanceof UnauthorizedError) {
       return errorResponse(c, { error: error.message }, 401)
     }
