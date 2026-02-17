@@ -44,11 +44,14 @@
 |-------|-------|---------|
 | `Login successful` | INFO | Login สำเร็จ |
 | `Login failed: <reason>` | WARN | Login ล้มเหลว (username/password ผิด, account disabled) |
-| `Rate limit exceeded: too many login attempts` | WARN | เกิน 5 ครั้ง / 15 นาที (ต่อ IP) |
+| `Session replaced: user logged in from another device` | WARN | Login ขณะที่มี session เดิมยังใช้งานได้อยู่ (single-session enforcement) |
+| `Rate limit exceeded: too many login attempts` | WARN | เกิน 15 ครั้ง / 15 นาที (ต่อ IP) |
 | `Logout successful` | INFO | Logout สำเร็จ |
 | `Unhandled error` | ERROR | Error ที่ไม่คาดคิดใน global error handler |
 
-> **หมายเหตุ:** login fail จะ override username/fullName ด้วยค่าที่ user พิมพ์มา (ยังไม่มี session)
+> **หมายเหตุ:**
+> - login fail จะ override username/fullName ด้วยค่าที่ user พิมพ์มา (ยังไม่มี session)
+> - Session replaced log จะปรากฏก่อน Login successful log เสมอ (เกิดขึ้นใน request เดียวกัน)
 
 ---
 
