@@ -10,6 +10,7 @@ import { SectionDrawer } from '../components/SectionDrawer';
 import { useSections, useSectionActions } from '../hooks/useSections';
 import { useSectionColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../sectionTable.config';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useRefresh } from '@/hooks/useRefresh';
 import { useUserRole } from '@/stores/auth.store';
 import { ROLE_ID } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
@@ -45,7 +46,7 @@ export function SectionListPage() {
     sortFieldMap: SORT_FIELD_MAP,
   });
 
-  const { data, isLoading } = useSections(params);
+  const { data, isLoading, refetch, isRefetching } = useSections(params);
 
   const columns = useSectionColumns({
     onView: (section) => openDetail(section.id),
@@ -55,8 +56,19 @@ export function SectionListPage() {
     currentUserRole: userRole,
   });
 
+  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+
   const headerActions = useMemo(() => (
     <>
+      <Button
+        variant="light"
+        color="orange"
+        size="xs"
+        onClick={handleRefresh}
+        loading={isRefreshLoading}
+      >
+        {t('common:action.refresh', 'Refresh')}
+      </Button>
       <Button variant="light" color="teal" size="xs" onClick={() => setExportOpened(true)}>
         {t('common:button.downloadReport')}
       </Button>
@@ -67,7 +79,7 @@ export function SectionListPage() {
         {t('sections:action.addSection')}
       </Button>
     </>
-  ), [isAdmin, actions.handleImportSuccess, openCreate, t]);
+  ), [isAdmin, actions.handleImportSuccess, openCreate, t, isRefreshLoading, handleRefresh]);
 
   const toolbarActions = useCallback((selectedRows: Section[]) =>
     isAdmin && (
@@ -80,11 +92,15 @@ export function SectionListPage() {
         {t('common:table.deleteSelected')}
       </Button>
     ),
-  [isAdmin, actions, t]);
+    [isAdmin, actions, t]);
+
 
   return (
     <div>
-      <SectionFilters params={params} onChange={handleFilterChange} />
+      <SectionFilters
+        params={params}
+        onChange={handleFilterChange}
+      />
 
       <SectionExportDrawer
         opened={exportOpened}

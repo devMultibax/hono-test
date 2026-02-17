@@ -11,6 +11,7 @@ import { UserDrawer } from '../components/UserDrawer';
 import { useUsers, useUserActions } from '../hooks/useUsers';
 import { useUserColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../userTable.config';
 import { useDataTable } from '@/hooks/useDataTable';
+import { useRefresh } from '@/hooks/useRefresh';
 import { useUser, useUserRole } from '@/stores/auth.store';
 import { ROLE_ID } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
@@ -48,7 +49,7 @@ export function UserListPage() {
     sortFieldMap: SORT_FIELD_MAP,
   });
 
-  const { data, isLoading } = useUsers(
+  const { data, isLoading, refetch, isRefetching } = useUsers(
     isAdmin ? params : { ...params, departmentId: currentUser?.departmentId },
   );
 
@@ -63,19 +64,30 @@ export function UserListPage() {
     currentUserRole: userRole,
   });
 
+  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+
   const headerActions = useMemo(() => (
     <>
+      <Button
+        variant="light"
+        color="orange"
+        size="xs"
+        onClick={handleRefresh}
+        loading={isRefreshLoading}
+      >
+        {t('common:action.refresh', 'Refresh')}
+      </Button>
       <Button variant="light" color="teal" size="xs" onClick={() => setExportOpened(true)}>
         {t('common:button.downloadReport')}
       </Button>
       {isAdmin && (
-          <ImportButton endpoint="/users/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} />
+        <ImportButton endpoint="/users/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} />
       )}
       <Button variant="filled" size="xs" onClick={openCreate}>
         {t('users:action.addUser')}
       </Button>
     </>
-  ), [isAdmin, actions.handleImportSuccess, openCreate, t]);
+  ), [isAdmin, actions.handleImportSuccess, openCreate, t, isRefreshLoading, handleRefresh]);
 
   const toolbarActions = useCallback((selectedRows: User[]) =>
     isAdmin && (
@@ -88,12 +100,19 @@ export function UserListPage() {
         {t('common:table.deleteSelected')}
       </Button>
     ),
-  [isAdmin, actions, t]);
+    [isAdmin, actions, t]);
+
+
 
   return (
     <div>
 
-      <UserFilters params={params} onChange={handleFilterChange} currentUserRole={userRole} userDepartmentId={currentUser?.departmentId} />
+      <UserFilters
+        params={params}
+        onChange={handleFilterChange}
+        currentUserRole={userRole}
+        userDepartmentId={currentUser?.departmentId}
+      />
 
       <UserExportDrawer
         opened={exportOpened}

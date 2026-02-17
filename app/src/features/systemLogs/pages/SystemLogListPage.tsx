@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { Button } from '@mantine/core';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import { useTranslation } from '@/lib/i18n';
@@ -6,6 +7,7 @@ import { useTranslation } from '@/lib/i18n';
 dayjs.extend(isBetween);
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { SystemLogFilters } from '../components/SystemLogFilters';
+import { useRefresh } from '@/hooks/useRefresh';
 import { useSystemLogs } from '../hooks/useSystemLogs';
 import { useSystemLogColumns } from '../systemLogTable.config';
 import type { SystemLog, SystemLogQueryParams } from '../types';
@@ -54,7 +56,7 @@ export function SystemLogListPage() {
   const columns = useSystemLogColumns();
 
   // Fetch logs with initial date range
-  const { data, isLoading, refetch } = useSystemLogs(INITIAL_PARAMS, true);
+  const { data, isLoading, refetch, isRefetching } = useSystemLogs(INITIAL_PARAMS, true);
 
   // Refetch when date range changes significantly
   useEffect(() => {
@@ -95,9 +97,26 @@ export function SystemLogListPage() {
     setPageSize(newPageSize);
   }, []);
 
+  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+
+  const headerActions = useMemo(() => (
+    <Button
+      variant="light"
+      color="orange"
+      size="xs"
+      onClick={handleRefresh}
+      loading={isRefreshLoading}
+    >
+      {t('common:action.refresh', 'Refresh')}
+    </Button>
+  ), [t, isRefreshLoading, handleRefresh]);
+
   return (
     <div>
-      <SystemLogFilters params={params} onChange={handleFilterChange} />
+      <SystemLogFilters
+        params={params}
+        onChange={handleFilterChange}
+      />
 
       <DataTable
         data={paginatedLogs}
@@ -108,6 +127,7 @@ export function SystemLogListPage() {
         enableColumnVisibility={false}
         enableRowSelection={false}
         onPaginationChange={handlePaginationChange}
+        headerActions={headerActions}
         compact
       />
     </div>
