@@ -188,6 +188,7 @@ departments.post('/', requireAdmin, async (c) => {
   const validated = createDepartmentSchema.parse(body)
 
   const department = await DepartmentService.create(validated.name, user.username)
+  c.get('logInfo')(`Created department "${validated.name}"`)
   return createdResponse(c, department)
 })
 
@@ -203,7 +204,9 @@ departments.put('/:id', requireAdmin, async (c) => {
   const body = await c.req.json()
   const validated = updateDepartmentSchema.parse(body)
 
+  const oldDepartment = await DepartmentService.getById(id)
   const department = await DepartmentService.update(id, validated, user.username)
+  c.get('logInfo')(`Updated department "${oldDepartment.name}" to "${department.name}"`)
   return successResponse(c, department)
 })
 
@@ -215,7 +218,9 @@ departments.delete('/:id', requireAdmin, async (c) => {
     return c.json({ error: MESSAGES.DEPARTMENT.INVALID_ID }, 400)
   }
 
+  const department = await DepartmentService.getById(id)
   await DepartmentService.delete(id)
+  c.get('logInfo')(`Deleted department "${department.name}"`)
   return noContentResponse(c)
 })
 
@@ -289,6 +294,7 @@ departments.post('/import', requireAdmin, async (c) => {
   }
 
   const result = await ImportService.importDepartments(file.buffer, user.username)
+  c.get('logInfo')(`Imported departments: ${result.success} success, ${result.failed} failed`)
 
   return c.json({
     success: result.success,

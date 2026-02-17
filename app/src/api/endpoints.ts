@@ -40,8 +40,6 @@ export const API_ENDPOINTS = {
   },
   SYSTEM_LOGS: {
     BASE: '/system-log',
-    FILES: '/system-log/files',
-    CLEANUP: '/system-log/cleanup',
   },
   BACKUP: {
     BASE: '/backup',

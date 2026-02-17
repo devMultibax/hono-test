@@ -28,8 +28,6 @@ export function ChangePasswordPage() {
   return <div />;
 }
 
-export function SystemLogsPage() {
-  return <div />;
-}
+export { SystemLogListPage as SystemLogsPage } from '@/features/systemLogs';
 
 

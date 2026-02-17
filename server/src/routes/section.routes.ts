@@ -197,6 +197,7 @@ sections.post('/', requireAdmin, async (c) => {
     validated.name,
     user.username
   )
+  c.get('logInfo')(`Created section "${validated.name}"`)
   return createdResponse(c, section)
 })
 
@@ -212,7 +213,9 @@ sections.put('/:id', requireAdmin, async (c) => {
   const body = await c.req.json()
   const validated = updateSectionSchema.parse(body)
 
+  const oldSection = await SectionService.getById(id, true) as SectionWithRelations
   const section = await SectionService.update(id, validated, user.username)
+  c.get('logInfo')(`Updated section "${oldSection.name}" to "${section.name}" in department "${oldSection.department?.name ?? '-'}"`)
   return successResponse(c, section)
 })
 
@@ -224,7 +227,9 @@ sections.delete('/:id', requireAdmin, async (c) => {
     return c.json({ error: 'Invalid section ID' }, 400)
   }
 
+  const oldSection = await SectionService.getById(id, true) as SectionWithRelations
   await SectionService.delete(id)
+  c.get('logInfo')(`Deleted section "${oldSection.name}" in department "${oldSection.department?.name ?? '-'}"`)
   return noContentResponse(c)
 })
 
@@ -300,6 +305,7 @@ sections.post('/import', requireAdmin, async (c) => {
   }
 
   const result = await ImportService.importSections(file.buffer, user.username)
+  c.get('logInfo')(`Imported sections: ${result.success} success, ${result.failed} failed`)
 
   return c.json({
     success: result.success,

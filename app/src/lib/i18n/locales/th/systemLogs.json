@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "System Logs"
+  },
+  "filter": {
+    "title": "กรองข้อมูล"
+  },
+  "field": {
+    "level": "Level",
+    "datetime": "วันที่/เวลา",
+    "username": "Username",
+    "fullName": "ชื่อ-นามสกุล",
+    "ip": "IP Address",
+    "url": "URL",
+    "method": "Method",
+    "event": "Event",
+    "startDateTime": "เวลาเริ่มต้น",
+    "endDateTime": "เวลาสิ้นสุด"
+  },
+  "level": {
+    "info": "ข้อมูล",
+    "warn": "แจ้งเตือน",
+    "error": "ข้อผิดพลาด",
+    "all": "ทั้งหมด"
+  },
+  "message": {
+    "empty": "ไม่พบ System Logs",
+    "searchFirst": "กรุณาเลือกช่วงวันที่และกดค้นหา"
+  },
+  "action": {
+    "search": "ค้นหา",
+    "reset": "รีเซ็ต"
+  }
+}

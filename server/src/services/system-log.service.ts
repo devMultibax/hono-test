@@ -36,38 +36,65 @@ export class SystemLogService {
   }
 
   static async getLogs(query: LogQuery): Promise<LogEntry[]> {
-    const { date, level, limit } = query
-    const targetDate = date ?? new Date().toISOString().split('T')[0]
-    const logFile = path.join(LOG_DIR, `app-${targetDate}.log`)
+    const { date, startDate, endDate, level, limit } = query
 
-    if (!existsSync(logFile)) {
-      return []
-    }
+    // Determine which log files to read
+    const logDates = this.getLogDates(date, startDate, endDate)
 
     const logs: LogEntry[] = []
-    const fileStream = createReadStream(logFile)
-    const rl = readline.createInterface({
-      input: fileStream,
-      crlfDelay: Infinity
-    })
 
-    for await (const line of rl) {
-      if (!line.trim()) continue
+    for (const targetDate of logDates) {
+      const logFile = path.join(LOG_DIR, `app-${targetDate}.log`)
 
-      try {
-        const entry = JSON.parse(line) as LogEntry
+      if (!existsSync(logFile)) continue
 
-        if (level && entry.level !== level) continue
+      const fileStream = createReadStream(logFile)
+      const rl = readline.createInterface({
+        input: fileStream,
+        crlfDelay: Infinity
+      })
 
-        logs.push(entry)
+      for await (const line of rl) {
+        if (!line.trim()) continue
 
-        if (logs.length >= limit) break
-      } catch {
-        continue
+        try {
+          const entry = JSON.parse(line) as LogEntry
+
+          if (level && entry.level !== level) continue
+
+          logs.push(entry)
+
+          if (logs.length >= limit) break
+        } catch {
+          continue
+        }
       }
+
+      if (logs.length >= limit) break
     }
 
     return logs.reverse()
+  }
+
+  private static getLogDates(date?: string, startDate?: string, endDate?: string): string[] {
+    // Single date mode (backward compatible)
+    if (date) return [date]
+
+    // Date range mode
+    if (startDate && endDate) {
+      const dates: string[] = []
+      const current = new Date(startDate)
+      const end = new Date(endDate)
+
+      while (current <= end) {
+        dates.push(current.toISOString().split('T')[0])
+        current.setDate(current.getDate() + 1)
+      }
+      return dates
+    }
+
+    // Default: today
+    return [new Date().toISOString().split('T')[0]]
   }
 
   static async cleanupOldLogs(daysToKeep = DEFAULT_DAYS_TO_KEEP): Promise<number> {

@@ -4,8 +4,9 @@ import { MasterDataService } from '../services/master-data.service';
 import { sectionSearchSchema } from '../schemas/master-data.schema';
 import { authMiddleware } from '../middleware/auth';
 import { MESSAGES } from '../constants/message';
+import type { HonoContext } from '../types';
 
-const masterDataRoutes = new Hono();
+const masterDataRoutes = new Hono<HonoContext>();
 const masterDataService = new MasterDataService();
 
 // Apply authentication middleware to all routes
@@ -21,7 +22,7 @@ masterDataRoutes.get('/departments', async (c) => {
             data: departments,
         });
     } catch (error) {
-        console.error('Error fetching departments:', error);
+        c.get('logError')('Failed to fetch departments', { error: String(error) });
         return c.json(
             {
                 success: false,
@@ -54,7 +55,7 @@ masterDataRoutes.get('/departments/:id/sections', async (c) => {
             data: sections,
         });
     } catch (error) {
-        console.error('Error fetching sections:', error);
+        c.get('logError')('Failed to fetch sections', { error: String(error) });
         return c.json(
             {
                 success: false,
@@ -79,7 +80,7 @@ masterDataRoutes.post(
                 data: sections,
             });
         } catch (error) {
-            console.error('Error searching sections:', error);
+            c.get('logError')('Failed to search sections', { error: String(error) });
             return c.json(
                 {
                     success: false,
@@ -101,7 +102,7 @@ masterDataRoutes.get('/users', async (c) => {
             data: users,
         });
     } catch (error) {
-        console.error('Error fetching users:', error);
+        c.get('logError')('Failed to fetch users', { error: String(error) });
         return c.json(
             {
                 success: false,
@@ -122,7 +123,7 @@ masterDataRoutes.get('/users/from-logs', async (c) => {
             data: users,
         });
     } catch (error) {
-        console.error('Error fetching users from logs:', error);
+        c.get('logError')('Failed to fetch users from logs', { error: String(error) });
         return c.json(
             {
                 success: false,

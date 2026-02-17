@@ -17,7 +17,7 @@ systemLogRoutes.use('/*', requireAdmin)
 systemLogRoutes.get('/', zValidator('query', logQuerySchema), async (c) => {
     const query = c.req.valid('query')
     const logs = await SystemLogService.getLogs(query)
-    return successResponse(c, { logs, total: logs.length })
+    return successResponse(c, { data: logs, total: logs.length })
 })
 
 // Get available log files

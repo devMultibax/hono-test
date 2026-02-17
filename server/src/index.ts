@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
 import { env } from './config/env'
 import { errorHandler } from './middleware/error-handler'
-import { requestLogger } from './middleware/logger'
+import { requestLogger, logMiddleware } from './middleware/logger'
 import { corsMiddleware } from './middleware/cors'
 import { generalApiRateLimiter } from './middleware/rate-limit'
 import { securityHeaders } from './middleware/security-headers'
@@ -27,6 +27,7 @@ const app = new Hono()
 app.use('*', securityHeaders)
 app.use('*', corsMiddleware)
 app.use('*', requestLogger)
+app.use('*', logMiddleware)
 app.use('*', generalApiRateLimiter)
 
 // Error handler

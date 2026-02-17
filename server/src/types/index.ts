@@ -1,9 +1,10 @@
-import type { Context } from 'hono'
-
 // Hono Context
 export type HonoContext = {
   Variables: {
     user: AuthPayload
+    logInfo: (event: string, additionalData?: Record<string, unknown>) => void
+    logWarn: (event: string, additionalData?: Record<string, unknown>) => void
+    logError: (event: string, additionalData?: Record<string, unknown>) => void
   }
 }
 
@@ -133,6 +134,8 @@ export interface UserWithRelations extends UserResponse {
 export interface AuthPayload {
   id: number
   username: string
+  firstName: string
+  lastName: string
   role: Role
   tokenVersion?: number
 }

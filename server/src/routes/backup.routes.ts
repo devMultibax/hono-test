@@ -24,6 +24,7 @@ backupRoutes.get('/', async (c) => {
 backupRoutes.post('/', zValidator('json', createBackupSchema), async (c) => {
   const { prefix } = c.req.valid('json')
   const result = await BackupService.createBackup(prefix)
+  c.get('logInfo')(`Created backup "${result.filename}"`)
   return createdResponse(c, {
     message: 'Backup created successfully',
     ...result
@@ -51,6 +52,7 @@ backupRoutes.get('/:filename', async (c) => {
 backupRoutes.post('/:filename/restore', async (c) => {
   const filename = c.req.param('filename')
   await BackupService.restoreBackup(filename)
+  c.get('logInfo')(`Restored backup "${filename}"`)
   return successResponse(c, { message: 'Database restored successfully' })
 })
 
@@ -58,6 +60,7 @@ backupRoutes.post('/:filename/restore', async (c) => {
 backupRoutes.delete('/:filename', async (c) => {
   const filename = c.req.param('filename')
   await BackupService.deleteBackup(filename)
+  c.get('logInfo')(`Deleted backup "${filename}"`)
   return successResponse(c, { message: 'Backup deleted successfully' })
 })
 

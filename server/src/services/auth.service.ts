@@ -125,6 +125,8 @@ export class AuthService {
     const payload: AuthPayload = {
       id: user.id,
       username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role as Role,
       tokenVersion: user.tokenVersion
     }

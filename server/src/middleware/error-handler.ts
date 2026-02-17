@@ -3,6 +3,7 @@ import { ZodError } from 'zod'
 import { AppError } from '../lib/errors'
 import { errorResponse } from '../lib/response'
 import { env } from '../config/env'
+import type { HonoContext } from '../types'
 
 export const errorHandler = (error: Error, c: Context) => {
   if (error instanceof ZodError) {
@@ -27,7 +28,7 @@ export const errorHandler = (error: Error, c: Context) => {
     )
   }
 
-  console.error('Unhandled error:', error)
+  ;(c as Context<HonoContext>).get('logError')('Unhandled error', { error: error.message })
 
   return errorResponse(
     c,

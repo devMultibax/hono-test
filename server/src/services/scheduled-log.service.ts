@@ -1,7 +1,7 @@
 import cron from 'node-cron'
 import fs from 'fs/promises'
 import path from 'path'
-import { logger, LOG_DIR } from '../lib/logger'
+import { LOG_DIR } from '../lib/logger'
 
 const RETENTION_DAYS = 30
 const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000
@@ -11,11 +11,11 @@ const LOG_FILE_PATTERN = /^app-.*\.log$/
 export class ScheduledLogService {
   static init(): void {
     cron.schedule(CRON_SCHEDULE, () => this.cleanupOldLogs())
-    logger.info('Scheduled Log Service initialized (Daily at 01:00 AM)')
+    console.log('[LOG] Scheduled Log Service initialized (Daily at 01:00 AM)')
   }
 
   private static async cleanupOldLogs(): Promise<void> {
-    logger.info('Starting scheduled log cleanup...')
+    console.log('[LOG] Starting scheduled log cleanup...')
 
     try {
       const files = await fs.readdir(LOG_DIR)
@@ -26,10 +26,10 @@ export class ScheduledLogService {
 
       if (oldFiles.length === 0) return
 
-      logger.info(`Found ${oldFiles.length} old logs to cleanup`)
+      console.log(`[LOG] Found ${oldFiles.length} old logs to cleanup`)
       await this.deleteFiles(oldFiles)
     } catch (error) {
-      logger.error(`Failed to cleanup old logs: ${(error as Error).message}`)
+      console.error(`[LOG] Failed to cleanup old logs: ${(error as Error).message}`)
     }
   }
 
@@ -48,7 +48,7 @@ export class ScheduledLogService {
           oldFiles.push({ file, filePath })
         }
       } catch (err) {
-        logger.warn(`Failed to stat log file ${file}: ${(err as Error).message}`)
+        console.warn(`[LOG] Failed to stat log file ${file}: ${(err as Error).message}`)
       }
     }
 
@@ -61,9 +61,9 @@ export class ScheduledLogService {
     for (const { file, filePath } of files) {
       try {
         await fs.unlink(filePath)
-        logger.info(`Deleted old log: ${file}`)
+        console.log(`[LOG] Deleted old log: ${file}`)
       } catch (err) {
-        logger.warn(`Failed to delete log ${file}: ${(err as Error).message}`)
+        console.warn(`[LOG] Failed to delete log ${file}: ${(err as Error).message}`)
       }
     }
   }

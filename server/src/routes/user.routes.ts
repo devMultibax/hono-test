@@ -37,6 +37,8 @@ users.post('/', requireAdmin, async (c) => {
     currentUser.username
   )
 
+  c.get('logInfo')(`Created user "${validated.username}"`)
+
   return createdResponse(c, result)
 })
 
@@ -249,6 +251,9 @@ users.put('/:id', requireAdmin, async (c) => {
   const validated = updateUserSchema.parse(body)
 
   const user = await UserService.update(id, validated, currentUser.username)
+
+  c.get('logInfo')(`Updated user ID ${id}`)
+
   return successResponse(c, user)
 })
 
@@ -261,6 +266,7 @@ users.delete('/:id', requireAdmin, async (c) => {
   }
 
   await UserService.delete(id)
+  c.get('logInfo')(`Deleted user ID ${id}`)
   return noContentResponse(c)
 })
 
@@ -286,6 +292,7 @@ users.patch('/:id/password/reset', requireAdmin, async (c) => {
   }
 
   const result = await UserService.resetPassword(id, currentUser.username)
+  c.get('logInfo')(`Reset password for user ID ${id}`)
   return successResponse(c, result)
 })
 
@@ -365,6 +372,7 @@ users.post('/import', requireAdmin, async (c) => {
   }
 
   const result = await ImportService.importUsers(file.buffer, user.username)
+  c.get('logInfo')(`Imported users: ${result.success} success, ${result.failed} failed`)
 
   return c.json({
     success: result.success,
