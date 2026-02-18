@@ -1,12 +1,13 @@
-import { useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
-import { Text } from '@mantine/core';
+import { useState, useMemo, useLayoutEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Text, Button } from '@mantine/core';
 import { createColumnHelper } from '@tanstack/react-table';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { useTranslation } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/date';
+import { usePageActions } from '@/contexts/PageHeaderContext';
 import { useUserLogs } from '../hooks/useUserLogs';
 import type { UserLog, ActionType, SortOrder } from '@/types';
 
@@ -23,6 +24,8 @@ const columnHelper = createColumnHelper<UserLog>();
 export function UserLogPage() {
   const { username } = useParams<{ username: string }>();
   const { t } = useTranslation(['users', 'common']);
+  const navigate = useNavigate();
+  const { setActions } = usePageActions();
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState('actionAt');
   const [order, setOrder] = useState<SortOrder>('desc');
@@ -123,6 +126,21 @@ export function UserLogPage() {
     () => [{ id: sort, desc: order === 'desc' }],
     [sort, order],
   );
+
+  const headerActions = useMemo(() => (
+    <Button
+      variant="subtle"
+      size="xs"
+      onClick={() => navigate('/users')}
+    >
+      {t('users:logs.back')}
+    </Button>
+  ), [t, navigate]);
+
+  useLayoutEffect(() => {
+    setActions(headerActions);
+    return () => setActions(null);
+  }, [headerActions, setActions]);
 
   return (
     <div>

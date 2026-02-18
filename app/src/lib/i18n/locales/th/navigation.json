@@ -6,7 +6,7 @@
     "sections": "หน่วยงาน",
     "admin": {
       "title": "ผู้ดูแลระบบ",
-      "userLogs": "ประวัติการใช้งาน",
+      "userLogs": "ประวัติการดำเนินการ",
       "systemLogs": "System Logs",
       "backups": "Backup",
       "database": "Database"
@@ -21,7 +21,7 @@
     "changePassword": "เปลี่ยนรหัสผ่าน",
     "departments": "แผนก",
     "sections": "หน่วยงาน",
-    "userLogs": "ประวัติการใช้งาน",
+    "userLogs": "ประวัติการดำเนินการ",
     "systemLogs": "System Logs",
     "backups": "Backup",
     "database": "Database"
@@ -33,6 +33,6 @@
     "editUser": "แก้ไขผู้ใช้",
     "userDetail": "ข้อมูลผู้ใช้",
     "detail": "ดูรายละเอียด",
-    "userLogs": "ประวัติการใช้งาน"
+    "userLogs": "ประวัติการดำเนินการ"
   }
 }
