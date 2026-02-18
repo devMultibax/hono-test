@@ -8,6 +8,13 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from '@/components/common/ErrorFallback';
 import { PageHeader } from '@/components/common/PageHeader';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { PageHeaderProvider, usePageActions } from '@/contexts/PageHeaderContext';
+
+function PageHeaderWithActions({ title }: { title?: string }) {
+  const { actions } = usePageActions();
+  if (!title) return null;
+  return <PageHeader title={title}>{actions}</PageHeader>;
+}
 
 export function MainLayout() {
   const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false);
@@ -50,12 +57,14 @@ export function MainLayout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
-          <Suspense fallback={<LoadingOverlay visible />}>
-            {title && <PageHeader title={title} />}
-            <Outlet />
-          </Suspense>
-        </ErrorBoundary>
+        <PageHeaderProvider>
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense fallback={<LoadingOverlay visible />}>
+              <PageHeaderWithActions title={title} />
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
+        </PageHeaderProvider>
       </AppShell.Main>
     </AppShell>
   );

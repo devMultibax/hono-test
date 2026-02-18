@@ -20,7 +20,7 @@
   "action": {
     "copy": "คัดลอก",
     "copied": "คัดลอกแล้ว",
-    "refresh": "รีเฟรช"
+    "refresh": "โหลดใหม่"
   },
   "field": {
     "createdAt": "สร้างเมื่อ",

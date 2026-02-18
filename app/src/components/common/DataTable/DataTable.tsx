@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,8 +10,32 @@ import {
   type SortingState,
   type ColumnDef,
 } from '@tanstack/react-table';
-import { Table, Paper, Checkbox, Group, Center } from '@mantine/core';
-import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Table, Paper, Checkbox, Group, Center, Menu, Switch, Text, ActionIcon } from '@mantine/core';
+import { ArrowUp, ArrowDown, ArrowUpDown, Settings } from 'lucide-react';
+
+const stickyLeftStyle: CSSProperties = {
+  position: 'sticky',
+  left: 0,
+  zIndex: 1,
+  background: 'var(--mantine-color-body)',
+};
+
+const stickyRightStyle: CSSProperties = {
+  position: 'sticky',
+  right: 0,
+  zIndex: 1,
+  background: 'var(--mantine-color-body)',
+};
+
+const stickyLeftHeadStyle: CSSProperties = {
+  ...stickyLeftStyle,
+  zIndex: 2,
+};
+
+const stickyRightHeadStyle: CSSProperties = {
+  ...stickyRightStyle,
+  zIndex: 2,
+};
 import { useTranslation } from '@/lib/i18n';
 import { TablePagination } from './TablePagination';
 import { TableSkeleton } from './TableSkeleton';
@@ -146,7 +170,7 @@ export function DataTable<T>({
     onSelectionChange?.(selectedRows);
   }, [selectedRows, onSelectionChange]);
 
-  const showToolbar = enableColumnVisibility || enableRowSelection || headerActions;
+  const showToolbar = enableRowSelection || headerActions;
 
   if (isLoading) {
     return (
@@ -160,8 +184,6 @@ export function DataTable<T>({
     <Paper withBorder radius="md" style={withTopBorder ? undefined : { borderTop: 'none', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
       {showToolbar && (
         <DataTableToolbar
-          table={table}
-          enableColumnVisibility={enableColumnVisibility}
           selectedRows={selectedRows}
           toolbarActions={toolbarActions}
           headerActions={headerActions}
@@ -179,18 +201,21 @@ export function DataTable<T>({
               fz={compact ? 'sm' : undefined}
               striped={false}
               withTableBorder={false}
+              style={{ width: '100%' }}
             >
               <Table.Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <Table.Tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
                       const canSort = header.column.getCanSort();
+                      const isSelection = header.column.id === 'selection';
                       return (
                         <Table.Th
                           key={header.id}
                           style={{
                             ...(header.column.columnDef.size ? { width: header.column.columnDef.size } : {}),
                             ...(canSort ? { cursor: 'pointer', userSelect: 'none' } : {}),
+                            ...(isSelection ? { ...stickyLeftHeadStyle, width: '1%', whiteSpace: 'nowrap' as const, paddingLeft: 8, paddingRight: 8, textAlign: 'center' as const } : {}),
                           }}
                           onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                         >
@@ -211,6 +236,41 @@ export function DataTable<T>({
                         </Table.Th>
                       );
                     })}
+                    {enableColumnVisibility && (
+                      <Table.Th style={{ width: '1%', whiteSpace: 'nowrap', padding: '0 8px', textAlign: 'center', ...stickyRightHeadStyle }}>
+                        <Menu shadow="md" width={220} closeOnItemClick={false} position="bottom-end">
+                          <Menu.Target>
+                            <ActionIcon variant="subtle" color="gray">
+                              <Settings size={16} />
+                            </ActionIcon>
+                          </Menu.Target>
+                          <Menu.Dropdown>
+                            <Menu.Label>{t('common:table.columnsVisibility')}</Menu.Label>
+                            {table
+                              .getAllLeafColumns()
+                              .filter((column) => column.columnDef.enableHiding !== false)
+                              .map((column) => {
+                                const header = column.columnDef.header;
+                                const displayName =
+                                  typeof header === 'string' && header.length > 0 ? header : column.id;
+                                return (
+                                  <Menu.Item key={column.id} onClick={() => column.toggleVisibility()}>
+                                    <Group justify="space-between" wrap="nowrap">
+                                      <Text size="sm">{displayName}</Text>
+                                      <Switch
+                                        size="xs"
+                                        checked={column.getIsVisible()}
+                                        onChange={() => {}}
+                                        style={{ pointerEvents: 'none' }}
+                                      />
+                                    </Group>
+                                  </Menu.Item>
+                                );
+                              })}
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Table.Th>
+                    )}
                   </Table.Tr>
                 ))}
               </Table.Thead>
@@ -218,13 +278,17 @@ export function DataTable<T>({
                 {table.getRowModel().rows.map((row) => (
                   <Table.Tr
                     key={row.id}
-                    bg={row.getIsSelected() ? 'var(--mantine-color-primary-light)' : undefined}
+                    bg={row.getIsSelected() ? 'var(--mantine-color-gray-1)' : undefined}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <Table.Td key={cell.id}>
+                      <Table.Td
+                        key={cell.id}
+                        style={cell.column.id === 'selection' ? { ...stickyLeftStyle, width: '1%', whiteSpace: 'nowrap' as const, paddingLeft: 8, paddingRight: 8, textAlign: 'center' as const } : undefined}
+                      >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </Table.Td>
                     ))}
+                    {enableColumnVisibility && <Table.Td style={{ ...stickyRightStyle, width: '1%', whiteSpace: 'nowrap', padding: '0 8px' }} />}
                   </Table.Tr>
                 ))}
               </Table.Tbody>

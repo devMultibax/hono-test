@@ -1,8 +1,9 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
 import { Button } from '@mantine/core';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import { useTranslation } from '@/lib/i18n';
+import { usePageActions } from '@/contexts/PageHeaderContext';
 
 dayjs.extend(isBetween);
 import { DataTable } from '@/components/common/DataTable/DataTable';
@@ -98,11 +99,11 @@ export function SystemLogListPage() {
   }, []);
 
   const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+  const { setActions } = usePageActions();
 
   const headerActions = useMemo(() => (
     <Button
-      variant="light"
-      color="orange"
+      variant="subtle"
       size="xs"
       onClick={handleRefresh}
       loading={isRefreshLoading}
@@ -110,6 +111,11 @@ export function SystemLogListPage() {
       {t('common:action.refresh', 'Refresh')}
     </Button>
   ), [t, isRefreshLoading, handleRefresh]);
+
+  useLayoutEffect(() => {
+    setActions(headerActions);
+    return () => setActions(null);
+  }, [headerActions, setActions]);
 
   return (
     <div>
@@ -127,7 +133,6 @@ export function SystemLogListPage() {
         enableColumnVisibility={false}
         enableRowSelection={false}
         onPaginationChange={handlePaginationChange}
-        headerActions={headerActions}
         compact
       />
     </div>

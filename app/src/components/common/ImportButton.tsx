@@ -106,7 +106,7 @@ export function ImportButton({
 
   return (
     <>
-      <Button variant="light" size="xs" onClick={() => setOpened(true)}>
+      <Button variant="subtle" size="xs" onClick={() => setOpened(true)}>
         {t('users:import.button')}
       </Button>
 

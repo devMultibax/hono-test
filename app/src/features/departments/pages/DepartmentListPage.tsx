@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useLayoutEffect } from 'react';
 import { Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
 
@@ -12,6 +12,7 @@ import { useDepartmentColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../departm
 import { useDataTable } from '@/hooks/useDataTable';
 import { useRefresh } from '@/hooks/useRefresh';
 import { useUserRole } from '@/stores/auth.store';
+import { usePageActions } from '@/contexts/PageHeaderContext';
 import { ROLE_ID } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
 import { departmentApi } from '@/api/services/department.api';
@@ -57,19 +58,19 @@ export function DepartmentListPage() {
   });
 
   const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+  const { setActions } = usePageActions();
 
   const headerActions = useMemo(() => (
     <>
       <Button
-        variant="light"
-        color="orange"
+        variant="subtle"
         size="xs"
         onClick={handleRefresh}
         loading={isRefreshLoading}
       >
         {t('common:action.refresh', 'Refresh')}
       </Button>
-      <Button variant="light" color="teal" size="xs" onClick={() => setExportOpened(true)}>
+      <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
         {t('common:button.downloadReport')}
       </Button>
       {isAdmin && (
@@ -80,6 +81,11 @@ export function DepartmentListPage() {
       </Button>
     </>
   ), [isAdmin, actions.handleImportSuccess, openCreate, t, isRefreshLoading, handleRefresh]);
+
+  useLayoutEffect(() => {
+    setActions(headerActions);
+    return () => setActions(null);
+  }, [headerActions, setActions]);
 
   const toolbarActions = useCallback((selectedRows: Department[]) =>
     isAdmin && (
@@ -132,7 +138,6 @@ export function DepartmentListPage() {
         onColumnVisibilityChange={setColumnVisibility}
         onPaginationChange={handlePaginationChange}
         toolbarActions={toolbarActions}
-        headerActions={headerActions}
         compact
       />
     </div>

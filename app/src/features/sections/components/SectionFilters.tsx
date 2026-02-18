@@ -1,4 +1,4 @@
-import { Paper, SimpleGrid, Title, Select } from '@mantine/core';
+import { Paper, SimpleGrid, Select } from '@mantine/core';
 import { SearchInput } from '@/components/common/SearchInput';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { useTranslation } from '@/lib/i18n';
@@ -56,7 +56,6 @@ export function SectionFilters({ params, onChange }: Props) {
 
   return (
     <Paper p="md" mb={0} withBorder radius="md" style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}>
-      <Title order={5} size="h6" mb="md" c="dimmed">{t('sections:filter.title')}</Title>
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
         <DepartmentSelect
           label={t('sections:field.department')}

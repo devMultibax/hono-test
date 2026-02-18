@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
@@ -13,6 +13,7 @@ import { useUserColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../userTable.con
 import { useDataTable } from '@/hooks/useDataTable';
 import { useRefresh } from '@/hooks/useRefresh';
 import { useUser, useUserRole } from '@/stores/auth.store';
+import { usePageActions } from '@/contexts/PageHeaderContext';
 import { ROLE_ID } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
 import { userApi } from '@/api/services/user.api';
@@ -65,19 +66,19 @@ export function UserListPage() {
   });
 
   const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+  const { setActions } = usePageActions();
 
   const headerActions = useMemo(() => (
     <>
       <Button
-        variant="light"
-        color="orange"
+        variant="subtle"
         size="xs"
         onClick={handleRefresh}
         loading={isRefreshLoading}
       >
         {t('common:action.refresh', 'Refresh')}
       </Button>
-      <Button variant="light" color="teal" size="xs" onClick={() => setExportOpened(true)}>
+      <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
         {t('common:button.downloadReport')}
       </Button>
       {isAdmin && (
@@ -88,6 +89,11 @@ export function UserListPage() {
       </Button>
     </>
   ), [isAdmin, actions.handleImportSuccess, openCreate, t, isRefreshLoading, handleRefresh]);
+
+  useLayoutEffect(() => {
+    setActions(headerActions);
+    return () => setActions(null);
+  }, [headerActions, setActions]);
 
   const toolbarActions = useCallback((selectedRows: User[]) =>
     isAdmin && (
@@ -141,7 +147,6 @@ export function UserListPage() {
         onColumnVisibilityChange={setColumnVisibility}
         onPaginationChange={handlePaginationChange}
         toolbarActions={toolbarActions}
-        headerActions={headerActions}
         compact
       />
     </div>

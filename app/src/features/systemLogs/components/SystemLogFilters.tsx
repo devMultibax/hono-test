@@ -1,4 +1,4 @@
-import { Paper, SimpleGrid, Title, Select, TextInput } from '@mantine/core';
+import { Paper, SimpleGrid, Select, TextInput } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
 import type { SystemLogQueryParams } from '../types';
 
@@ -61,14 +61,10 @@ interface Props {
 }
 
 export function SystemLogFilters({ params, onChange }: Props) {
-  const { t } = useTranslation(['systemLogs']);
   const update = (patch: Partial<SystemLogQueryParams>) => onChange({ ...params, ...patch });
 
   return (
     <Paper p="md" mb={0} withBorder radius="md" style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}>
-      <Title order={5} size="h6" mb="md" c="dimmed">
-        {t('systemLogs:filter.title')}
-      </Title>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
         <SystemLogFilterFields values={params} onUpdate={update} />
       </SimpleGrid>
