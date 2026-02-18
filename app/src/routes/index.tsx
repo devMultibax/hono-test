@@ -9,7 +9,7 @@ import { SectionListPage } from '@/features/sections';
 import {
   DashboardPage,
   ProfilePage,
-  ChangePasswordPage,
+  // ChangePasswordPage,
   SystemLogsPage,
 } from './pages';
 import { DatabasePage } from '@/features/database';
@@ -48,7 +48,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'password',
-                element: <ChangePasswordPage />,
+                element: <ProfilePage />,
                 handle: {
                   title: 'navigation:page.changePassword',
                   breadcrumb: 'navigation:page.changePassword',

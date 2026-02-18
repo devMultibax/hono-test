@@ -20,14 +20,6 @@ export function DashboardPage() {
   );
 }
 
-export function ProfilePage() {
-  return <div />;
-}
-
-export function ChangePasswordPage() {
-  return <div />;
-}
+export { ProfilePage } from '@/features/profile';
 
 export { SystemLogListPage as SystemLogsPage } from '@/features/systemLogs';
-
-
