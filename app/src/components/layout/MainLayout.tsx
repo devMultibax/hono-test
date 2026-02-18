@@ -10,31 +10,44 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 export function MainLayout() {
-  const [opened, { toggle, close }] = useDisclosure();
+  const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false);
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
   const { title, breadcrumbs } = usePageMeta();
 
   return (
     <AppShell
+      layout="alt"
       header={{ height: 60 }}
       navbar={{
         width: 260,
         breakpoint: 'sm',
-        collapsed: { mobile: !opened },
+        collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
       }}
       padding="md"
     >
       <AppShell.Header>
-        <Header opened={opened} onToggle={toggle} />
+        <Header
+          mobileOpened={mobileOpened}
+          onMobileToggle={toggleMobile}
+          desktopOpened={desktopOpened}
+          onDesktopToggle={toggleDesktop}
+          breadcrumbs={breadcrumbs}
+        />
       </AppShell.Header>
 
       <AppShell.Navbar>
-        <Sidebar onNavigate={close} />
+        <Sidebar
+          desktopOpened={desktopOpened}
+          onDesktopToggle={toggleDesktop}
+          onNavigate={closeMobile}
+          onMobileClose={closeMobile}
+        />
       </AppShell.Navbar>
 
       <AppShell.Main>
         <ErrorBoundary FallbackComponent={ErrorFallback}>
           <Suspense fallback={<LoadingOverlay visible />}>
-            {title && <PageHeader title={title} breadcrumbs={breadcrumbs} />}
+            {title && <PageHeader title={title} />}
             <Outlet />
           </Suspense>
         </ErrorBoundary>

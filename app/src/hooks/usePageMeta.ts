@@ -7,7 +7,7 @@ interface RouteHandle {
   breadcrumb?: string;
 }
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   label: string;
   path?: string;
 }

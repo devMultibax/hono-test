@@ -1,4 +1,5 @@
-import { ScrollArea, Stack, NavLink, Divider, Text, ThemeIcon } from '@mantine/core';
+import { ScrollArea, Stack, NavLink, ThemeIcon, Group, Title, ActionIcon } from '@mantine/core';
+import { Menu, X, Circle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { RoleId } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
@@ -7,14 +8,17 @@ import { useTranslation } from '@/lib/i18n';
 import { getMenuItems, type MenuItem } from './sidebarMenu.config';
 
 interface Props {
+  desktopOpened?: boolean;
+  onDesktopToggle?: () => void;
   onNavigate?: () => void;
+  onMobileClose?: () => void;
 }
 
-export function Sidebar({ onNavigate }: Props) {
+export function Sidebar({ desktopOpened, onDesktopToggle, onNavigate, onMobileClose }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
   const userRole = useUserRole();
-  const { t } = useTranslation('navigation');
+  const { t } = useTranslation(['navigation', 'auth']);
 
   const menus = getMenuItems(t);
   const filteredMenus = filterMenuItemsByRole(menus, userRole);
@@ -47,25 +51,72 @@ export function Sidebar({ onNavigate }: Props) {
   );
 
   return (
-    <ScrollArea className="h-full">
-      <Stack p="md" gap="xs">
-        {filteredMenus.map((item) => {
-          if (!item.hasSubmenu && item.path) {
-            return renderNavItem({ path: item.path, label: item.label, icon: item.icon });
-          }
+    <Stack h="100%" gap={0}>
+      <Group
+        h={60}
+        px="md"
+        justify="space-between"
+        style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', flexShrink: 0 }}
+      >
+        <Title order={3}>{t('auth:app.appName')}</Title>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          visibleFrom="sm"
+          onClick={onDesktopToggle}
+          aria-label="Toggle sidebar"
+        >
+          {desktopOpened ? <X size={18} /> : <Menu size={18} />}
+        </ActionIcon>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          hiddenFrom="sm"
+          onClick={onMobileClose}
+          aria-label="Close sidebar"
+        >
+          <X size={18} />
+        </ActionIcon>
+      </Group>
 
-          return (
-            <div key={item.id}>
-              <Divider my="sm" />
-              <Text size="xs" c="dimmed" fw={600} px="sm" tt="uppercase">
-                {item.label}
-              </Text>
-              {item.children?.map(renderNavItem)}
-            </div>
-          );
-        })}
-      </Stack>
-    </ScrollArea>
+      <ScrollArea flex={1}>
+        <Stack p="md" gap="xs">
+          {filteredMenus.map((item) => {
+            if (!item.hasSubmenu && item.path) {
+              return renderNavItem({ path: item.path, label: item.label, icon: item.icon });
+            }
+
+            const hasActiveChild = item.children?.some((child) => isActive(child.path)) ?? false;
+
+            return (
+              <NavLink
+                key={item.id}
+                label={item.label}
+                leftSection={
+                  <ThemeIcon variant="light" size="sm">
+                    <item.icon size={16} />
+                  </ThemeIcon>
+                }
+                childrenOffset={28}
+                defaultOpened={hasActiveChild}
+                styles={{ root: { borderRadius: 'var(--mantine-radius-md)' } }}
+              >
+                {item.children?.map((child) => (
+                  <NavLink
+                    key={child.path}
+                    label={child.label}
+                    leftSection={<Circle size={6} fill="currentColor" />}
+                    active={isActive(child.path)}
+                    onClick={() => handleNavigate(child.path)}
+                    styles={{ root: { borderRadius: 'var(--mantine-radius-md)' } }}
+                  />
+                ))}
+              </NavLink>
+            );
+          })}
+        </Stack>
+      </ScrollArea>
+    </Stack>
   );
 }
 
