@@ -7,7 +7,7 @@ interface Props {
   opened: boolean;
   onClose: () => void;
   initialParams: SectionQueryParams;
-  onExport: (params: SectionExportParams) => Promise<void>;
+  onExport: (params: SectionExportParams, signal: AbortSignal) => Promise<void>;
 }
 
 export function SectionExportDrawer({ opened, onClose, initialParams, onExport }: Props) {

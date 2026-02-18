@@ -37,8 +37,8 @@ export const userApi = {
   resetPassword: (id: number) =>
     apiClient.patch<ResetPasswordResponse>(`/users/${id}/password/reset`),
 
-  exportExcel: (params?: UserQueryParams) =>
-    downloadFile(`/users/export/excel?${buildQueryString(params)}`, `users-${Date.now()}.xlsx`),
+  exportExcel: (params?: UserQueryParams, signal?: AbortSignal) =>
+    downloadFile(`/users/export/excel?${buildQueryString(params)}`, `users-${Date.now()}.xlsx`, signal),
 
   downloadTemplate: () =>
     downloadFile('/users/template', 'user-import-template.xlsx'),

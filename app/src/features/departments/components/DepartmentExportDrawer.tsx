@@ -7,7 +7,7 @@ interface Props {
   opened: boolean;
   onClose: () => void;
   initialParams: DepartmentQueryParams;
-  onExport: (params: DepartmentExportParams) => Promise<void>;
+  onExport: (params: DepartmentExportParams, signal: AbortSignal) => Promise<void>;
 }
 
 export function DepartmentExportDrawer({ opened, onClose, initialParams, onExport }: Props) {

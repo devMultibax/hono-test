@@ -106,7 +106,10 @@ export function DepartmentListPage() {
         opened={exportOpened}
         onClose={() => setExportOpened(false)}
         initialParams={params}
-        onExport={(exportParams) => departmentApi.exportExcel(exportParams)}
+        onExport={async (exportParams, signal) => {
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          departmentApi.exportExcel(exportParams, signal)
+        }}
       />
 
       <DepartmentDrawer

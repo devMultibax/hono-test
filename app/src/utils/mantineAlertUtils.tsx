@@ -1,4 +1,4 @@
-import { Text, Button, Group, Stack, ThemeIcon, Alert } from '@mantine/core';
+import { Text, Button, Group, Stack, ThemeIcon, Alert, Loader, Progress } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import {
   IconCircleCheck,
@@ -169,5 +169,53 @@ export const Confirm = {
         ),
       });
     });
+  },
+};
+
+const LOADING_MODAL_ID = 'export-loading';
+
+export const Loading = {
+  show: (message: string, onCancel?: () => void) => {
+    modals.open({
+      modalId: LOADING_MODAL_ID,
+      withCloseButton: false,
+      closeOnClickOutside: false,
+      closeOnEscape: false,
+      centered: true,
+      size: 'sm',
+      overlayProps: { blur: 3, backgroundOpacity: 0.5 },
+      children: (
+        <Stack gap="md" py="xs">
+          <Group gap="sm" wrap="nowrap">
+            <Loader size="sm" />
+            <Text fw={500} size="sm">
+              {message}
+            </Text>
+          </Group>
+          <Text size="xs" c="dimmed">
+            {t('common:export.pleaseWait')}
+          </Text>
+          <Progress value={100} animated color="blue" size="sm" />
+          {onCancel && (
+            <Group justify="flex-end">
+              <Button
+                variant="subtle"
+                color="gray"
+                size="xs"
+                onClick={() => {
+                  modals.close(LOADING_MODAL_ID);
+                  onCancel();
+                }}
+              >
+                {t('common:button.cancel')}
+              </Button>
+            </Group>
+          )}
+        </Stack>
+      ),
+    });
+  },
+  hide: () => {
+    modals.close(LOADING_MODAL_ID);
   },
 };

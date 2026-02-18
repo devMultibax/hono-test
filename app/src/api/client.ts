@@ -85,8 +85,8 @@ apiClient.interceptors.response.use(
   }
 );
 
-export async function downloadFile(url: string, filename: string) {
-  const res = await apiClient.get(url, { responseType: 'blob' });
+export async function downloadFile(url: string, filename: string, signal?: AbortSignal) {
+  const res = await apiClient.get(url, { responseType: 'blob', signal });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(new Blob([res.data]));
   link.download = filename;

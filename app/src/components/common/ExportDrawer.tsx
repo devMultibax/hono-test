@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { Drawer, Button, Stack, Group, Text } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
+import { Loading, Report } from '@/utils/mantineAlertUtils';
 
 interface ExportDrawerProps<TParams> {
   opened: boolean;
   onClose: () => void;
   title: string;
   initialParams: TParams;
-  onExport: (params: TParams) => Promise<void>;
+  onExport: (params: TParams, signal: AbortSignal) => Promise<void>;
   children: (params: TParams, update: (patch: Partial<TParams>) => void) => ReactNode;
   hint?: string;
   confirmTitle?: string;
@@ -28,8 +29,8 @@ export function ExportDrawer<TParams>({
 }: ExportDrawerProps<TParams>) {
   const { t } = useTranslation('common');
   const { confirm } = useConfirm();
-  const [loading, setLoading] = useState(false);
   const [params, setParams] = useState<TParams>(initialParams);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (opened) {
@@ -48,14 +49,28 @@ export function ExportDrawer<TParams>({
       if (!confirmed) return;
     }
 
-    setLoading(true);
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
+    const handleCancel = () => {
+      abortControllerRef.current?.abort();
+    };
+
+    onClose();
+    Loading.show(t('common:export.generatingFile'), handleCancel);
+
     try {
-      await onExport(params);
-      onClose();
+      await onExport(params, signal);
+    } catch (err) {
+      const error = err as Error;
+      if (error.name === 'CanceledError' || error.name === 'AbortError') {
+        return;
+      }
+      Report.error(t('common:export.downloadFailed'));
     } finally {
-      setLoading(false);
+      Loading.hide();
     }
-  }, [params, onExport, onClose, confirm, confirmTitle, confirmMessage]);
+  }, [params, onExport, onClose, confirm, confirmTitle, confirmMessage, t]);
 
   return (
     <Drawer opened={opened} onClose={onClose} title={title} position="right" size="xs">
@@ -70,7 +85,7 @@ export function ExportDrawer<TParams>({
           <Button variant="subtle" color="gray" onClick={onClose}>
             {t('common:button.cancel')}
           </Button>
-          <Button onClick={handleExport} loading={loading}>
+          <Button onClick={handleExport}>
             {t('common:button.download')}
           </Button>
         </Group>

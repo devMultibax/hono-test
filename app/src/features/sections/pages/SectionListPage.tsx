@@ -106,7 +106,7 @@ export function SectionListPage() {
         opened={exportOpened}
         onClose={() => setExportOpened(false)}
         initialParams={params}
-        onExport={(exportParams) => sectionApi.exportExcel(exportParams)}
+        onExport={(exportParams, signal) => sectionApi.exportExcel(exportParams, signal)}
       />
 
       <SectionDrawer

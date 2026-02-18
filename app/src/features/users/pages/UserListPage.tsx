@@ -118,7 +118,7 @@ export function UserListPage() {
         opened={exportOpened}
         onClose={() => setExportOpened(false)}
         initialParams={params}
-        onExport={(exportParams) => userApi.exportExcel(exportParams)}
+        onExport={(exportParams, signal) => userApi.exportExcel(exportParams, signal)}
       />
 
       <UserDrawer

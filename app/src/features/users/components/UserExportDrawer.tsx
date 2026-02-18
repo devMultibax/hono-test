@@ -8,7 +8,7 @@ interface Props {
   opened: boolean;
   onClose: () => void;
   initialParams: UserQueryParams;
-  onExport: (params: UserExportParams) => Promise<void>;
+  onExport: (params: UserExportParams, signal: AbortSignal) => Promise<void>;
 }
 
 export function UserExportDrawer({ opened, onClose, initialParams, onExport }: Props) {

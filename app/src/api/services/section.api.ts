@@ -29,8 +29,8 @@ export const sectionApi = {
     delete: (id: number) =>
         apiClient.delete(`/sections/${id}`),
 
-    exportExcel: (params?: SectionQueryParams) =>
-        downloadFile(`/sections/export/excel?${buildQueryString(params)}`, `sections-${Date.now()}.xlsx`),
+    exportExcel: (params?: SectionQueryParams, signal?: AbortSignal) =>
+        downloadFile(`/sections/export/excel?${buildQueryString(params)}`, `sections-${Date.now()}.xlsx`, signal),
 
     downloadTemplate: () =>
         downloadFile('/sections/template', 'section-import-template.xlsx'),

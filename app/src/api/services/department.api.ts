@@ -29,8 +29,8 @@ export const departmentApi = {
   delete: (id: number) =>
     apiClient.delete(`/departments/${id}`),
 
-  exportExcel: (params?: DepartmentQueryParams) =>
-    downloadFile(`/departments/export/excel?${buildQueryString(params)}`, `departments-${Date.now()}.xlsx`),
+  exportExcel: (params?: DepartmentQueryParams, signal?: AbortSignal) =>
+    downloadFile(`/departments/export/excel?${buildQueryString(params)}`, `departments-${Date.now()}.xlsx`, signal),
 
   downloadTemplate: () =>
     downloadFile('/departments/template', 'department-import-template.xlsx'),
