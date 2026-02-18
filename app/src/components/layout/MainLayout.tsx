@@ -24,6 +24,11 @@ export function MainLayout() {
         collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
       }}
       padding="md"
+      styles={{
+        main: {
+          backgroundColor: 'var(--mantine-color-gray-0)',
+        },
+      }}
     >
       <AppShell.Header>
         <Header
