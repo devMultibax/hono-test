@@ -146,8 +146,6 @@ export class AuthService {
       expiresIn: TOKEN_EXPIRY
     })
 
-    await this.logUserAction(user, ActionType.LOGIN)
-
     return {
       token,
       user: this.formatUserResponse({
@@ -189,18 +187,6 @@ export class AuthService {
       where: { id: userId },
       data: { tokenVersion: { increment: 1 } }
     })
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        department: true,
-        section: true
-      }
-    })
-
-    if (user) {
-      await this.logUserAction(user, ActionType.LOGOUT)
-    }
   }
 
   // Profile Management Methods

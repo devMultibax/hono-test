@@ -123,9 +123,7 @@
     "actionType": {
       "CREATE": "สร้าง",
       "UPDATE": "แก้ไข",
-      "DELETE": "ลบ",
-      "LOGIN": "เข้าสู่ระบบ",
-      "LOGOUT": "ออกจากระบบ"
+      "DELETE": "ลบ"
     }
   },
   "message": {
