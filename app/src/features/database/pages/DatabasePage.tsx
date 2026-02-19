@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useLayoutEffect, useRef, useEffect, useCallback } from 'react';
 import {
   Button,
   Group,
@@ -12,7 +12,6 @@ import {
   Skeleton,
 } from '@mantine/core';
 import {
-  RefreshCcw,
   Database as DatabaseIcon,
   HardDrive,
   Table2,
@@ -20,15 +19,15 @@ import {
   Rows3,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { usePageActions } from '@/contexts/PageHeaderContext';
 import { useDatabaseStatistics, useDatabaseActions } from '../hooks/useDatabase';
 import type { TableStat } from '../types';
-
-const ICON_SIZE = 16;
 
 export function DatabasePage() {
   const { t } = useTranslation(['database', 'common']);
   const { data: statistics, isLoading } = useDatabaseStatistics();
   const { handleAnalyze, isAnalyzing } = useDatabaseActions();
+  const { setActions } = usePageActions();
 
   const statsData = useMemo(
     () => [
@@ -60,18 +59,26 @@ export function DatabasePage() {
     [statistics, t],
   );
 
+  const handleAnalyzeRef = useRef(handleAnalyze);
+  useEffect(() => { handleAnalyzeRef.current = handleAnalyze; }, [handleAnalyze]);
+  const stableHandleAnalyze = useCallback(() => handleAnalyzeRef.current(), []);
+
+  const headerActions = useMemo(() => (
+    <Button
+      onClick={stableHandleAnalyze}
+      loading={isAnalyzing}
+    >
+      {t('database:action.analyze')}
+    </Button>
+  ), [t, stableHandleAnalyze, isAnalyzing]);
+
+  useLayoutEffect(() => {
+    setActions(headerActions);
+    return () => setActions(null);
+  }, [headerActions, setActions]);
+
   return (
     <div>
-      <Group justify="flex-end" mb="md">
-        <Button
-          leftSection={<RefreshCcw size={ICON_SIZE} strokeWidth={3} />}
-          onClick={handleAnalyze}
-          loading={isAnalyzing}
-        >
-          {t('database:action.analyze')}
-        </Button>
-      </Group>
-
       <Stack gap="lg">
         {/* Database Info Cards */}
         <Paper p="md" radius="md" withBorder>

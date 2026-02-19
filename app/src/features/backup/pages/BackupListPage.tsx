@@ -1,3 +1,4 @@
+import { useMemo, useLayoutEffect, useRef, useEffect, useCallback } from 'react';
 import {
   Button,
   Group,
@@ -22,10 +23,9 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/date';
+import { usePageActions } from '@/contexts/PageHeaderContext';
 import { useBackups, useBackupActions } from '../hooks/useBackup';
 import type { BackupType } from '../types';
-
-const ICON_SIZE = 16;
 
 const TYPE_CONFIG: Record<BackupType, { color: string; gradient: string }> = {
   yearly: { color: 'blue', gradient: 'linear-gradient(135deg, var(--mantine-color-blue-1) 0%, var(--mantine-color-indigo-1) 100%)' },
@@ -40,17 +40,30 @@ export function BackupListPage() {
 
   const backups = data?.backups ?? [];
 
+  const { setActions } = usePageActions();
+
+  // handleCreate is unstable (recreated each render due to useMutation deps).
+  // Use a ref updated via effect so the useMemo can use a stable callback.
+  const handleCreateRef = useRef(handleCreate);
+  useEffect(() => { handleCreateRef.current = handleCreate; }, [handleCreate]);
+  const stableHandleCreate = useCallback(() => handleCreateRef.current(), []);
+
+  const headerActions = useMemo(() => (
+    <Button
+      onClick={stableHandleCreate}
+      loading={isCreating}
+    >
+      {t('backup:action.create')}
+    </Button>
+  ), [t, stableHandleCreate, isCreating]);
+
+  useLayoutEffect(() => {
+    setActions(headerActions);
+    return () => setActions(null);
+  }, [headerActions, setActions]);
+
   return (
     <div>
-      <Group justify="flex-end" mb="md">
-        <Button
-          leftSection={<DatabaseBackup size={ICON_SIZE} strokeWidth={3} />}
-          onClick={handleCreate}
-          loading={isCreating}
-        >
-          {t('backup:action.create')}
-        </Button>
-      </Group>
 
       <Stack gap="md" mt="md">
         {isLoading ? (
