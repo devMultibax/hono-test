@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { useTranslation } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/date';
 import { usePageActions } from '@/contexts/PageHeaderContext';
+import { useRefresh } from '@/hooks/useRefresh';
 import { useUserLogs } from '../hooks/useUserLogs';
 import type { UserLog, ActionType, SortOrder } from '@/types';
 
@@ -30,12 +31,14 @@ export function UserLogPage() {
   const [sort, setSort] = useState('actionAt');
   const [order, setOrder] = useState<SortOrder>('desc');
 
-  const { data, isLoading } = useUserLogs(username ?? '', {
+  const { data, isLoading, refetch, isRefetching } = useUserLogs(username ?? '', {
     page,
     limit: 10,
     sort,
     order,
   });
+
+  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
 
   const columns = useMemo(
     () => [
@@ -128,14 +131,24 @@ export function UserLogPage() {
   );
 
   const headerActions = useMemo(() => (
-    <Button
-      variant="subtle"
-      size="xs"
-      onClick={() => navigate('/users')}
-    >
-      {t('users:logs.back')}
-    </Button>
-  ), [t, navigate]);
+    <>
+      <Button
+        variant="subtle"
+        size="xs"
+        onClick={handleRefresh}
+        loading={isRefreshLoading}
+      >
+        {t('common:action.refresh')}
+      </Button>
+      <Button
+        variant="subtle"
+        size="xs"
+        onClick={() => navigate('/users')}
+      >
+        {t('users:logs.back')}
+      </Button>
+    </>
+  ), [t, navigate, handleRefresh, isRefreshLoading]);
 
   useLayoutEffect(() => {
     setActions(headerActions);
