@@ -7,7 +7,7 @@ import { authMiddleware } from '../middleware/auth'
 import { loginRateLimiter } from '../middleware/rate-limit'
 import { generateCsrfToken, csrfProtection } from '../middleware/csrf'
 import { env } from '../config/env'
-import { MESSAGES } from '../constants/message'
+import { CODES } from '../constants/error-codes'
 import { UnauthorizedError } from '../lib/errors'
 import type { HonoContext } from '../types'
 
@@ -42,7 +42,7 @@ auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
 
     c.get('logInfo')('Login successful', { username: validated.username })
 
-    return successResponse(c, { user: result.user, message: MESSAGES.AUTH.LOGIN_SUCCESS })
+    return successResponse(c, { user: result.user, code: CODES.AUTH_LOGIN_SUCCESS })
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       c.get('logWarn')(`Login failed: ${error.message}`, {
@@ -65,7 +65,7 @@ auth.post('/logout', authMiddleware, async (c) => {
     path: '/'
   })
 
-  return successResponse(c, { message: MESSAGES.AUTH.LOGOUT_SUCCESS })
+  return successResponse(c, { code: CODES.AUTH_LOGOUT_SUCCESS })
 })
 
 // Get current authenticated user
@@ -84,7 +84,7 @@ auth.put('/me', authMiddleware, csrfProtection, async (c) => {
   const validated = updateProfileSchema.parse(body)
 
   const user = await AuthService.updateProfile(currentUser.id, validated)
-  return successResponse(c, { message: MESSAGES.AUTH.PROFILE_UPDATE_SUCCESS, user })
+  return successResponse(c, { code: CODES.AUTH_PROFILE_UPDATE_SUCCESS, user })
 })
 
 // Change current authenticated user's password
@@ -102,7 +102,7 @@ auth.put('/me/password', authMiddleware, csrfProtection, async (c) => {
     validated.newPassword
   )
 
-  return successResponse(c, { message: MESSAGES.AUTH.PASSWORD_CHANGE_SUCCESS, user })
+  return successResponse(c, { code: CODES.AUTH_PASSWORD_CHANGE_SUCCESS, user })
 })
 
 export default auth

@@ -3,7 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { MasterDataService } from '../services/master-data.service';
 import { sectionSearchSchema } from '../schemas/master-data.schema';
 import { authMiddleware } from '../middleware/auth';
-import { MESSAGES } from '../constants/message';
+import { CODES } from '../constants/error-codes';
 import type { HonoContext } from '../types';
 
 const masterDataRoutes = new Hono<HonoContext>();
@@ -26,7 +26,7 @@ masterDataRoutes.get('/departments', async (c) => {
         return c.json(
             {
                 success: false,
-                message: MESSAGES.MASTER_DATA.FETCH_DEPARTMENTS_FAILED,
+                error: CODES.MASTER_DATA_FETCH_DEPARTMENTS_FAILED,
             },
             500
         );
@@ -42,7 +42,7 @@ masterDataRoutes.get('/departments/:id/sections', async (c) => {
             return c.json(
                 {
                     success: false,
-                    message: MESSAGES.MASTER_DATA.INVALID_DEPARTMENT_ID,
+                    error: CODES.MASTER_DATA_INVALID_DEPARTMENT_ID,
                 },
                 400
             );
@@ -59,7 +59,7 @@ masterDataRoutes.get('/departments/:id/sections', async (c) => {
         return c.json(
             {
                 success: false,
-                message: MESSAGES.MASTER_DATA.FETCH_SECTIONS_FAILED,
+                error: CODES.MASTER_DATA_FETCH_SECTIONS_FAILED,
             },
             500
         );
@@ -84,7 +84,7 @@ masterDataRoutes.post(
             return c.json(
                 {
                     success: false,
-                    message: MESSAGES.MASTER_DATA.SEARCH_SECTIONS_FAILED,
+                    error: CODES.MASTER_DATA_SEARCH_SECTIONS_FAILED,
                 },
                 500
             );
@@ -106,7 +106,7 @@ masterDataRoutes.get('/users', async (c) => {
         return c.json(
             {
                 success: false,
-                message: MESSAGES.MASTER_DATA.FETCH_USERS_FAILED,
+                error: CODES.MASTER_DATA_FETCH_USERS_FAILED,
             },
             500
         );
@@ -127,7 +127,7 @@ masterDataRoutes.get('/users/from-logs', async (c) => {
         return c.json(
             {
                 success: false,
-                message: MESSAGES.MASTER_DATA.FETCH_USER_LOGS_FAILED,
+                error: CODES.MASTER_DATA_FETCH_USER_LOGS_FAILED,
             },
             500
         );

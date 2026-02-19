@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, statSync, readdirSync, readFileSync, writeFileSy
 import path from 'path'
 import { env } from '../config/env'
 import { NotFoundError } from '../lib/errors'
+import { CODES } from '../constants/error-codes'
 import type { BackupFile } from '../schemas/backup.schema'
 
 const BACKUP_DIR = path.resolve(process.cwd(), 'storage/backups')
@@ -306,7 +307,7 @@ export class BackupService {
     const filePath = path.join(BACKUP_DIR, filename)
 
     if (!existsSync(filePath)) {
-      throw new NotFoundError('Backup file not found')
+      throw new NotFoundError(CODES.BACKUP_FILE_NOT_FOUND)
     }
 
     return filePath

@@ -67,7 +67,7 @@ apiClient.interceptors.response.use(
 
     // Redirect to login on 401
     if (err.response?.status === 401) {
-      const isSessionReplaced = (err.response?.data as { error?: string })?.error === 'SESSION_REPLACED';
+      const isSessionReplaced = (err.response?.data as { error?: string })?.error === 'AUTH_SESSION_REPLACED';
       useAuthStore.getState().logout();
       if (window.location.pathname !== '/login') {
         if (isSessionReplaced) {

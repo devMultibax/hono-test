@@ -3,6 +3,7 @@ import { ZodError } from 'zod'
 import { AppError } from '../lib/errors'
 import { errorResponse } from '../lib/response'
 import { env } from '../config/env'
+import { CODES } from '../constants/error-codes'
 import type { HonoContext } from '../types'
 
 export const errorHandler = (error: Error, c: Context) => {
@@ -10,7 +11,7 @@ export const errorHandler = (error: Error, c: Context) => {
     return errorResponse(
       c,
       {
-        error: 'Validation error',
+        error: CODES.VALIDATION_ERROR,
         details: error.issues
       },
       400
@@ -33,7 +34,7 @@ export const errorHandler = (error: Error, c: Context) => {
   return errorResponse(
     c,
     {
-      error: 'Internal server error',
+      error: CODES.INTERNAL_SERVER_ERROR,
       details: env.NODE_ENV === 'development' ? error.message : undefined
     },
     500

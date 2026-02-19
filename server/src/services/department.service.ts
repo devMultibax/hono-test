@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError } from '../lib/errors'
+import { CODES } from '../constants/error-codes'
 import type { DepartmentResponse, DepartmentWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { getUserFullName } from '../utils/audit.utils'
@@ -175,7 +176,7 @@ export class DepartmentService {
     })
 
     if (!department) {
-      throw new NotFoundError('Department not found')
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
     }
 
     const base = this.formatDepartmentResponse(department)
@@ -195,7 +196,7 @@ export class DepartmentService {
     })
 
     if (existing) {
-      throw new ConflictError('Department name already exists')
+      throw new ConflictError(CODES.DEPARTMENT_NAME_EXISTS)
     }
 
     const createdByName = await getUserFullName(createdBy)
@@ -227,7 +228,7 @@ export class DepartmentService {
       })
 
       if (existing) {
-        throw new ConflictError('Department name already exists')
+        throw new ConflictError(CODES.DEPARTMENT_NAME_EXISTS)
       }
     }
 
@@ -246,7 +247,7 @@ export class DepartmentService {
 
       return this.formatDepartmentResponse(department)
     } catch {
-      throw new NotFoundError('Department not found')
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
     }
   }
 
@@ -261,15 +262,15 @@ export class DepartmentService {
     })
 
     if (!department) {
-      throw new NotFoundError('Department not found')
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
     }
 
     if (department._count.users > 0) {
-      throw new ConflictError(`ไม่สามารถลบได้ เนื่องจากมีผู้ใช้งานอยู่ ${department._count.users} คน`)
+      throw new ConflictError(CODES.DEPARTMENT_HAS_USERS, { count: department._count.users })
     }
 
     if (department._count.sections > 0) {
-      throw new ConflictError(`ไม่สามารถลบได้ เนื่องจากมีหน่วยงานอยู่ ${department._count.sections} หน่วยงาน`)
+      throw new ConflictError(CODES.DEPARTMENT_HAS_SECTIONS, { count: department._count.sections })
     }
 
     await prisma.department.delete({

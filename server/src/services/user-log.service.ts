@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError } from '../lib/errors'
+import { CODES } from '../constants/error-codes'
 import type { ActionType, Role, Status, UserLogResponse } from '../types'
 import {
   calculatePagination,
@@ -108,7 +109,7 @@ export class UserLogService {
     })
 
     if (!log) {
-      throw new NotFoundError('User log not found')
+      throw new NotFoundError(CODES.USER_LOG_NOT_FOUND)
     }
 
     return this.formatUserLogResponse(log)

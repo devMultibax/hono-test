@@ -3,12 +3,20 @@ import { DepartmentService } from './department.service'
 import { SectionService } from './section.service'
 import { UserService } from './user.service'
 import { prisma } from '../lib/prisma'
+import { AppError } from '../lib/errors'
+import { CODES } from '../constants/error-codes'
 import { Role } from '../types'
+
+export interface ImportRowError {
+  row: number
+  code: string
+  params?: Record<string, unknown>
+}
 
 export interface ImportResult {
   success: number
   failed: number
-  errors: Array<{ row: number; error: string }>
+  errors: ImportRowError[]
 }
 
 export class ImportService {
@@ -38,10 +46,7 @@ export class ImportService {
 
         try {
           if (!row.Name || row.Name.trim() === '') {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Department name is required'
-            })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_DEPT_NAME_REQUIRED })
             result.failed++
             continue
           }
@@ -49,10 +54,7 @@ export class ImportService {
           const name = row.Name.trim()
 
           if (name.length > 100) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Department name is too long (max 100 characters)'
-            })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_DEPT_NAME_TOO_LONG, params: { max: 100 } })
             result.failed++
             continue
           }
@@ -60,15 +62,12 @@ export class ImportService {
           await DepartmentService.create(name, createdBy)
           result.success++
         } catch (error: any) {
-          result.errors.push({
-            row: rowNumber,
-            error: error.message || 'Unknown error'
-          })
+          result.errors.push({ row: rowNumber, code: error.message || CODES.IMPORT_UNKNOWN_ERROR })
           result.failed++
         }
       }
     } catch (error: any) {
-      throw new Error(`Failed to process Excel file: ${error.message}`)
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
     }
 
     return result
@@ -114,19 +113,13 @@ export class ImportService {
 
         try {
           if (!row.Department || String(row.Department).trim() === '') {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Department name is required'
-            })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_SECTION_DEPT_REQUIRED })
             result.failed++
             continue
           }
 
           if (!row.Name || row.Name.trim() === '') {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Section name is required'
-            })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_SECTION_NAME_REQUIRED })
             result.failed++
             continue
           }
@@ -137,19 +130,13 @@ export class ImportService {
           const departmentId = departmentMap.get(departmentName.toLowerCase())
 
           if (!departmentId) {
-            result.errors.push({
-              row: rowNumber,
-              error: `Department "${departmentName}" not found or inactive`
-            })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_SECTION_DEPT_NOT_FOUND, params: { name: departmentName } })
             result.failed++
             continue
           }
 
           if (name.length > 100) {
-            result.errors.push({
-              row: rowNumber,
-              error: 'Section name is too long (max 100 characters)'
-            })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_SECTION_NAME_TOO_LONG, params: { max: 100 } })
             result.failed++
             continue
           }
@@ -157,15 +144,12 @@ export class ImportService {
           await SectionService.create(departmentId, name, createdBy)
           result.success++
         } catch (error: any) {
-          result.errors.push({
-            row: rowNumber,
-            error: error.message || 'Unknown error'
-          })
+          result.errors.push({ row: rowNumber, code: error.message || CODES.IMPORT_UNKNOWN_ERROR })
           result.failed++
         }
       }
     } catch (error: any) {
-      throw new Error(`Failed to process Excel file: ${error.message}`)
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
     }
 
     return result
@@ -223,25 +207,25 @@ export class ImportService {
         try {
           // Validate required fields
           if (!row.Username || String(row.Username).trim() === '') {
-            result.errors.push({ row: rowNumber, error: 'Username is required' })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_USERNAME_REQUIRED })
             result.failed++
             continue
           }
 
           if (!row['First Name'] || String(row['First Name']).trim() === '') {
-            result.errors.push({ row: rowNumber, error: 'First name is required' })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_FIRST_NAME_REQUIRED })
             result.failed++
             continue
           }
 
           if (!row['Last Name'] || String(row['Last Name']).trim() === '') {
-            result.errors.push({ row: rowNumber, error: 'Last name is required' })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_LAST_NAME_REQUIRED })
             result.failed++
             continue
           }
 
           if (!row['Department ID']) {
-            result.errors.push({ row: rowNumber, error: 'Department ID is required' })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_DEPT_ID_REQUIRED })
             result.failed++
             continue
           }
@@ -257,40 +241,40 @@ export class ImportService {
 
           // Validate username format
           if (username.length !== 6) {
-            result.errors.push({ row: rowNumber, error: 'Username must be exactly 6 characters' })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_USERNAME_LENGTH })
             result.failed++
             continue
           }
 
           if (!/^[a-zA-Z0-9]+$/.test(username)) {
-            result.errors.push({ row: rowNumber, error: 'Username must contain only letters and numbers' })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_USERNAME_FORMAT })
             result.failed++
             continue
           }
 
           // Validate username uniqueness (DB)
           if (existingUsernames.has(username)) {
-            result.errors.push({ row: rowNumber, error: `Username "${username}" already exists` })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_USERNAME_EXISTS, params: { username } })
             result.failed++
             continue
           }
 
           // Validate username uniqueness (within this import batch)
           if (batchUsernames.has(username)) {
-            result.errors.push({ row: rowNumber, error: `Duplicate username "${username}" in file` })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_USERNAME_DUPLICATE, params: { username } })
             result.failed++
             continue
           }
 
           // Validate department exists
           if (isNaN(departmentId) || departmentId <= 0) {
-            result.errors.push({ row: rowNumber, error: 'Department ID must be a positive number' })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_DEPT_ID_INVALID })
             result.failed++
             continue
           }
 
           if (!activeDepartmentIds.has(departmentId)) {
-            result.errors.push({ row: rowNumber, error: `Department ID ${departmentId} not found or inactive` })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_DEPT_NOT_FOUND, params: { departmentId } })
             result.failed++
             continue
           }
@@ -298,20 +282,20 @@ export class ImportService {
           // Validate section exists and belongs to department
           if (sectionId !== null) {
             if (isNaN(sectionId) || sectionId <= 0) {
-              result.errors.push({ row: rowNumber, error: 'Section ID must be a positive number' })
+              result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_SECTION_ID_INVALID })
               result.failed++
               continue
             }
 
             const sectionDeptId = sectionMap.get(sectionId)
             if (sectionDeptId === undefined) {
-              result.errors.push({ row: rowNumber, error: `Section ID ${sectionId} not found or inactive` })
+              result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_SECTION_NOT_FOUND, params: { sectionId } })
               result.failed++
               continue
             }
 
             if (sectionDeptId !== departmentId) {
-              result.errors.push({ row: rowNumber, error: `Section ID ${sectionId} does not belong to Department ID ${departmentId}` })
+              result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_SECTION_DEPT_MISMATCH, params: { sectionId, departmentId } })
               result.failed++
               continue
             }
@@ -319,14 +303,14 @@ export class ImportService {
 
           // Validate email format
           if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            result.errors.push({ row: rowNumber, error: `Invalid email format: ${email}` })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_EMAIL_INVALID, params: { email } })
             result.failed++
             continue
           }
 
           // Validate tel format
           if (tel && (tel.length !== 10 || !/^[0-9]+$/.test(tel))) {
-            result.errors.push({ row: rowNumber, error: `Phone number must be exactly 10 digits: ${tel}` })
+            result.errors.push({ row: rowNumber, code: CODES.IMPORT_USER_TEL_INVALID, params: { tel } })
             result.failed++
             continue
           }
@@ -346,15 +330,12 @@ export class ImportService {
           existingUsernames.add(username)
           batchUsernames.add(username)
         } catch (error: any) {
-          result.errors.push({
-            row: rowNumber,
-            error: error.message || 'Unknown error'
-          })
+          result.errors.push({ row: rowNumber, code: error.message || CODES.IMPORT_UNKNOWN_ERROR })
           result.failed++
         }
       }
     } catch (error: any) {
-      throw new Error(`Failed to process Excel file: ${error.message}`)
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
     }
 
     return result

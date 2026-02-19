@@ -11,7 +11,7 @@ import { ImportService } from '../services/import.service'
 import { userExcelColumns } from '../controllers/user.controller'
 import { parseUpload, validateFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
-import { MESSAGES } from '../constants/message'
+import { CODES } from '../constants/error-codes'
 import ExcelJS from 'exceljs'
 
 const users = new Hono<HonoContext>()
@@ -230,7 +230,7 @@ users.get('/:id', requireUser, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: MESSAGES.USER.INVALID_ID }, 400)
+    return c.json({ error: CODES.USER_INVALID_ID }, 400)
   }
 
   const include = c.req.query('include') === 'true'
@@ -244,7 +244,7 @@ users.put('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: MESSAGES.USER.INVALID_ID }, 400)
+    return c.json({ error: CODES.USER_INVALID_ID }, 400)
   }
 
   const body = await c.req.json()
@@ -262,7 +262,7 @@ users.delete('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: MESSAGES.USER.INVALID_ID }, 400)
+    return c.json({ error: CODES.USER_INVALID_ID }, 400)
   }
 
   await UserService.delete(id)
@@ -288,7 +288,7 @@ users.patch('/:id/password/reset', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: MESSAGES.USER.INVALID_ID }, 400)
+    return c.json({ error: CODES.USER_INVALID_ID }, 400)
   }
 
   const result = await UserService.resetPassword(id, currentUser.username)
@@ -356,7 +356,7 @@ users.post('/import', requireAdmin, async (c) => {
   const file = await parseUpload(c)
 
   if (!file) {
-    return c.json({ error: MESSAGES.USER.NO_FILE_UPLOADED }, 400)
+    return c.json({ error: CODES.USER_NO_FILE_UPLOADED }, 400)
   }
 
   const validation = validateFile(file)
@@ -368,7 +368,7 @@ users.post('/import', requireAdmin, async (c) => {
   const fileValidation = ImportService.validateUserFile(file.buffer)
 
   if (!fileValidation.valid) {
-    return c.json({ error: MESSAGES.USER.INVALID_FILE_STRUCTURE, details: fileValidation.errors }, 400)
+    return c.json({ error: CODES.USER_INVALID_FILE_STRUCTURE, details: fileValidation.errors }, 400)
   }
 
   const result = await ImportService.importUsers(file.buffer, user.username)
@@ -378,7 +378,7 @@ users.post('/import', requireAdmin, async (c) => {
     success: result.success,
     failed: result.failed,
     total: result.success + result.failed,
-    errors: result.errors.map(e => `Row ${e.row}: ${e.error}`)
+    errors: result.errors
   }, 200)
 })
 

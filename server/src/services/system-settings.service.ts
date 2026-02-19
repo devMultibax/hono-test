@@ -1,7 +1,7 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError } from '../lib/errors'
 import { getUserFullName } from '../utils/audit.utils'
-import { MESSAGES } from '../constants/message'
+import { CODES } from '../constants/error-codes'
 import type { SystemSettingResponse, MaintenanceStatusResponse } from '../types'
 
 // Setting keys constants
@@ -29,7 +29,7 @@ export class SystemSettingsService {
     const setting = await prisma.systemSetting.findUnique({
       where: { key },
     })
-    if (!setting) throw new NotFoundError(MESSAGES.SYSTEM_SETTINGS.NOT_FOUND)
+    if (!setting) throw new NotFoundError(CODES.SYSTEM_SETTINGS_NOT_FOUND)
     return setting
   }
 
@@ -54,7 +54,7 @@ export class SystemSettingsService {
       this.cache.delete(key) // Invalidate cache ทันที
       return setting
     } catch {
-      throw new NotFoundError(MESSAGES.SYSTEM_SETTINGS.NOT_FOUND)
+      throw new NotFoundError(CODES.SYSTEM_SETTINGS_NOT_FOUND)
     }
   }
 
@@ -75,7 +75,7 @@ export class SystemSettingsService {
   static async getMaintenanceMessage(): Promise<string> {
     return (
       (await this.getCachedValue(SETTING_KEYS.MAINTENANCE_MESSAGE)) ??
-      MESSAGES.SYSTEM_SETTINGS.MAINTENANCE_ACTIVE
+      CODES.SYSTEM_MAINTENANCE_ACTIVE
     )
   }
 

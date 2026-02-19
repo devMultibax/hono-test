@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError } from '../lib/errors'
+import { CODES } from '../constants/error-codes'
 import type { SectionResponse, SectionWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { getUserFullName } from '../utils/audit.utils'
@@ -180,7 +181,7 @@ export class SectionService {
     })
 
     if (!section) {
-      throw new NotFoundError('Section not found')
+      throw new NotFoundError(CODES.SECTION_NOT_FOUND)
     }
 
     const base = this.formatSectionResponse(section)
@@ -213,7 +214,7 @@ export class SectionService {
     })
 
     if (!department) {
-      throw new NotFoundError('Department not found')
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
     }
 
     const existing = await prisma.section.findFirst({
@@ -224,7 +225,7 @@ export class SectionService {
     })
 
     if (existing) {
-      throw new ConflictError('Section name already exists in this department')
+      throw new ConflictError(CODES.SECTION_NAME_EXISTS)
     }
 
     const createdByName = await getUserFullName(createdBy)
@@ -254,7 +255,7 @@ export class SectionService {
       })
 
       if (!department) {
-        throw new NotFoundError('Department not found')
+        throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
       }
     }
 
@@ -268,7 +269,7 @@ export class SectionService {
       })
 
       if (existing) {
-        throw new ConflictError('Section name already exists in this department')
+        throw new ConflictError(CODES.SECTION_NAME_EXISTS)
       }
     }
 
@@ -287,7 +288,7 @@ export class SectionService {
 
       return this.formatSectionResponse(section)
     } catch {
-      throw new NotFoundError('Section not found')
+      throw new NotFoundError(CODES.SECTION_NOT_FOUND)
     }
   }
 
@@ -302,11 +303,11 @@ export class SectionService {
     })
 
     if (!section) {
-      throw new NotFoundError('Section not found')
+      throw new NotFoundError(CODES.SECTION_NOT_FOUND)
     }
 
     if (section._count.users > 0) {
-      throw new ConflictError(`ไม่สามารถลบได้ เนื่องจากมีผู้ใช้งานอยู่ ${section._count.users} คน`)
+      throw new ConflictError(CODES.SECTION_HAS_USERS, { count: section._count.users })
     }
 
     await prisma.section.delete({

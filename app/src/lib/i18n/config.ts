@@ -14,6 +14,7 @@ import backup from './locales/th/backup.json';
 import systemLogs from './locales/th/systemLogs.json';
 import profile from './locales/th/profile.json';
 import systemSettings from './locales/th/systemSettings.json';
+import api from './locales/th/api.json';
 
 const resources = {
   th: {
@@ -30,6 +31,7 @@ const resources = {
     systemLogs,
     profile,
     systemSettings,
+    api,
   },
 };
 

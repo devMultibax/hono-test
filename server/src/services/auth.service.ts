@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import { prisma } from '../lib/prisma'
 import { env } from '../config/env'
 import { UnauthorizedError, NotFoundError } from '../lib/errors'
+import { CODES } from '../constants/error-codes'
 import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations } from '../types'
 
 const TOKEN_EXPIRY = '24h'
@@ -104,17 +105,17 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new UnauthorizedError('Invalid credentials')
+      throw new UnauthorizedError(CODES.AUTH_INVALID_CREDENTIALS)
     }
 
     if (user.status === 'inactive') {
-      throw new UnauthorizedError('Account is inactive')
+      throw new UnauthorizedError(CODES.AUTH_ACCOUNT_INACTIVE)
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
-      throw new UnauthorizedError('Invalid credentials')
+      throw new UnauthorizedError(CODES.AUTH_INVALID_CREDENTIALS)
     }
 
     // Detect active session before incrementing tokenVersion
@@ -170,7 +171,7 @@ export class AuthService {
         })
 
         if (!user || user.tokenVersion !== decoded.tokenVersion) {
-          throw new UnauthorizedError('SESSION_REPLACED')
+          throw new UnauthorizedError(CODES.AUTH_SESSION_REPLACED)
         }
       }
 
@@ -179,7 +180,7 @@ export class AuthService {
       if (error instanceof UnauthorizedError) {
         throw error
       }
-      throw new UnauthorizedError('Invalid token')
+      throw new UnauthorizedError(CODES.AUTH_INVALID_TOKEN)
     }
   }
 
@@ -213,7 +214,7 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
     return this.formatUserResponse(user)
@@ -233,7 +234,7 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
     const updatedUser = await prisma.user.update({

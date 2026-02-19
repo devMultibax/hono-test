@@ -1,6 +1,8 @@
 import ExcelJS from 'exceljs'
 import { PassThrough } from 'stream'
 import type { ExportColumn, ExcelExportOptions } from '../types/export'
+import { ValidationError } from '../lib/errors'
+import { CODES } from '../constants/error-codes'
 
 const MAX_ROWS_NORMAL = 10000
 const MAX_ROWS_LIMIT = 50000
@@ -42,7 +44,7 @@ export class ExportService {
     const totalCount = data.length
 
     if (totalCount > MAX_ROWS_LIMIT) {
-      throw new Error(`Export limited to ${MAX_ROWS_LIMIT} rows.`)
+      throw new ValidationError(CODES.EXPORT_ROW_LIMIT_EXCEEDED, { limit: MAX_ROWS_LIMIT })
     }
 
     if (totalCount <= MAX_ROWS_NORMAL) {

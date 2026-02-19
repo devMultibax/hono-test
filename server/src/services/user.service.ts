@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma'
-import { NotFoundError } from '../lib/errors'
+import { NotFoundError, ConflictError, ValidationError } from '../lib/errors'
+import { CODES } from '../constants/error-codes'
 import { ActionType, Role, type UserResponse, type UserWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { generateDefaultPassword } from '../lib/password'
@@ -182,7 +183,7 @@ export class UserService {
     })
 
     if (existingUser) {
-      throw new Error('Username already exists')
+      throw new ConflictError(CODES.USER_USERNAME_EXISTS)
     }
 
     // Verify department exists
@@ -191,7 +192,7 @@ export class UserService {
     })
 
     if (!department) {
-      throw new NotFoundError('Department not found')
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
     }
 
     // Verify section exists if provided
@@ -201,7 +202,7 @@ export class UserService {
       })
 
       if (!section) {
-        throw new NotFoundError('Section not found')
+        throw new NotFoundError(CODES.SECTION_NOT_FOUND)
       }
     }
 
@@ -278,7 +279,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
     const base = this.formatUserResponse(user)
@@ -316,7 +317,7 @@ export class UserService {
     })
 
     if (!existingUser) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
     if (data.departmentId) {
@@ -325,7 +326,7 @@ export class UserService {
       })
 
       if (!department) {
-        throw new NotFoundError('Department not found')
+        throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
       }
     }
 
@@ -335,7 +336,7 @@ export class UserService {
       })
 
       if (!section) {
-        throw new NotFoundError('Section not found')
+        throw new NotFoundError(CODES.SECTION_NOT_FOUND)
       }
     }
 
@@ -376,7 +377,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
     await this.logUserAction(user as any, ActionType.DELETE)
@@ -386,7 +387,7 @@ export class UserService {
         where: { id }
       })
     } catch {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
   }
 
@@ -398,7 +399,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
     return await bcrypt.compare(password, user.password)
@@ -410,7 +411,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
     // Generate new default password
@@ -456,12 +457,12 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError('User not found')
+      throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
     if (!isPasswordValid) {
-      throw new Error('Current password is incorrect')
+      throw new ValidationError(CODES.USER_INVALID_PASSWORD)
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS)

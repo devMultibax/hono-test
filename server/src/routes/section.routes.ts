@@ -12,6 +12,7 @@ import { sectionExcelColumns } from '../controllers/section.controller'
 import { parseUpload, validateFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
 import ExcelJS from 'exceljs'
+import { CODES } from '../constants/error-codes'
 
 const sections = new Hono<HonoContext>()
 
@@ -289,7 +290,7 @@ sections.post('/import', requireAdmin, async (c) => {
   const file = await parseUpload(c)
 
   if (!file) {
-    return c.json({ error: 'No file uploaded' }, 400)
+    return c.json({ error: CODES.USER_NO_FILE_UPLOADED }, 400)
   }
 
   const validation = validateFile(file)
@@ -301,7 +302,7 @@ sections.post('/import', requireAdmin, async (c) => {
   const fileValidation = ImportService.validateSectionFile(file.buffer)
 
   if (!fileValidation.valid) {
-    return c.json({ error: 'Invalid file structure', details: fileValidation.errors }, 400)
+    return c.json({ error: CODES.USER_INVALID_FILE_STRUCTURE, details: fileValidation.errors }, 400)
   }
 
   const result = await ImportService.importSections(file.buffer, user.username)
@@ -311,7 +312,7 @@ sections.post('/import', requireAdmin, async (c) => {
     success: result.success,
     failed: result.failed,
     total: result.success + result.failed,
-    errors: result.errors.map(e => `Row ${e.row}: ${e.error}`)
+    errors: result.errors
   }, 200)
 })
 

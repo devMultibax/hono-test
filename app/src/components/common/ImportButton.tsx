@@ -5,13 +5,19 @@ import { apiClient } from '@/api/client';
 import { Report } from '@/utils/mantineAlertUtils';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from '@/lib/i18n';
-import type { AxiosError } from 'axios';
+import i18n from '@/lib/i18n/config';
+
+export interface ImportRowError {
+  row: number;
+  code: string;
+  params?: Record<string, unknown>;
+}
 
 interface ImportResult {
   success: number;
   failed: number;
   total: number;
-  errors?: string[];
+  errors?: ImportRowError[];
 }
 
 interface Props {
@@ -55,7 +61,7 @@ export function ImportButton({
     if (file.size > maxSize * 1024 * 1024) {
       setResult({
         success: 0, failed: 1, total: 1,
-        errors: [t('users:import.fileSizeError', { size: maxSize })],
+        errors: [{ row: 0, code: 'IMPORT_FILE_TOO_LARGE', params: { size: maxSize } }],
       });
       return;
     }
@@ -84,10 +90,11 @@ export function ImportButton({
 
       onSuccess?.();
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string }>;
+      const { extractErrorMessage } = await import('@/utils/errorHandlerUtils');
+      const message = extractErrorMessage(error) || t('users:import.importError');
       setResult({
         success: 0, failed: 1, total: 1,
-        errors: [axiosError.response?.data?.message || t('users:import.importError')],
+        errors: [{ row: 0, code: '__message__', params: { message } }],
       });
     } finally {
       setLoading(false);
@@ -152,6 +159,16 @@ function ResultView({ result, onClose, onRetry }: ResultViewProps) {
   const successRate = Math.round((result.success / result.total) * 100);
   const hasErrors = result.errors && result.errors.length > 0;
 
+  function formatRowError(err: ImportRowError): string {
+    // Special synthetic error from catch block carrying an already-translated message
+    if (err.code === '__message__') return String(err.params?.message ?? '');
+    // File-too-large error is handled client-side with existing i18n key
+    if (err.code === 'IMPORT_FILE_TOO_LARGE') return t('users:import.fileSizeError', { size: err.params?.size });
+    const apiKey = `api:${err.code}`;
+    const translated = i18n.exists(apiKey) ? i18n.t(apiKey, err.params ?? {}) : err.code;
+    return err.row > 0 ? `แถวที่ ${err.row}: ${translated}` : translated;
+  }
+
   return (
     <Stack gap="md">
       <Group justify="center" gap="xl">
@@ -178,7 +195,7 @@ function ResultView({ result, onClose, onRetry }: ResultViewProps) {
             <Stack gap={4}>
               {result.errors?.map((err, i) => (
                 <Alert key={i} color="red" variant="light" py={6} px="sm">
-                  <Text size="xs">{err}</Text>
+                  <Text size="xs">{formatRowError(err)}</Text>
                 </Alert>
               ))}
             </Stack>

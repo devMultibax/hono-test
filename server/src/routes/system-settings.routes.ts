@@ -5,7 +5,7 @@ import { requireAdmin } from '../middleware/permission'
 import { SystemSettingsService } from '../services/system-settings.service'
 import { updateSystemSettingSchema } from '../schemas/system-settings.schema'
 import { successResponse } from '../lib/response'
-import { MESSAGES } from '../constants/message'
+import { CODES } from '../constants/error-codes'
 import type { HonoContext } from '../types'
 
 const systemSettings = new Hono<HonoContext>()
@@ -42,7 +42,7 @@ systemSettings.put('/:key', requireAdmin, async (c) => {
     validated.value,
     user.username
   )
-  c.get('logInfo')(MESSAGES.SYSTEM_SETTINGS.UPDATE_SUCCESS, { key, value: validated.value })
+  c.get('logInfo')(CODES.SYSTEM_SETTINGS_UPDATE_SUCCESS, { key, value: validated.value })
   return successResponse(c, setting)
 })
 

@@ -11,7 +11,7 @@ import { ImportService } from '../services/import.service'
 import { departmentExcelColumns } from '../controllers/department.controller'
 import { parseUpload, validateFile, type UploadedFile } from '../middleware/upload'
 import { stream } from 'hono/streaming'
-import { MESSAGES } from '../constants/message'
+import { CODES } from '../constants/error-codes'
 import ExcelJS from 'exceljs'
 
 const departments = new Hono<HonoContext>()
@@ -173,7 +173,7 @@ departments.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: MESSAGES.DEPARTMENT.INVALID_ID }, 400)
+    return c.json({ error: CODES.DEPARTMENT_INVALID_ID }, 400)
   }
 
   const include = c.req.query('include') === 'true'
@@ -198,7 +198,7 @@ departments.put('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: MESSAGES.DEPARTMENT.INVALID_ID }, 400)
+    return c.json({ error: CODES.DEPARTMENT_INVALID_ID }, 400)
   }
 
   const body = await c.req.json()
@@ -215,7 +215,7 @@ departments.delete('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: MESSAGES.DEPARTMENT.INVALID_ID }, 400)
+    return c.json({ error: CODES.DEPARTMENT_INVALID_ID }, 400)
   }
 
   const department = await DepartmentService.getById(id)
@@ -278,7 +278,7 @@ departments.post('/import', requireAdmin, async (c) => {
   const file = await parseUpload(c)
 
   if (!file) {
-    return c.json({ error: MESSAGES.USER.NO_FILE_UPLOADED }, 400)
+    return c.json({ error: CODES.USER_NO_FILE_UPLOADED }, 400)
   }
 
   const validation = validateFile(file)
@@ -290,7 +290,7 @@ departments.post('/import', requireAdmin, async (c) => {
   const fileValidation = ImportService.validateDepartmentFile(file.buffer)
 
   if (!fileValidation.valid) {
-    return c.json({ error: MESSAGES.USER.INVALID_FILE_STRUCTURE, details: fileValidation.errors }, 400)
+    return c.json({ error: CODES.USER_INVALID_FILE_STRUCTURE, details: fileValidation.errors }, 400)
   }
 
   const result = await ImportService.importDepartments(file.buffer, user.username)
@@ -300,7 +300,7 @@ departments.post('/import', requireAdmin, async (c) => {
     success: result.success,
     failed: result.failed,
     total: result.success + result.failed,
-    errors: result.errors.map(e => `Row ${e.row}: ${e.error}`)
+    errors: result.errors
   }, 200)
 })
 
