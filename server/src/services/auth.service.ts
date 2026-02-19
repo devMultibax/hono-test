@@ -165,10 +165,19 @@ export class AuthService {
       if (decoded.tokenVersion !== undefined) {
         const user = await prisma.user.findUnique({
           where: { id: decoded.id },
-          select: { tokenVersion: true }
+          select: { tokenVersion: true, status: true }
         })
 
-        if (!user || user.tokenVersion !== decoded.tokenVersion) {
+        if (!user) {
+          throw new UnauthorizedError(CODES.AUTH_ACCOUNT_DELETED)
+        }
+
+        // Check if user account is still active (before tokenVersion check)
+        if (user.status === 'inactive') {
+          throw new UnauthorizedError(CODES.AUTH_ACCOUNT_INACTIVE)
+        }
+
+        if (user.tokenVersion !== decoded.tokenVersion) {
           throw new UnauthorizedError(CODES.AUTH_SESSION_REPLACED)
         }
       }

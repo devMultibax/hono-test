@@ -353,6 +353,11 @@ export class UserService {
       updateData.password = await bcrypt.hash(data.password, SALT_ROUNDS)
     }
 
+    // Invalidate active sessions when user is disabled
+    if (data.status === 'inactive' && existingUser.status !== 'inactive') {
+      updateData.tokenVersion = { increment: 1 }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id },
       data: updateData,
@@ -383,6 +388,12 @@ export class UserService {
     await this.logUserAction(user as any, ActionType.DELETE)
 
     try {
+      // Invalidate active sessions before deleting
+      await prisma.user.update({
+        where: { id },
+        data: { tokenVersion: { increment: 1 } }
+      })
+
       await prisma.user.delete({
         where: { id }
       })

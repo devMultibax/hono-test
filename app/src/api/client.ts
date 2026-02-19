@@ -2,14 +2,13 @@ import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
 import { handleApiError } from './error-handler';
-import { Report } from '@/utils/mantineAlertUtils';
-import { t } from '@/lib/i18n/helpers';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 30000;
 const MUTATING_METHODS = ['post', 'put', 'patch', 'delete'];
 
 let refreshPromise: Promise<string | null> | null = null;
+let isHandling401 = false;
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -65,19 +64,15 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Redirect to login on 401
-    if (err.response?.status === 401) {
-      const isSessionReplaced = (err.response?.data as { error?: string })?.error === 'AUTH_SESSION_REPLACED';
+    // Redirect to login on 401 (guard against multiple concurrent 401s)
+    if (err.response?.status === 401 && !isHandling401) {
+      isHandling401 = true;
       useAuthStore.getState().logout();
       if (window.location.pathname !== '/login') {
-        if (isSessionReplaced) {
-          Report.warning(t('auth:sessionReplaced'), () => {
-            window.location.href = '/login';
-          });
-        } else {
-          window.location.href = '/login';
-        }
+        window.location.href = '/login';
       }
+      isHandling401 = false;
+      return Promise.reject(error);
     }
 
     // Redirect to maintenance page on 503 maintenance response
