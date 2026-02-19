@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin } from '../middleware/permission'
-import { SystemSettingsService } from '../services/system-settings.service'
+import { SystemSettingsService, SETTING_KEYS } from '../services/system-settings.service'
 import { updateSystemSettingSchema } from '../schemas/system-settings.schema'
 import { successResponse } from '../lib/response'
 import { CODES } from '../constants/error-codes'
@@ -42,7 +42,19 @@ systemSettings.put('/:key', requireAdmin, async (c) => {
     validated.value,
     user.username
   )
-  c.get('logInfo')(CODES.SYSTEM_SETTINGS_UPDATE_SUCCESS, { key, value: validated.value })
+
+  // Log specific event for maintenance_mode toggle
+  if (key === SETTING_KEYS.MAINTENANCE_MODE) {
+    const isEnabled = validated.value === 'true'
+    const event = isEnabled
+      ? 'System maintenance enabled (ปิดการใช้งานระบบ)'
+      : 'System maintenance disabled (เปิดการใช้งานระบบ)'
+    const logFn = isEnabled ? c.get('logWarn') : c.get('logInfo')
+    logFn(event)
+  } else {
+    c.get('logInfo')(CODES.SYSTEM_SETTINGS_UPDATE_SUCCESS, { key, value: validated.value })
+  }
+
   return successResponse(c, setting)
 })
 

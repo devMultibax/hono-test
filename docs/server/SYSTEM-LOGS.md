@@ -114,6 +114,16 @@
 
 ---
 
+### System Settings (`/system-settings`)
+
+| Event | Level | เงื่อนไข |
+|-------|-------|---------|
+| `System maintenance enabled (ปิดการใช้งานระบบ)` | WARN | เปลี่ยน `maintenance_mode` เป็น `true` |
+| `System maintenance disabled (เปิดการใช้งานระบบ)` | INFO | เปลี่ยน `maintenance_mode` เป็น `false` |
+| `SYSTEM_SETTINGS_UPDATE_SUCCESS` (พร้อม `key`, `value`) | INFO | อัปเดต setting อื่น ๆ สำเร็จ |
+
+---
+
 ### Master Data (`/master-data`)
 
 | Event | Level | เงื่อนไข |
@@ -172,7 +182,7 @@ actionType, actionAt
 ## 5. สิ่งที่ยังไม่ Log เข้า Structured Log
 
 | สิ่ง | วิธีปัจจุบัน | เหตุผล |
-|-----|------------|--------|
+|-----|------------|-------|
 | Scheduled backup (daily 02:00) | `console.log` | ไม่มี request context (`c`) |
 | Scheduled log cleanup (daily 01:00) | `console.log` | ไม่มี request context (`c`) |
 | Backup process (pg_dump/pg_restore) | `console.log` | Infrastructure level |
