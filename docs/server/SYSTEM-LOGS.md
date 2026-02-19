@@ -44,7 +44,7 @@
 |-------|-------|---------|
 | `Login successful` | INFO | Login สำเร็จ |
 | `Login failed: <reason>` | WARN | Login ล้มเหลว (username/password ผิด, account disabled) |
-| `Session replaced: user logged in from another device` | WARN | Login ขณะที่มี session เดิมยังใช้งานได้อยู่ (single-session enforcement) |
+| `Session replaced: logged in from another device` | WARN | Login ขณะที่มี session เดิมยังใช้งานได้อยู่ (single-session enforcement) |
 | `Rate limit exceeded: too many login attempts` | WARN | เกิน 15 ครั้ง / 15 นาที (ต่อ IP) |
 | `Logout successful` | INFO | Logout สำเร็จ |
 | `Unhandled error` | ERROR | Error ที่ไม่คาดคิดใน global error handler |
@@ -60,9 +60,9 @@
 | Event | Level | เงื่อนไข |
 |-------|-------|---------|
 | `Created user "<username>"` | INFO | สร้าง user สำเร็จ |
-| `Updated user ID <id>` | INFO | แก้ไข user สำเร็จ |
-| `Deleted user ID <id>` | INFO | ลบ user สำเร็จ |
-| `Reset password for user ID <id>` | INFO | Reset รหัสผ่านสำเร็จ |
+| `Updated user #<id>` | INFO | แก้ไข user สำเร็จ |
+| `Deleted user #<id>` | INFO | ลบ user สำเร็จ |
+| `Reset password for user #<id>` | INFO | Reset รหัสผ่านสำเร็จ |
 | `Imported users: <n> success, <n> failed` | INFO | Import Excel สำเร็จ |
 | `Unhandled error` | ERROR | Error ที่ไม่คาดคิด (ผ่าน global error handler) |
 
@@ -118,9 +118,9 @@
 
 | Event | Level | เงื่อนไข |
 |-------|-------|---------|
-| `System maintenance enabled (ปิดการใช้งานระบบ)` | WARN | เปลี่ยน `maintenance_mode` เป็น `true` |
-| `System maintenance disabled (เปิดการใช้งานระบบ)` | INFO | เปลี่ยน `maintenance_mode` เป็น `false` |
-| `SYSTEM_SETTINGS_UPDATE_SUCCESS` (พร้อม `key`, `value`) | INFO | อัปเดต setting อื่น ๆ สำเร็จ |
+| `Maintenance mode enabled` | WARN | เปลี่ยน `maintenance_mode` เป็น `true` |
+| `Maintenance mode disabled` | INFO | เปลี่ยน `maintenance_mode` เป็น `false` |
+| `Updated setting "<key>"` | INFO | อัปเดต setting อื่น ๆ สำเร็จ |
 
 ---
 

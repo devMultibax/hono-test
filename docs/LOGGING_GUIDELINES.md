@@ -31,16 +31,16 @@
 | INFO | `Login successful` |
 | INFO | `Logout successful` |
 | WARN | `Login failed: <เหตุผล>` — credentials ผิด / บัญชีถูกระงับ |
-| WARN | `Session replaced: user logged in from another device` — Login ขณะ session เดิมยังไม่หมดอายุ |
+| WARN | `Session replaced: logged in from another device` — Login ขณะ session เดิมยังไม่หมดอายุ |
 
 ### Users (`/users`)
 
 | Level | Event |
 |-------|-------|
 | INFO | `Created user "<username>"` |
-| INFO | `Updated user ID <id>` |
-| INFO | `Deleted user ID <id>` |
-| INFO | `Reset password for user ID <id>` |
+| INFO | `Updated user #<id>` |
+| INFO | `Deleted user #<id>` |
+| INFO | `Reset password for user #<id>` |
 | INFO | `Imported users: <n> success, <n> failed` |
 
 ### Departments (`/departments`)
@@ -73,9 +73,9 @@
 
 | Level | Event |
 |-------|-------|
-| WARN | `System maintenance enabled (ปิดการใช้งานระบบ)` — เปลี่ยน `maintenance_mode` เป็น `true` |
-| INFO | `System maintenance disabled (เปิดการใช้งานระบบ)` — เปลี่ยน `maintenance_mode` เป็น `false` |
-| INFO | `SYSTEM_SETTINGS_UPDATE_SUCCESS` (พร้อม `key` และ `value`) — อัปเดต setting อื่น ๆ |
+| WARN | `Maintenance mode enabled` — เปลี่ยน `maintenance_mode` เป็น `true` |
+| INFO | `Maintenance mode disabled` — เปลี่ยน `maintenance_mode` เป็น `false` |
+| INFO | `Updated setting "<key>"` — อัปเดต setting อื่น ๆ |
 
 ### Master Data (`/master-data`)
 

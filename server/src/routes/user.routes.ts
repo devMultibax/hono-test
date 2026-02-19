@@ -252,7 +252,7 @@ users.put('/:id', requireAdmin, async (c) => {
 
   const user = await UserService.update(id, validated, currentUser.username)
 
-  c.get('logInfo')(`Updated user ID ${id}`)
+  c.get('logInfo')(`Updated user #${id}`)
 
   return successResponse(c, user)
 })
@@ -266,7 +266,7 @@ users.delete('/:id', requireAdmin, async (c) => {
   }
 
   await UserService.delete(id)
-  c.get('logInfo')(`Deleted user ID ${id}`)
+  c.get('logInfo')(`Deleted user #${id}`)
   return noContentResponse(c)
 })
 
@@ -292,7 +292,7 @@ users.patch('/:id/password/reset', requireAdmin, async (c) => {
   }
 
   const result = await UserService.resetPassword(id, currentUser.username)
-  c.get('logInfo')(`Reset password for user ID ${id}`)
+  c.get('logInfo')(`Reset password for user #${id}`)
   return successResponse(c, result)
 })
 

@@ -34,7 +34,7 @@ auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
     })
 
     if (result.previousSessionTerminated) {
-      c.get('logWarn')('Session replaced: user logged in from another device', {
+      c.get('logWarn')('Session replaced: logged in from another device', {
         username: validated.username,
         fullName: '-',
       })
