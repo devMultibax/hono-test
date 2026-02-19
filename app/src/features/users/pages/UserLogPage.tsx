@@ -104,7 +104,8 @@ export function UserLogPage() {
         enableSorting: false,
         cell: ({ getValue }) => formatDateTime(getValue()),
       }),
-      columnHelper.accessor('createdBy', {
+      columnHelper.accessor((row) => row.createdByName || row.createdBy, {
+        id: 'createdBy',
         header: t('users:logs.column.createdBy'),
         enableSorting: false,
       }),
@@ -116,7 +117,8 @@ export function UserLogPage() {
           return value ? formatDateTime(value) : '-';
         },
       }),
-      columnHelper.accessor('updatedBy', {
+      columnHelper.accessor((row) => row.updatedByName || row.updatedBy, {
+        id: 'updatedBy',
         header: t('users:logs.column.updatedBy'),
         enableSorting: false,
         cell: ({ getValue }) => getValue() || '-',
