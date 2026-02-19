@@ -435,7 +435,7 @@ export class UserService {
       }
     })
 
-    await this.logUserAction(updatedUser as any, ActionType.UPDATE)
+    await this.logUserAction(updatedUser as any, ActionType.RESET_PASSWORD)
 
     return {
       user: this.formatUserResponse(updatedUser),
@@ -483,7 +483,7 @@ export class UserService {
       }
     })
 
-    await this.logUserAction(updatedUser as any, ActionType.UPDATE)
+    await this.logUserAction(updatedUser as any, ActionType.CHANGE_PASSWORD)
 
     return this.formatUserResponse(updatedUser)
   }
@@ -506,7 +506,7 @@ export class UserService {
         updatedAt: user.updatedAt,
         updatedBy: user.updatedBy,
         updatedByName: user.updatedByName,
-        actionType
+        actionType: actionType as any
       }
     })
   }

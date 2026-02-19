@@ -16,6 +16,8 @@ const ACTION_TYPE_COLORS: Record<ActionType, string> = {
   CREATE: 'green',
   UPDATE: 'blue',
   DELETE: 'red',
+  RESET_PASSWORD: 'orange',
+  CHANGE_PASSWORD: 'violet',
 };
 
 const columnHelper = createColumnHelper<UserLog>();

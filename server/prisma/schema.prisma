@@ -20,8 +20,8 @@ enum ActionType {
   CREATE
   UPDATE
   DELETE
-  LOGIN
-  LOGOUT
+  RESET_PASSWORD
+  CHANGE_PASSWORD
 }
 
 model Department {

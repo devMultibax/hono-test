@@ -123,7 +123,9 @@
     "actionType": {
       "CREATE": "สร้าง",
       "UPDATE": "แก้ไข",
-      "DELETE": "ลบ"
+      "DELETE": "ลบ",
+      "RESET_PASSWORD": "รีเซ็ตรหัสผ่าน",
+      "CHANGE_PASSWORD": "เปลี่ยนรหัสผ่าน"
     }
   },
   "message": {

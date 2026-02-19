@@ -22,7 +22,9 @@ export enum Role {
 export enum ActionType {
   CREATE = 'CREATE',
   UPDATE = 'UPDATE',
-  DELETE = 'DELETE'
+  DELETE = 'DELETE',
+  RESET_PASSWORD = 'RESET_PASSWORD',
+  CHANGE_PASSWORD = 'CHANGE_PASSWORD'
 }
 
 // Department Types

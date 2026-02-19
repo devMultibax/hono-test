@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const ACTION_TYPES = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT'] as const
+const ACTION_TYPES = ['CREATE', 'UPDATE', 'DELETE', 'RESET_PASSWORD', 'CHANGE_PASSWORD'] as const
 
 export const userLogQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),

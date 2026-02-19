@@ -1,7 +1,7 @@
 // ============ Common Types ============
 export type Status = 'active' | 'inactive';
 export type Role = 'USER' | 'ADMIN';
-export type ActionType = 'CREATE' | 'UPDATE' | 'DELETE';
+export type ActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'RESET_PASSWORD' | 'CHANGE_PASSWORD';
 export type SortOrder = 'asc' | 'desc';
 
 // ============ Pagination ============
