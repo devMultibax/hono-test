@@ -189,6 +189,22 @@ export interface UserLogResponse {
   actionAt: Date
 }
 
+// System Setting Types
+export interface SystemSettingResponse {
+  id: number
+  key: string
+  value: string
+  description: string | null
+  updatedAt: Date | null
+  updatedBy: string | null
+  updatedByName: string | null
+}
+
+export interface MaintenanceStatusResponse {
+  maintenance: boolean
+  message: string | null
+}
+
 // Common Types
 export interface ErrorResponse {
   error: string

@@ -9,7 +9,8 @@
       "userLogs": "ประวัติการดำเนินการ",
       "systemLogs": "System Logs",
       "backups": "Backup",
-      "database": "Database"
+      "database": "Database",
+      "systemSettings": "ตั้งค่าระบบ"
     }
   },
   "page": {

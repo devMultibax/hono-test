@@ -124,3 +124,16 @@ model UserLog {
   @@index([actionAt])
   @@map("user_log")
 }
+
+model SystemSetting {
+  id            Int       @id @default(autoincrement())
+  key           String    @unique @db.VarChar(100)
+  value         String    @default("false") @db.Text
+  description   String?   @db.VarChar(500)
+  updatedAt     DateTime?
+  updatedBy     String?   @db.VarChar(100)
+  updatedByName String?   @db.VarChar(200)
+
+  @@index([key])
+  @@map("system_setting")
+}

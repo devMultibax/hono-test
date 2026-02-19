@@ -6,6 +6,7 @@ import { requestLogger, logMiddleware } from './middleware/logger'
 import { corsMiddleware } from './middleware/cors'
 import { generalApiRateLimiter } from './middleware/rate-limit'
 import { securityHeaders } from './middleware/security-headers'
+import { maintenanceMiddleware } from './middleware/maintenance'
 import { registerOpenAPIRoutes } from './lib/openapi'
 import { prisma } from './lib/prisma'
 import { ScheduledBackupService } from './services/scheduled-backup.service'
@@ -20,6 +21,7 @@ import databaseRoutes from './routes/database.routes'
 import systemLogRoutes from './routes/system-log.routes'
 import backupRoutes from './routes/backup.routes'
 import userLogRoutes from './routes/user-log.routes'
+import systemSettingsRoutes from './routes/system-settings.routes'
 
 const app = new Hono()
 
@@ -29,6 +31,7 @@ app.use('*', corsMiddleware)
 app.use('*', requestLogger)
 app.use('*', logMiddleware)
 app.use('*', generalApiRateLimiter)
+app.use('*', maintenanceMiddleware)
 
 // Error handler
 app.onError(errorHandler)
@@ -56,6 +59,7 @@ app.route('/database', databaseRoutes)
 app.route('/system-log', systemLogRoutes)
 app.route('/backup', backupRoutes)
 app.route('/user-logs', userLogRoutes)
+app.route('/system-settings', systemSettingsRoutes)
 
 // 404 handler
 app.notFound((c) => {

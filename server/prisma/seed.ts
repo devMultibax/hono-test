@@ -156,6 +156,31 @@ async function main() {
     console.log('✅ Created test user (username: test01, password: test123)')
   }
 
+  // 5. Seed System Settings
+  console.log('⚙️  Seeding system settings...')
+
+  await prisma.systemSetting.upsert({
+    where: { key: 'maintenance_mode' },
+    update: {},
+    create: {
+      key: 'maintenance_mode',
+      value: 'false',
+      description: 'เปิด/ปิดโหมดปิดปรับปรุงระบบ',
+    },
+  })
+
+  await prisma.systemSetting.upsert({
+    where: { key: 'maintenance_message' },
+    update: {},
+    create: {
+      key: 'maintenance_message',
+      value: 'ระบบปิดปรับปรุงชั่วคราว กรุณาลองใหม่ภายหลัง',
+      description: 'ข้อความแจ้งเตือนเมื่อระบบปิดปรับปรุง',
+    },
+  })
+
+  console.log('✅ Created system settings (maintenance_mode, maintenance_message)')
+
   console.log('\n🎉 Seed completed successfully!')
   console.log('\n📝 Login credentials:')
   console.log('   Admin: username=682732, password=(from hash)')

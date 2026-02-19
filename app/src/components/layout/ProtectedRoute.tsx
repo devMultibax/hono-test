@@ -3,11 +3,13 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { LoadingOverlay } from '@mantine/core';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/api/client';
+import { useMaintenanceStatus } from '@/features/system-settings/hooks/useSystemSettings';
 
 export function ProtectedRoute() {
   const location = useLocation();
-  const { isAuthenticated, isHydrated, csrfToken, setCsrfToken } = useAuthStore();
+  const { isAuthenticated, isHydrated, csrfToken, setCsrfToken, user } = useAuthStore();
   const hasFetched = useRef(false);
+  const { data: maintenanceStatus } = useMaintenanceStatus({ enabled: isHydrated });
 
   // Fetch CSRF token if missing
   useEffect(() => {
@@ -27,6 +29,11 @@ export function ProtectedRoute() {
 
   if (!isHydrated) return <LoadingOverlay visible />;
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
+
+  // Redirect non-admin users to maintenance page when maintenance is active
+  if (maintenanceStatus?.maintenance && user?.role !== 'ADMIN') {
+    return <Navigate to="/maintenance" replace />;
+  }
 
   return <Outlet />;
 }

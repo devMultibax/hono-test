@@ -13,6 +13,7 @@ import database from './locales/th/database.json';
 import backup from './locales/th/backup.json';
 import systemLogs from './locales/th/systemLogs.json';
 import profile from './locales/th/profile.json';
+import systemSettings from './locales/th/systemSettings.json';
 
 const resources = {
   th: {
@@ -28,6 +29,7 @@ const resources = {
     backup,
     systemLogs,
     profile,
+    systemSettings,
   },
 };
 

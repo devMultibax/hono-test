@@ -6,6 +6,7 @@ import {
   Terminal,
   Database,
   Server,
+  Settings,
 } from 'lucide-react';
 import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
 import type { TFunction } from 'i18next';
@@ -70,6 +71,7 @@ export const getMenuItems = (t: TFunction): MenuItem[] => [
       { path: '/admin/system-logs', label: t('menu.admin.systemLogs'), icon: Terminal, allowedRoles: [ROLE_ID.ADMIN] },
       { path: '/admin/backups', label: t('menu.admin.backups'), icon: Database, allowedRoles: [ROLE_ID.ADMIN] },
       { path: '/admin/database', label: t('menu.admin.database'), icon: Server, allowedRoles: [ROLE_ID.ADMIN] },
+      { path: '/admin/system-settings', label: t('menu.admin.systemSettings'), icon: Settings, allowedRoles: [ROLE_ID.ADMIN] },
     ],
   },
 ];

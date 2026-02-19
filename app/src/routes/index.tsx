@@ -14,11 +14,17 @@ import {
 } from './pages';
 import { DatabasePage } from '@/features/database';
 import { BackupListPage } from '@/features/backup';
+import { SystemSettingsPage } from '@/features/system-settings';
+import { MaintenancePage } from '@/features/maintenance/MaintenancePage';
 
 export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/maintenance',
+    element: <MaintenancePage />,
   },
   {
     path: '/',
@@ -105,6 +111,11 @@ export const router = createBrowserRouter([
                 path: 'database',
                 element: <DatabasePage />,
                 handle: { title: 'navigation:page.database', breadcrumb: 'navigation:menu.admin.database' },
+              },
+              {
+                path: 'system-settings',
+                element: <SystemSettingsPage />,
+                handle: { title: 'systemSettings:page.title', breadcrumb: 'navigation:menu.admin.systemSettings' },
               },
             ],
           },

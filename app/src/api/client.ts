@@ -80,6 +80,15 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Redirect to maintenance page on 503 maintenance response
+    const responseData = err.response?.data as { maintenance?: boolean } | undefined;
+    if (err.response?.status === 503 && responseData?.maintenance === true) {
+      if (window.location.pathname !== '/maintenance') {
+        window.location.href = '/maintenance';
+      }
+      return Promise.reject(error);
+    }
+
     handleApiError(err);
     return Promise.reject(error);
   }

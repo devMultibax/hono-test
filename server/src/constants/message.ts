@@ -43,5 +43,10 @@ export const MESSAGES = {
     },
     SYSTEM_LOG: {
         CLEANUP_SUCCESS: 'ล้างประวัติการใช้งานเก่าสำเร็จ',
-    }
+    },
+    SYSTEM_SETTINGS: {
+        UPDATE_SUCCESS: 'อัปเดตการตั้งค่าระบบสำเร็จ',
+        NOT_FOUND: 'ไม่พบการตั้งค่าที่ระบุ',
+        MAINTENANCE_ACTIVE: 'ระบบปิดปรับปรุงชั่วคราว กรุณาลองใหม่ภายหลัง',
+    },
 } as const

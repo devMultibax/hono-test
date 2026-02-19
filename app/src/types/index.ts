@@ -221,6 +221,22 @@ export interface BackupFile {
   sizeFormatted: string;
 }
 
+// ============ System Settings ============
+export interface SystemSetting {
+  id: number;
+  key: string;
+  value: string;
+  description: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  updatedByName: string | null;
+}
+
+export interface MaintenanceStatus {
+  maintenance: boolean;
+  message: string | null;
+}
+
 // ============ Database ============
 export interface TableStat {
   tableName: string;
