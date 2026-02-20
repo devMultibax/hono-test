@@ -1,0 +1,43 @@
+import type { User } from '@/types';
+
+export const mockUser: User = {
+  id: 1,
+  username: 'jdoe',
+  firstName: 'John',
+  lastName: 'Doe',
+  departmentId: 1,
+  sectionId: null,
+  email: 'john@example.com',
+  tel: null,
+  role: 'USER',
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00.000Z',
+  createdBy: 'admin',
+  createdByName: 'Admin',
+  updatedAt: null,
+  updatedBy: null,
+  updatedByName: null,
+  lastLoginAt: null,
+  isDefaultPassword: false,
+};
+
+export const mockAdminUser: User = {
+  id: 2,
+  username: 'admin',
+  firstName: 'Admin',
+  lastName: 'User',
+  departmentId: 1,
+  sectionId: null,
+  email: 'admin@example.com',
+  tel: null,
+  role: 'ADMIN',
+  status: 'active',
+  createdAt: '2024-01-01T00:00:00.000Z',
+  createdBy: 'system',
+  createdByName: 'System',
+  updatedAt: null,
+  updatedBy: null,
+  updatedByName: null,
+  lastLoginAt: null,
+  isDefaultPassword: false,
+};
