@@ -65,8 +65,10 @@ app.route('/system-settings', systemSettingsRoutes)
 app.notFound((c) => {
   return c.json(
     {
-      error: 'Not Found',
-      message: 'The requested resource was not found'
+      error: {
+        code: 'NOT_FOUND',
+        message: 'The requested resource was not found'
+      }
     },
     404
   )

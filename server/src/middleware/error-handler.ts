@@ -11,7 +11,8 @@ export const errorHandler = (error: Error, c: Context) => {
     return errorResponse(
       c,
       {
-        error: CODES.VALIDATION_ERROR,
+        code: CODES.VALIDATION_ERROR,
+        message: 'Input validation failed',
         details: error.issues
       },
       400
@@ -22,7 +23,8 @@ export const errorHandler = (error: Error, c: Context) => {
     return errorResponse(
       c,
       {
-        error: error.message,
+        code: error.message,
+        message: error.message,
         details: error.details
       },
       error.statusCode
@@ -34,7 +36,8 @@ export const errorHandler = (error: Error, c: Context) => {
   return errorResponse(
     c,
     {
-      error: CODES.INTERNAL_SERVER_ERROR,
+      code: CODES.INTERNAL_SERVER_ERROR,
+      message: 'An unexpected error occurred',
       details: env.NODE_ENV === 'development' ? error.message : undefined
     },
     500

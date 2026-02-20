@@ -58,7 +58,7 @@ export function useSections(params: SectionQueryParams) {
 export function useSection(id: number) {
   return useQuery({
     queryKey: sectionKeys.detail(id),
-    queryFn: () => sectionApi.getById(id).then((r) => r.data),
+    queryFn: () => sectionApi.getById(id).then((r) => r.data.data),
     enabled: id > 0,
   });
 }

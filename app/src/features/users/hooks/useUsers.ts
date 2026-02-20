@@ -58,7 +58,7 @@ export function useUsers(params: UserQueryParams) {
 export function useUser(id: number) {
   return useQuery({
     queryKey: userKeys.detail(id),
-    queryFn: () => userApi.getById(id).then((r) => r.data),
+    queryFn: () => userApi.getById(id).then((r) => r.data.data),
     enabled: id > 0,
   });
 }

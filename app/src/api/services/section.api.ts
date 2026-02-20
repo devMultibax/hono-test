@@ -12,13 +12,13 @@ export const sectionApi = {
         apiClient.get<SectionListResponse>('/sections', { params: { ...params, include: 'true' } }),
 
     getById: (id: number) =>
-        apiClient.get<Section>(`/sections/${id}`, { params: { include: 'true' } }),
+        apiClient.get<{ data: Section }>(`/sections/${id}`, { params: { include: 'true' } }),
 
     create: (data: CreateSectionRequest) =>
-        apiClient.post<Section>('/sections', data),
+        apiClient.post<{ data: Section }>('/sections', data),
 
     update: (id: number, data: UpdateSectionRequest) =>
-        apiClient.put<Section>(`/sections/${id}`, data),
+        apiClient.put<{ data: Section }>(`/sections/${id}`, data),
 
     delete: (id: number) =>
         apiClient.delete(`/sections/${id}`),

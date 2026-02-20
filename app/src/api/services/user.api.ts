@@ -14,22 +14,22 @@ export const userApi = {
     apiClient.get<UserListResponse>('/users', { params: { ...params, include: 'true' } }),
 
   getById: (id: number) =>
-    apiClient.get<User>(`/users/${id}`, { params: { include: 'true' } }),
+    apiClient.get<{ data: User }>(`/users/${id}`, { params: { include: 'true' } }),
 
   create: (data: CreateUserRequest) =>
-    apiClient.post<CreateUserResponse>('/users', data),
+    apiClient.post<{ data: CreateUserResponse }>('/users', data),
 
   update: (id: number, data: UpdateUserRequest) =>
-    apiClient.put<User>(`/users/${id}`, data),
+    apiClient.put<{ data: User }>(`/users/${id}`, data),
 
   delete: (id: number) =>
     apiClient.delete(`/users/${id}`),
 
   verifyPassword: (password: string) =>
-    apiClient.post<{ valid: boolean }>('/users/password/verify', { password }),
+    apiClient.post<{ data: { valid: boolean } }>('/users/password/verify', { password }),
 
   resetPassword: (id: number) =>
-    apiClient.patch<ResetPasswordResponse>(`/users/${id}/password/reset`),
+    apiClient.patch<{ data: ResetPasswordResponse }>(`/users/${id}/password/reset`),
 
   exportExcel: (params?: UserQueryParams, signal?: AbortSignal) =>
     downloadFile('/users/export/excel', `users-${Date.now()}.xlsx`, signal, params as Record<string, unknown>),

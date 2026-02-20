@@ -79,7 +79,7 @@ describe('Section Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data).toHaveLength(3)
+      expect(data.data).toHaveLength(3)
     })
 
     it('should return sections with pagination', async () => {
@@ -129,7 +129,7 @@ describe('Section Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.id).toBe(1)
+      expect(data.data.id).toBe(1)
     })
 
     it('should return 400 for invalid id', async () => {

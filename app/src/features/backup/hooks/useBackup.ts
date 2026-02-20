@@ -15,7 +15,7 @@ export const backupKeys = createQueryKeys('backups');
 export function useBackups() {
   return useQuery({
     queryKey: backupKeys.lists(),
-    queryFn: () => backupApi.getBackups().then((r) => r.data),
+    queryFn: () => backupApi.getBackups().then((r) => r.data.data),
   });
 }
 

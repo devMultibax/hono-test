@@ -8,7 +8,7 @@ interface BackupListResponse {
 
 export const backupApi = {
   getBackups: () =>
-    apiClient.get<BackupListResponse>('/backup'),
+    apiClient.get<{ data: BackupListResponse }>('/backup'),
 
   createBackup: (prefix?: string) =>
     apiClient.post('/backup', { prefix }),

@@ -206,6 +206,31 @@ export interface MaintenanceStatusResponse {
 }
 
 // Common Types
+export interface ApiErrorDetail {
+  code: string
+  message: string
+  details?: unknown
+}
+
+export interface ApiErrorResponse {
+  error: ApiErrorDetail
+}
+
+export interface ApiResponse<T> {
+  data: T
+}
+
+export interface ApiPaginatedResponse<T> {
+  data: T[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
+/** @deprecated Use ApiErrorResponse instead */
 export interface ErrorResponse {
   error: string
   details?: unknown

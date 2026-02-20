@@ -12,13 +12,13 @@ export const departmentApi = {
     apiClient.get<DepartmentListResponse>('/departments', { params }),
 
   getById: (id: number) =>
-    apiClient.get<Department>(`/departments/${id}`, { params: { include: 'true' } }),
+    apiClient.get<{ data: Department }>(`/departments/${id}`, { params: { include: 'true' } }),
 
   create: (data: CreateDepartmentRequest) =>
-    apiClient.post<Department>('/departments', data),
+    apiClient.post<{ data: Department }>('/departments', data),
 
   update: (id: number, data: UpdateDepartmentRequest) =>
-    apiClient.put<Department>(`/departments/${id}`, data),
+    apiClient.put<{ data: Department }>(`/departments/${id}`, data),
 
   delete: (id: number) =>
     apiClient.delete(`/departments/${id}`),

@@ -33,7 +33,7 @@ async function refreshCsrfToken(): Promise<string | null> {
   refreshPromise = axios
     .get(`${API_URL}/auth/csrf-token`, { withCredentials: true })
     .then((res) => {
-      const token = res.data.csrfToken;
+      const token = res.data.data?.csrfToken;
       useAuthStore.getState().setCsrfToken(token);
       return token;
     })
@@ -43,8 +43,15 @@ async function refreshCsrfToken(): Promise<string | null> {
   return refreshPromise;
 }
 
-function isCsrfError(err: AxiosError<{ error?: string }>): boolean {
-  return err.response?.status === 403 && (err.response?.data?.error ?? '').toLowerCase().includes('csrf');
+function isCsrfError(err: AxiosError<{ error?: { code?: string; message?: string } | string }>): boolean {
+  if (err.response?.status !== 403) return false;
+  const errorData = err.response?.data?.error;
+  if (typeof errorData === 'string') return errorData.toLowerCase().includes('csrf');
+  if (typeof errorData === 'object' && errorData !== null) {
+    return (errorData.code ?? '').toLowerCase().includes('csrf') ||
+      (errorData.message ?? '').toLowerCase().includes('csrf');
+  }
+  return false;
 }
 
 // Handle errors and auto-retry CSRF failures

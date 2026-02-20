@@ -62,7 +62,7 @@ sections.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: 'Invalid section ID' }, 400)
+    return c.json({ error: { code: CODES.SECTION_INVALID_ID, message: 'Invalid section ID' } }, 400)
   }
 
   const include = c.req.query('include') === 'true'
@@ -91,7 +91,7 @@ sections.put('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: 'Invalid section ID' }, 400)
+    return c.json({ error: { code: CODES.SECTION_INVALID_ID, message: 'Invalid section ID' } }, 400)
   }
 
   const body = await c.req.json()
@@ -108,7 +108,7 @@ sections.delete('/:id', requireAdmin, async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id)) {
-    return c.json({ error: 'Invalid section ID' }, 400)
+    return c.json({ error: { code: CODES.SECTION_INVALID_ID, message: 'Invalid section ID' } }, 400)
   }
 
   const oldSection = await SectionService.getById(id, true) as SectionWithRelations
@@ -173,30 +173,30 @@ sections.post('/import', requireAdmin, async (c) => {
   const file = await parseUpload(c)
 
   if (!file) {
-    return c.json({ error: CODES.USER_NO_FILE_UPLOADED }, 400)
+    return c.json({ error: { code: CODES.USER_NO_FILE_UPLOADED, message: 'No file uploaded' } }, 400)
   }
 
   const validation = validateFile(file)
 
   if (!validation.valid) {
-    return c.json({ error: validation.error }, 400)
+    return c.json({ error: { code: validation.error, message: validation.error ?? 'File validation failed' } }, 400)
   }
 
   const fileValidation = ImportService.validateSectionFile(file.buffer)
 
   if (!fileValidation.valid) {
-    return c.json({ error: CODES.USER_INVALID_FILE_STRUCTURE, details: fileValidation.errors }, 400)
+    return c.json({ error: { code: CODES.USER_INVALID_FILE_STRUCTURE, message: 'Invalid file structure', details: fileValidation.errors } }, 400)
   }
 
   const result = await ImportService.importSections(file.buffer, user.username)
   c.get('logInfo')(`Imported sections: ${result.success} success, ${result.failed} failed`)
 
-  return c.json({
-    success: result.success,
+  return successResponse(c, {
+    imported: result.success,
     failed: result.failed,
     total: result.success + result.failed,
     errors: result.errors
-  }, 200)
+  })
 })
 
 export default sections

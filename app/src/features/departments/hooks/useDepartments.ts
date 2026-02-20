@@ -58,7 +58,7 @@ export function useDepartments(params: DepartmentQueryParams) {
 export function useDepartment(id: number) {
   return useQuery({
     queryKey: departmentKeys.detail(id),
-    queryFn: () => departmentApi.getById(id).then((r) => r.data),
+    queryFn: () => departmentApi.getById(id).then((r) => r.data.data),
     enabled: id > 0,
   });
 }

@@ -19,15 +19,15 @@ export const requireRole = (...allowedRoles: Role[]): MiddlewareHandler => {
     const user = c.get('user')
 
     if (!user) {
-      return errorResponse(c, { error: 'Unauthorized' }, 401)
+      return errorResponse(c, { code: 'AUTH_UNAUTHORIZED', message: 'Unauthorized' }, 401)
     }
 
     if (!allowedRoles.includes(user.role)) {
       return errorResponse(
         c,
         {
-          error: 'Forbidden',
-          details: 'You do not have permission to access this resource'
+          code: 'ACCESS_FORBIDDEN',
+          message: 'You do not have permission to access this resource'
         },
         403
       )

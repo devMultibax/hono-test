@@ -74,7 +74,7 @@ export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView
     if (!confirmed) return;
 
     const res = await resetPassword.mutateAsync(user.id);
-    setResetResult({ username: user.username, password: res.data.password });
+    setResetResult({ username: user.username, password: res.data.data?.password });
   };
 
   const actionHandlers: Record<Action, (() => void) | undefined> = {

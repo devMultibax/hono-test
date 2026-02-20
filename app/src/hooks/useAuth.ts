@@ -14,7 +14,7 @@ export function useAuth() {
   const fetchCsrfToken = useCallback(async () => {
     try {
       const res = await apiClient.get('/auth/csrf-token');
-      setCsrfToken(res.data.csrfToken);
+      setCsrfToken(res.data.data?.csrfToken);
     } catch (err) {
       console.error('Failed to fetch CSRF token:', err);
     }
@@ -26,7 +26,7 @@ export function useAuth() {
       setLoginError(null);
       try {
         const res = await apiClient.post('/auth/login', credentials);
-        setUser(res.data.user);
+        setUser(res.data.data?.user);
         navigate('/dashboard');
       } catch (err) {
         setLoginError(err as Error);

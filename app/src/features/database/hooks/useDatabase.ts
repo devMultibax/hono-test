@@ -16,7 +16,7 @@ export const databaseKeys = {
 export function useDatabaseStatistics() {
   return useQuery({
     queryKey: databaseKeys.statistics(),
-    queryFn: () => databaseApi.getStatistics().then((r) => r.data),
+    queryFn: () => databaseApi.getStatistics().then((r) => r.data.data),
   });
 }
 

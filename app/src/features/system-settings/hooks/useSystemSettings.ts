@@ -11,7 +11,7 @@ export const useMaintenanceStatus = ({ enabled = true }: { enabled?: boolean } =
   useQuery({
     queryKey: systemSettingsKeys.maintenanceStatus,
     queryFn: () =>
-      systemSettingsApi.getMaintenanceStatus().then((r) => r.data),
+      systemSettingsApi.getMaintenanceStatus().then((r) => r.data.data),
     staleTime: 30_000,        // 30 วินาที
     refetchInterval: 60_000,  // refetch ทุก 1 นาที
     enabled,
@@ -21,7 +21,7 @@ export const useMaintenanceStatus = ({ enabled = true }: { enabled?: boolean } =
 export const useSystemSettings = () =>
   useQuery({
     queryKey: systemSettingsKeys.all,
-    queryFn: () => systemSettingsApi.getAll().then((r) => r.data),
+    queryFn: () => systemSettingsApi.getAll().then((r) => r.data.data),
   });
 
 // อัปเดต setting
@@ -29,7 +29,7 @@ export const useUpdateSystemSetting = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ key, value }: { key: string; value: string }) =>
-      systemSettingsApi.update(key, value).then((r) => r.data),
+      systemSettingsApi.update(key, value).then((r) => r.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: systemSettingsKeys.all });
       queryClient.invalidateQueries({ queryKey: systemSettingsKeys.maintenanceStatus });

@@ -1,8 +1,10 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { MasterDataService } from '../services/master-data.service';
 import { sectionSearchSchema } from '../schemas/master-data.schema';
 import { authMiddleware } from '../middleware/auth';
+import { successResponse } from '../lib/response';
+import { ValidationError } from '../lib/errors';
 import { CODES } from '../constants/error-codes';
 import type { HonoContext } from '../types';
 
@@ -14,56 +16,20 @@ masterDataRoutes.use('*', authMiddleware);
 
 // Get all departments
 masterDataRoutes.get('/departments', async (c) => {
-    try {
-        const departments = await masterDataService.getAllDepartments();
-
-        return c.json({
-            success: true,
-            data: departments,
-        });
-    } catch (error) {
-        c.get('logError')('Failed to fetch departments', { error: String(error) });
-        return c.json(
-            {
-                success: false,
-                error: CODES.MASTER_DATA_FETCH_DEPARTMENTS_FAILED,
-            },
-            500
-        );
-    }
+    const departments = await masterDataService.getAllDepartments();
+    return successResponse(c, departments);
 });
 
 // Get sections by department ID
 masterDataRoutes.get('/departments/:id/sections', async (c) => {
-    try {
-        const departmentId = parseInt(c.req.param('id'));
+    const departmentId = parseInt(c.req.param('id'));
 
-        if (isNaN(departmentId)) {
-            return c.json(
-                {
-                    success: false,
-                    error: CODES.MASTER_DATA_INVALID_DEPARTMENT_ID,
-                },
-                400
-            );
-        }
-
-        const sections = await masterDataService.getSectionsByDepartment(departmentId);
-
-        return c.json({
-            success: true,
-            data: sections,
-        });
-    } catch (error) {
-        c.get('logError')('Failed to fetch sections', { error: String(error) });
-        return c.json(
-            {
-                success: false,
-                error: CODES.MASTER_DATA_FETCH_SECTIONS_FAILED,
-            },
-            500
-        );
+    if (isNaN(departmentId)) {
+        throw new ValidationError(CODES.MASTER_DATA_INVALID_DEPARTMENT_ID);
     }
+
+    const sections = await masterDataService.getSectionsByDepartment(departmentId);
+    return successResponse(c, sections);
 });
 
 // Search sections
@@ -71,67 +37,22 @@ masterDataRoutes.post(
     '/departments/sections/search',
     zValidator('json', sectionSearchSchema),
     async (c) => {
-        try {
-            const searchData = c.req.valid('json');
-            const sections = await masterDataService.searchSections(searchData);
-
-            return c.json({
-                success: true,
-                data: sections,
-            });
-        } catch (error) {
-            c.get('logError')('Failed to search sections', { error: String(error) });
-            return c.json(
-                {
-                    success: false,
-                    error: CODES.MASTER_DATA_SEARCH_SECTIONS_FAILED,
-                },
-                500
-            );
-        }
+        const searchData = c.req.valid('json');
+        const sections = await masterDataService.searchSections(searchData);
+        return successResponse(c, sections);
     }
 );
 
 // Get all users
 masterDataRoutes.get('/users', async (c) => {
-    try {
-        const users = await masterDataService.getAllUsers();
-
-        return c.json({
-            success: true,
-            data: users,
-        });
-    } catch (error) {
-        c.get('logError')('Failed to fetch users', { error: String(error) });
-        return c.json(
-            {
-                success: false,
-                error: CODES.MASTER_DATA_FETCH_USERS_FAILED,
-            },
-            500
-        );
-    }
+    const users = await masterDataService.getAllUsers();
+    return successResponse(c, users);
 });
 
 // Get users from logs
 masterDataRoutes.get('/users/from-logs', async (c) => {
-    try {
-        const users = await masterDataService.getUsersFromLogs();
-
-        return c.json({
-            success: true,
-            data: users,
-        });
-    } catch (error) {
-        c.get('logError')('Failed to fetch users from logs', { error: String(error) });
-        return c.json(
-            {
-                success: false,
-                error: CODES.MASTER_DATA_FETCH_USER_LOGS_FAILED,
-            },
-            500
-        );
-    }
+    const users = await masterDataService.getUsersFromLogs();
+    return successResponse(c, users);
 });
 
 export default masterDataRoutes;

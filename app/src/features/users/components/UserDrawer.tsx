@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Drawer, Modal, Button, Text, Stack, Grid, Group } from '@mantine/core';
-import type { AxiosResponse } from 'axios';
 import { DrawerForm } from '@/components/common/DrawerForm';
 import { PasswordDisplay } from '@/components/common/PasswordDisplay';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -15,7 +14,6 @@ import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
 import { formatDateTime } from '@/lib/date';
 import type { UserDrawerState, CreateUserRequest, UpdateUserRequest } from '../types';
-import type { CreateUserResponse } from '@/types';
 
 interface Props {
   state: UserDrawerState;
@@ -57,8 +55,7 @@ function CreateContent({ opened, onClose }: { opened: boolean; onClose: () => vo
     if (!confirmed) return;
 
     const res = await createUser.mutateAsync(data);
-    const response = res as AxiosResponse<CreateUserResponse>;
-    setCredentials({ username: data.username, password: response.data.password });
+    setCredentials({ username: data.username, password: res.data.data?.password });
   };
 
   const handleClose = () => {

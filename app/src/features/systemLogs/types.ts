@@ -16,7 +16,3 @@ export interface SystemLogQueryParams {
   endDateTime: string;
   level?: string;
 }
-
-export interface SystemLogListResponse {
-  data: SystemLog[];
-}

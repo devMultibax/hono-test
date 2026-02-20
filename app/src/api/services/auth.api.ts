@@ -11,19 +11,19 @@ interface CsrfResponse {
 
 export const authApi = {
   getCsrfToken: () =>
-    apiClient.get<CsrfResponse>('/auth/csrf-token'),
+    apiClient.get<{ data: CsrfResponse }>('/auth/csrf-token'),
 
   login: (data: LoginRequest) =>
-    apiClient.post<LoginResponse>('/auth/login', data),
+    apiClient.post<{ data: LoginResponse }>('/auth/login', data),
 
   logout: () =>
     apiClient.post('/auth/logout'),
 
   getMe: () =>
-    apiClient.get<{ user: User }>('/auth/me'),
+    apiClient.get<{ data: { user: User } }>('/auth/me'),
 
   updateMe: (data: UpdateProfileRequest) =>
-    apiClient.put<{ user: User }>('/auth/me', data),
+    apiClient.put<{ data: { user: User } }>('/auth/me', data),
 
   changePassword: (data: ChangePasswordRequest) =>
     apiClient.put('/auth/me/password', data),

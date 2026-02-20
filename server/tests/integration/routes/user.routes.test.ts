@@ -92,7 +92,7 @@ describe('User Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data).toHaveLength(3)
+      expect(data.data).toHaveLength(3)
     })
 
     it('should return users with pagination', async () => {
@@ -157,7 +157,7 @@ describe('User Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.id).toBe(1)
+      expect(data.data.id).toBe(1)
     })
 
     it('should return user with relations when include=true', async () => {
@@ -344,7 +344,7 @@ describe('User Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.valid).toBe(true)
+      expect(data.data?.valid).toBe(true)
     })
   })
 

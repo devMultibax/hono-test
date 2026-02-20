@@ -47,7 +47,7 @@ describe('Auth Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data).toHaveProperty('csrfToken')
+      expect(data.data).toHaveProperty('csrfToken')
     })
   })
 
@@ -69,7 +69,7 @@ describe('Auth Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.user).toBeDefined()
+      expect(data.data.user).toBeDefined()
       expect(res.headers.get('Set-Cookie')).toBeTruthy()
     })
 
@@ -119,7 +119,7 @@ describe('Auth Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.message).toBe('Logged out successfully')
+      expect(data.data?.code).toBe('AUTH_LOGOUT_SUCCESS')
     })
 
     it('should return 401 without auth token', async () => {
@@ -141,8 +141,8 @@ describe('Auth Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.user).toBeDefined()
-      expect(data.user.username).toBe('testuser')
+      expect(data.data.user).toBeDefined()
+      expect(data.data.user.username).toBe('testuser')
     })
 
     it('should return 401 without auth token', async () => {
@@ -180,7 +180,7 @@ describe('Auth Routes', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.user.firstName).toBe('Updated')
+      expect(data.data.user.firstName).toBe('Updated')
     })
 
     it('should return 401 without auth token', async () => {

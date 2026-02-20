@@ -77,15 +77,23 @@ export function ImportButton({
     formData.append('file', selectedFile);
 
     try {
-      const response = await apiClient.post<ImportResult>(endpoint, formData, {
+      const response = await apiClient.post<{ data: { imported: number; failed: number; total: number; errors?: ImportRowError[] } }>(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      setResult(response.data);
+      const apiData = response.data.data;
+      const importResult: ImportResult = {
+        success: apiData.imported,
+        failed: apiData.failed,
+        total: apiData.total,
+        errors: apiData.errors,
+      };
+
+      setResult(importResult);
       setSelectedFile(null);
 
-      if (response.data.success > 0) {
-        Report.success(t('users:import.successMessage', { count: response.data.success }));
+      if (importResult.success > 0) {
+        Report.success(t('users:import.successMessage', { count: importResult.success }));
       }
 
       onSuccess?.();

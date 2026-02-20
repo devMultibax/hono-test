@@ -4,11 +4,13 @@ import { t, i18n } from '@/lib/i18n/helpers';
 export interface ErrorResponse {
   response?: {
     data?: {
-      code?: string;
-      error?: string;
-      details?: Record<string, unknown>;
-      requiresLogin?: boolean;
-      maintenance?: boolean;
+      error?: {
+        code?: string;
+        message?: string;
+        details?: Record<string, unknown>;
+        requiresLogin?: boolean;
+        maintenance?: boolean;
+      };
     };
     status?: number;
   };
@@ -28,8 +30,9 @@ export function extractErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error;
   if (!isErrorResponse(error)) return t('errors:http.default');
 
-  const errorCode = error.response?.data?.error;
-  const details = error.response?.data?.details;
+  const errorObj = error.response?.data?.error;
+  const errorCode = errorObj?.code;
+  const details = errorObj?.details;
   const status = error.response?.status;
 
   // 1. ลองแปลจาก error code
@@ -69,7 +72,7 @@ export function handleErrorMode(error: unknown): {
   }
 
   const isServerError = error.response?.status === 500;
-  const needsReLogin = error.response?.data?.requiresLogin === true;
+  const needsReLogin = error.response?.data?.error?.requiresLogin === true;
 
   return {
     mode: isServerError || needsReLogin ? 'error' : 'warning',

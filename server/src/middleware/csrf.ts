@@ -20,19 +20,19 @@ export const csrfProtection = async (c: Context, next: Next) => {
   let secret = getCookie(c, CSRF_SECRET_COOKIE)
 
   if (!secret) {
-    return errorResponse(c, { error: 'CSRF secret not found' }, 403)
+    return errorResponse(c, { code: 'CSRF_SECRET_NOT_FOUND', message: 'CSRF secret not found' }, 403)
   }
 
   const token = c.req.header(CSRF_TOKEN_HEADER)
 
   if (!token) {
-    return errorResponse(c, { error: 'CSRF token missing' }, 403)
+    return errorResponse(c, { code: 'CSRF_TOKEN_MISSING', message: 'CSRF token missing' }, 403)
   }
 
   const isValid = CsrfUtils.verifyToken(token, secret)
 
   if (!isValid) {
-    return errorResponse(c, { error: 'Invalid CSRF token' }, 403)
+    return errorResponse(c, { code: 'CSRF_VALIDATION_FAILED', message: 'Invalid CSRF token' }, 403)
   }
 
   await next()
