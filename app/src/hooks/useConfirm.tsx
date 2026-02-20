@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Confirm } from '@/utils/mantineAlertUtils';
 
 interface ConfirmOptions {
@@ -7,9 +8,9 @@ interface ConfirmOptions {
 }
 
 export function useConfirm() {
-  const confirm = (options: ConfirmOptions): Promise<boolean> => {
+  const confirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
     return Confirm.show(options);
-  };
+  }, []);
 
   return { confirm };
 }

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { backupApi } from '@/api/services/backup.api';
 import { createQueryKeys } from '@/hooks/createQueryKeys';
 import { useTranslation } from '@/lib/i18n';
@@ -49,6 +49,14 @@ export function useBackupActions() {
   const createMutation = useCreateBackup();
   const restoreMutation = useRestoreBackup();
 
+  // Use refs so callbacks don't need mutation objects in deps
+  const createMutationRef = useRef(createMutation);
+  const restoreMutationRef = useRef(restoreMutation);
+  useEffect(() => {
+    createMutationRef.current = createMutation;
+    restoreMutationRef.current = restoreMutation;
+  });
+
   const handleCreate = useCallback(async () => {
     const confirmed = await confirm({
       message: t('backup:confirm.create'),
@@ -56,12 +64,12 @@ export function useBackupActions() {
     if (!confirmed) return;
 
     try {
-      await createMutation.mutateAsync(undefined);
+      await createMutationRef.current.mutateAsync(undefined);
       Report.success(t('backup:message.createSuccess'));
     } catch {
       // error already handled by interceptor
     }
-  }, [confirm, createMutation, t]);
+  }, [confirm, t]);
 
   const handleRestore = useCallback(
     async (filename: string) => {
@@ -72,13 +80,13 @@ export function useBackupActions() {
       if (!confirmed) return;
 
       try {
-        await restoreMutation.mutateAsync(filename);
+        await restoreMutationRef.current.mutateAsync(filename);
         Report.success(t('backup:message.restoreSuccess'));
       } catch {
         // error already handled by interceptor
       }
     },
-    [confirm, restoreMutation, t],
+    [confirm, t],
   );
 
   return {

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { databaseApi } from '@/api/services/database.api';
 import { useTranslation } from '@/lib/i18n';
 import { Report } from '@/utils/mantineAlertUtils';
@@ -38,14 +38,20 @@ export function useDatabaseActions() {
   const { t } = useTranslation(['database']);
   const analyzeMutation = useAnalyzeDatabase();
 
+  // Use ref so callback doesn't need mutation object in deps
+  const analyzeMutationRef = useRef(analyzeMutation);
+  useEffect(() => {
+    analyzeMutationRef.current = analyzeMutation;
+  });
+
   const handleAnalyze = useCallback(async () => {
     try {
-      await analyzeMutation.mutateAsync();
+      await analyzeMutationRef.current.mutateAsync();
       Report.success(t('database:message.analyzeSuccess'));
     } catch {
       // error already handled by interceptor
     }
-  }, [analyzeMutation, t]);
+  }, [t]);
 
   return {
     handleAnalyze,
