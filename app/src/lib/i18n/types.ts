@@ -7,6 +7,12 @@ import users from './locales/th/users.json';
 import navigation from './locales/th/navigation.json';
 import database from './locales/th/database.json';
 import api from './locales/th/api.json';
+import backup from './locales/th/backup.json';
+import departments from './locales/th/departments.json';
+import sections from './locales/th/sections.json';
+import systemLogs from './locales/th/systemLogs.json';
+import systemSettings from './locales/th/systemSettings.json';
+import profile from './locales/th/profile.json';
 
 declare module 'react-i18next' {
   interface CustomTypeOptions {
@@ -20,6 +26,13 @@ declare module 'react-i18next' {
       navigation: typeof navigation;
       database: typeof database;
       api: typeof api;
+      backup: typeof backup;
+      departments: typeof departments;
+      sections: typeof sections;
+      systemLogs: typeof systemLogs;
+      systemSettings: typeof systemSettings;
+      profile: typeof profile;
     };
   }
 }
+

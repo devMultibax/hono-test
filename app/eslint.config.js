@@ -19,5 +19,9 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Allow exporting hooks alongside components (common in context files)
+      'react-refresh/only-export-components': ['warn', { allowExportNames: ['usePageActions'] }],
+    },
   },
 ])

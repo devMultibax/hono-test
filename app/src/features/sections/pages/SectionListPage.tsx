@@ -20,19 +20,26 @@ import type { Section } from '@/types';
 import type { SectionQueryParams, SectionDrawerState } from '../types';
 
 export function SectionListPage() {
+  // ─── 1. Hooks & Context ───
   const userRole = useUserRole();
   const { t } = useTranslation(['sections', 'common']);
+  const { setActions } = usePageActions();
+
+  // ─── 2. Local UI State ───
   const [exportOpened, setExportOpened] = useState(false);
   const [drawer, setDrawer] = useState<SectionDrawerState>({ mode: 'closed' });
 
+  // ─── 3. Feature Hooks ───
   const actions = useSectionActions();
   const isAdmin = hasRole([ROLE_ID.ADMIN], userRole);
 
+  // ─── 4. Stable Callbacks ───
   const openCreate = useCallback(() => setDrawer({ mode: 'create' }), []);
   const openDetail = useCallback((sectionId: number) => setDrawer({ mode: 'detail', sectionId }), []);
   const openEdit = useCallback((sectionId: number) => setDrawer({ mode: 'edit', sectionId }), []);
   const closeDrawer = useCallback(() => setDrawer({ mode: 'closed' }), []);
 
+  // ─── 5. Table State ───
   const {
     params,
     sorting,
@@ -47,8 +54,11 @@ export function SectionListPage() {
     sortFieldMap: SORT_FIELD_MAP,
   });
 
+  // ─── 6. Data Fetching ───
   const { data, isLoading, refetch, isRefetching } = useSections(params);
+  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
 
+  // ─── 7. Column Config ───
   const columns = useSectionColumns({
     onView: (section) => openDetail(section.id),
     onEdit: (section) => openEdit(section.id),
@@ -57,8 +67,7 @@ export function SectionListPage() {
     currentUserRole: userRole,
   });
 
-  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
-  const { setActions } = usePageActions();
+  // ─── 8. Header Actions ───
 
   const headerActions = useMemo(() => (
     <>
@@ -100,7 +109,7 @@ export function SectionListPage() {
     ),
     [isAdmin, actions, t]);
 
-
+  // ─── 9. Render ───
   return (
     <div>
       <SectionFilters

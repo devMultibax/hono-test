@@ -7,12 +7,6 @@ import type {
     SectionQueryParams,
 } from '@/types';
 
-const buildQueryString = (params?: SectionQueryParams): string => {
-    if (!params) return '';
-    const entries = Object.entries(params).filter(([, v]) => v != null);
-    return new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
-};
-
 export const sectionApi = {
     getAll: (params: SectionQueryParams) =>
         apiClient.get<SectionListResponse>('/sections', { params: { ...params, include: 'true' } }),
@@ -30,7 +24,7 @@ export const sectionApi = {
         apiClient.delete(`/sections/${id}`),
 
     exportExcel: (params?: SectionQueryParams, signal?: AbortSignal) =>
-        downloadFile(`/sections/export/excel?${buildQueryString(params)}`, `sections-${Date.now()}.xlsx`, signal),
+        downloadFile('/sections/export/excel', `sections-${Date.now()}.xlsx`, signal, params as Record<string, unknown>),
 
     downloadTemplate: () =>
         downloadFile('/sections/template', 'section-import-template.xlsx'),

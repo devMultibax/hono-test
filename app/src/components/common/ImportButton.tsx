@@ -67,7 +67,7 @@ export function ImportButton({
     }
     setSelectedFile(file);
     setResult(null);
-  }, [maxSize, t]);
+  }, [maxSize]);
 
   const handleImport = useCallback(async () => {
     if (!selectedFile) return;

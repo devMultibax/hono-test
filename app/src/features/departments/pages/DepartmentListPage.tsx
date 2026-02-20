@@ -20,19 +20,26 @@ import type { Department } from '@/types';
 import type { DepartmentQueryParams, DepartmentDrawerState } from '../types';
 
 export function DepartmentListPage() {
+  // ─── 1. Hooks & Context ───
   const userRole = useUserRole();
   const { t } = useTranslation(['departments', 'common']);
+  const { setActions } = usePageActions();
+
+  // ─── 2. Local UI State ───
   const [exportOpened, setExportOpened] = useState(false);
   const [drawer, setDrawer] = useState<DepartmentDrawerState>({ mode: 'closed' });
 
+  // ─── 3. Feature Hooks ───
   const actions = useDepartmentActions();
   const isAdmin = hasRole([ROLE_ID.ADMIN], userRole);
 
+  // ─── 4. Stable Callbacks ───
   const openCreate = useCallback(() => setDrawer({ mode: 'create' }), []);
   const openDetail = useCallback((departmentId: number) => setDrawer({ mode: 'detail', departmentId }), []);
   const openEdit = useCallback((departmentId: number) => setDrawer({ mode: 'edit', departmentId }), []);
   const closeDrawer = useCallback(() => setDrawer({ mode: 'closed' }), []);
 
+  // ─── 5. Table State ───
   const {
     params,
     sorting,
@@ -47,8 +54,11 @@ export function DepartmentListPage() {
     sortFieldMap: SORT_FIELD_MAP,
   });
 
+  // ─── 6. Data Fetching ───
   const { data, isLoading, refetch, isRefetching } = useDepartments(params);
+  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
 
+  // ─── 7. Column Config ───
   const columns = useDepartmentColumns({
     onView: (department) => openDetail(department.id),
     onEdit: (department) => openEdit(department.id),
@@ -57,8 +67,7 @@ export function DepartmentListPage() {
     currentUserRole: userRole,
   });
 
-  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
-  const { setActions } = usePageActions();
+  // ─── 8. Header Actions ───
 
   const headerActions = useMemo(() => (
     <>
@@ -100,7 +109,7 @@ export function DepartmentListPage() {
     ),
     [isAdmin, actions, t]);
 
-
+  // ─── 9. Render ───
   return (
     <div>
       <DepartmentFilters
@@ -112,10 +121,7 @@ export function DepartmentListPage() {
         opened={exportOpened}
         onClose={() => setExportOpened(false)}
         initialParams={params}
-        onExport={async (exportParams, signal) => {
-          await new Promise(resolve => setTimeout(resolve, 10000));
-          departmentApi.exportExcel(exportParams, signal)
-        }}
+        onExport={(exportParams, signal) => departmentApi.exportExcel(exportParams, signal)}
       />
 
       <DepartmentDrawer

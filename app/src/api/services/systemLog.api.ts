@@ -1,6 +1,5 @@
 import { apiClient } from '../client';
-import { API_ENDPOINTS } from '../endpoints';
-import type { SystemLog, SystemLogQueryParams, SystemLogListResponse } from '@/features/systemLogs/types';
+import type { SystemLogQueryParams, SystemLogListResponse } from '@/features/systemLogs/types';
 
 export const systemLogApi = {
   getLogs: (params: SystemLogQueryParams) => {
@@ -21,7 +20,7 @@ export const systemLogApi = {
     queryParams.limit = 10000;
 
     return apiClient
-      .get<SystemLogListResponse>(API_ENDPOINTS.SYSTEM_LOGS.BASE, { params: queryParams })
+      .get<SystemLogListResponse>('/system-log', { params: queryParams })
       .then((r) => {
         const response = r.data as SystemLogListResponse;
         return response?.data || [];

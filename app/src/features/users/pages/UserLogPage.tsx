@@ -23,23 +23,27 @@ const ACTION_TYPE_COLORS: Record<ActionType, string> = {
 const columnHelper = createColumnHelper<UserLog>();
 
 export function UserLogPage() {
+  // ─── 1. Hooks & Context ───
   const { username } = useParams<{ username: string }>();
   const { t } = useTranslation(['users', 'common']);
   const navigate = useNavigate();
   const { setActions } = usePageActions();
+
+  // ─── 2. Local UI State ───
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState('actionAt');
   const [order, setOrder] = useState<SortOrder>('desc');
 
+  // ─── 3. Data Fetching ───
   const { data, isLoading, refetch, isRefetching } = useUserLogs(username ?? '', {
     page,
     limit: 10,
     sort,
     order,
   });
-
   const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
 
+  // ─── 4. Column Config ───
   const columns = useMemo(
     () => [
       columnHelper.accessor('actionType', {
@@ -127,11 +131,13 @@ export function UserLogPage() {
     [t],
   );
 
+  // ─── 5. Derived State ───
   const sorting = useMemo(
     () => [{ id: sort, desc: order === 'desc' }],
     [sort, order],
   );
 
+  // ─── 6. Header Actions ───
   const headerActions = useMemo(() => (
     <>
       <Button
@@ -157,6 +163,7 @@ export function UserLogPage() {
     return () => setActions(null);
   }, [headerActions, setActions]);
 
+  // ─── 7. Render ───
   return (
     <div>
       <DataTable

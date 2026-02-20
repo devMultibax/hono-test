@@ -1,4 +1,4 @@
-import { useMemo, useLayoutEffect, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useLayoutEffect } from 'react';
 import {
   Button,
   Group,
@@ -24,11 +24,15 @@ import { useDatabaseStatistics, useDatabaseActions } from '../hooks/useDatabase'
 import type { TableStat } from '../types';
 
 export function DatabasePage() {
+  // ─── 1. Hooks & Context ───
   const { t } = useTranslation(['database', 'common']);
-  const { data: statistics, isLoading } = useDatabaseStatistics();
-  const { handleAnalyze, isAnalyzing } = useDatabaseActions();
   const { setActions } = usePageActions();
 
+  // ─── 2. Data Fetching ───
+  const { data: statistics, isLoading } = useDatabaseStatistics();
+  const { handleAnalyze, isAnalyzing } = useDatabaseActions();
+
+  // ─── 3. Derived Data ───
   const statsData = useMemo(
     () => [
       {
@@ -59,24 +63,22 @@ export function DatabasePage() {
     [statistics, t],
   );
 
-  const handleAnalyzeRef = useRef(handleAnalyze);
-  useEffect(() => { handleAnalyzeRef.current = handleAnalyze; }, [handleAnalyze]);
-  const stableHandleAnalyze = useCallback(() => handleAnalyzeRef.current(), []);
-
+  // ─── 4. Header Actions ───
   const headerActions = useMemo(() => (
     <Button
-      onClick={stableHandleAnalyze}
+      onClick={handleAnalyze}
       loading={isAnalyzing}
     >
       {t('database:action.analyze')}
     </Button>
-  ), [t, stableHandleAnalyze, isAnalyzing]);
+  ), [t, handleAnalyze, isAnalyzing]);
 
   useLayoutEffect(() => {
     setActions(headerActions);
     return () => setActions(null);
   }, [headerActions, setActions]);
 
+  // ─── 5. Render ───
   return (
     <div>
       <Stack gap="lg">

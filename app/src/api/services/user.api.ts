@@ -9,12 +9,6 @@ import type {
   ResetPasswordResponse,
 } from '@/types';
 
-const buildQueryString = (params?: UserQueryParams): string => {
-  if (!params) return '';
-  const entries = Object.entries(params).filter(([, v]) => v != null);
-  return new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
-};
-
 export const userApi = {
   getAll: (params: UserQueryParams) =>
     apiClient.get<UserListResponse>('/users', { params: { ...params, include: 'true' } }),
@@ -38,7 +32,7 @@ export const userApi = {
     apiClient.patch<ResetPasswordResponse>(`/users/${id}/password/reset`),
 
   exportExcel: (params?: UserQueryParams, signal?: AbortSignal) =>
-    downloadFile(`/users/export/excel?${buildQueryString(params)}`, `users-${Date.now()}.xlsx`, signal),
+    downloadFile('/users/export/excel', `users-${Date.now()}.xlsx`, signal, params as Record<string, unknown>),
 
   downloadTemplate: () =>
     downloadFile('/users/template', 'user-import-template.xlsx'),

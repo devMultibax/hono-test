@@ -1,4 +1,4 @@
-import { useMemo, useLayoutEffect, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useLayoutEffect } from 'react';
 import {
   Button,
   Group,
@@ -34,34 +34,32 @@ const TYPE_CONFIG: Record<BackupType, { color: string; gradient: string }> = {
 };
 
 export function BackupListPage() {
+  // ─── 1. Hooks & Context ───
   const { t } = useTranslation(['backup', 'common']);
+  const { setActions } = usePageActions();
+
+  // ─── 2. Data Fetching ───
   const { data, isLoading } = useBackups();
   const { handleCreate, handleRestore, isCreating } = useBackupActions();
 
   const backups = data?.backups ?? [];
 
-  const { setActions } = usePageActions();
-
-  // handleCreate is unstable (recreated each render due to useMutation deps).
-  // Use a ref updated via effect so the useMemo can use a stable callback.
-  const handleCreateRef = useRef(handleCreate);
-  useEffect(() => { handleCreateRef.current = handleCreate; }, [handleCreate]);
-  const stableHandleCreate = useCallback(() => handleCreateRef.current(), []);
-
+  // ─── 3. Header Actions ───
   const headerActions = useMemo(() => (
     <Button
-      onClick={stableHandleCreate}
+      onClick={handleCreate}
       loading={isCreating}
     >
       {t('backup:action.create')}
     </Button>
-  ), [t, stableHandleCreate, isCreating]);
+  ), [t, handleCreate, isCreating]);
 
   useLayoutEffect(() => {
     setActions(headerActions);
     return () => setActions(null);
   }, [headerActions, setActions]);
 
+  // ─── 4. Render ───
   return (
     <div>
 

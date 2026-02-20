@@ -1,5 +1,4 @@
 import { apiClient } from '../client';
-import { API_ENDPOINTS } from '../endpoints';
 import type { BackupFile } from '@/types';
 
 interface BackupListResponse {
@@ -9,11 +8,11 @@ interface BackupListResponse {
 
 export const backupApi = {
   getBackups: () =>
-    apiClient.get<BackupListResponse>(API_ENDPOINTS.BACKUP.BASE),
+    apiClient.get<BackupListResponse>('/backup'),
 
   createBackup: (prefix?: string) =>
-    apiClient.post(API_ENDPOINTS.BACKUP.BASE, { prefix }),
+    apiClient.post('/backup', { prefix }),
 
   restoreBackup: (filename: string) =>
-    apiClient.post(API_ENDPOINTS.BACKUP.RESTORE(filename)),
+    apiClient.post(`/backup/${filename}/restore`),
 };

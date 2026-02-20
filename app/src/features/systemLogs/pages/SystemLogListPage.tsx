@@ -49,15 +49,19 @@ function filterLogs(logs: SystemLog[], filters: SystemLogQueryParams): SystemLog
 }
 
 export function SystemLogListPage() {
+  // ─── 1. Hooks & Context ───
   const { t } = useTranslation(['systemLogs', 'common']);
+  const { setActions } = usePageActions();
+
+  // ─── 2. Local UI State ───
   const [params, setParams] = useState<SystemLogQueryParams>(INITIAL_PARAMS);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const columns = useSystemLogColumns();
-
+  // ─── 3. Data Fetching ───
   // Fetch logs with initial date range
   const { data, isLoading, refetch, isRefetching } = useSystemLogs(INITIAL_PARAMS, true);
+  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
 
   // Refetch when date range changes significantly
   useEffect(() => {
@@ -70,6 +74,7 @@ export function SystemLogListPage() {
     }
   }, [params.startDateTime, refetch]);
 
+  // ─── 4. Derived Data ───
   const allLogs = useMemo(() => data || [], [data]);
   const filteredLogs = useMemo(() => filterLogs(allLogs, params), [allLogs, params]);
 
@@ -88,6 +93,7 @@ export function SystemLogListPage() {
     totalPages,
   }), [page, pageSize, totalItems, totalPages]);
 
+  // ─── 5. Stable Callbacks ───
   const handleFilterChange = useCallback((newParams: SystemLogQueryParams) => {
     setParams(newParams);
     setPage(1); // Reset to first page when filters change
@@ -98,9 +104,10 @@ export function SystemLogListPage() {
     setPageSize(newPageSize);
   }, []);
 
-  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
-  const { setActions } = usePageActions();
+  // ─── 6. Column Config ───
+  const columns = useSystemLogColumns();
 
+  // ─── 7. Header Actions ───
   const headerActions = useMemo(() => (
     <Button
       variant="subtle"
@@ -117,6 +124,7 @@ export function SystemLogListPage() {
     return () => setActions(null);
   }, [headerActions, setActions]);
 
+  // ─── 8. Render ───
   return (
     <div>
       <SystemLogFilters

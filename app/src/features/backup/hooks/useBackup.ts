@@ -1,22 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { backupApi } from '@/api/services/backup.api';
+import { createQueryKeys } from '@/hooks/createQueryKeys';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Report } from '@/utils/mantineAlertUtils';
 
 // === Query Keys ===
 
-export const backupKeys = {
-  all: ['backups'] as const,
-  list: () => [...backupKeys.all, 'list'] as const,
-};
+export const backupKeys = createQueryKeys('backups');
 
 // === Queries ===
 
 export function useBackups() {
   return useQuery({
-    queryKey: backupKeys.list(),
+    queryKey: backupKeys.lists(),
     queryFn: () => backupApi.getBackups().then((r) => r.data),
   });
 }
@@ -28,7 +26,7 @@ export function useCreateBackup() {
   return useMutation({
     mutationFn: (prefix: string | undefined) => backupApi.createBackup(prefix).then((r) => r.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: backupKeys.list() });
+      queryClient.invalidateQueries({ queryKey: backupKeys.lists() });
     },
   });
 }
@@ -38,7 +36,7 @@ export function useRestoreBackup() {
   return useMutation({
     mutationFn: (filename: string) => backupApi.restoreBackup(filename).then((r) => r.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: backupKeys.list() });
+      queryClient.invalidateQueries({ queryKey: backupKeys.lists() });
     },
   });
 }

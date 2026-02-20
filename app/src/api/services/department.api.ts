@@ -7,12 +7,6 @@ import type {
   DepartmentQueryParams,
 } from '@/types';
 
-const buildQueryString = (params?: DepartmentQueryParams): string => {
-  if (!params) return '';
-  const entries = Object.entries(params).filter(([, v]) => v != null);
-  return new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
-};
-
 export const departmentApi = {
   getAll: (params: DepartmentQueryParams) =>
     apiClient.get<DepartmentListResponse>('/departments', { params }),
@@ -30,7 +24,7 @@ export const departmentApi = {
     apiClient.delete(`/departments/${id}`),
 
   exportExcel: (params?: DepartmentQueryParams, signal?: AbortSignal) =>
-    downloadFile(`/departments/export/excel?${buildQueryString(params)}`, `departments-${Date.now()}.xlsx`, signal),
+    downloadFile('/departments/export/excel', `departments-${Date.now()}.xlsx`, signal, params as Record<string, unknown>),
 
   downloadTemplate: () =>
     downloadFile('/departments/template', 'department-import-template.xlsx'),

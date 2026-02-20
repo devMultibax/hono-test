@@ -21,21 +21,29 @@ import type { User } from '@/types';
 import type { UserQueryParams, UserDrawerState } from '../types';
 
 export function UserListPage() {
+  // ─── 1. Hooks & Context ───
   const currentUser = useUser();
   const userRole = useUserRole();
   const { t } = useTranslation(['users', 'common']);
-  const [exportOpened, setExportOpened] = useState(false);
-  const [drawer, setDrawer] = useState<UserDrawerState>({ mode: 'closed' });
+  const { setActions } = usePageActions();
   const navigate = useNavigate();
 
+  // ─── 2. Local UI State ───
+  const [exportOpened, setExportOpened] = useState(false);
+  const [drawer, setDrawer] = useState<UserDrawerState>({ mode: 'closed' });
+
+  // ─── 3. Feature Hooks ───
   const actions = useUserActions();
   const isAdmin = hasRole([ROLE_ID.ADMIN], userRole);
 
+  // ─── 4. Stable Callbacks ───
   const openCreate = useCallback(() => setDrawer({ mode: 'create' }), []);
   const openDetail = useCallback((userId: number) => setDrawer({ mode: 'detail', userId }), []);
   const openEdit = useCallback((userId: number) => setDrawer({ mode: 'edit', userId }), []);
   const closeDrawer = useCallback(() => setDrawer({ mode: 'closed' }), []);
+  const openLogs = useCallback((user: User) => navigate(`/users/${user.username}/logs`), [navigate]);
 
+  // ─── 5. Table State ───
   const {
     params,
     sorting,
@@ -50,12 +58,13 @@ export function UserListPage() {
     sortFieldMap: SORT_FIELD_MAP,
   });
 
+  // ─── 6. Data Fetching ───
   const { data, isLoading, refetch, isRefetching } = useUsers(
     isAdmin ? params : { ...params, departmentId: currentUser?.departmentId },
   );
+  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
 
-  const openLogs = useCallback((user: User) => navigate(`/users/${user.username}/logs`), [navigate]);
-
+  // ─── 7. Column Config ───
   const columns = useUserColumns({
     onView: (user) => openDetail(user.id),
     onEdit: (user) => openEdit(user.id),
@@ -65,8 +74,7 @@ export function UserListPage() {
     currentUserRole: userRole,
   });
 
-  const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
-  const { setActions } = usePageActions();
+  // ─── 8. Header Actions ───
 
   const headerActions = useMemo(() => (
     <>
@@ -108,8 +116,7 @@ export function UserListPage() {
     ),
     [isAdmin, actions, t]);
 
-
-
+  // ─── 9. Render ───
   return (
     <div>
 

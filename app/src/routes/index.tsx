@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
-import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { LoginPage } from '@/features/auth';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { AdminRoute } from '@/components/layout/AdminRoute';
@@ -9,13 +9,12 @@ import { SectionListPage } from '@/features/sections';
 import {
   DashboardPage,
   ProfilePage,
-  // ChangePasswordPage,
   SystemLogsPage,
 } from './pages';
 import { DatabasePage } from '@/features/database';
 import { BackupListPage } from '@/features/backup';
 import { SystemSettingsPage } from '@/features/system-settings';
-import { MaintenancePage } from '@/features/maintenance/MaintenancePage';
+import { MaintenancePage } from '@/features/maintenance';
 
 export const router = createBrowserRouter([
   {
