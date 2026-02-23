@@ -1,4 +1,5 @@
 import type { ExportColumn } from '../types/export'
+import { MSG } from '../constants/messages'
 
 // Value formatters
 export const formatDate = (v: unknown) =>
@@ -12,19 +13,19 @@ export const mapValue = (map: Record<string, string>) =>
 
 // Shared label maps
 export const roleMap: Record<string, string> = {
-  USER: 'ผู้ใช้',
-  ADMIN: 'ผู้ดูแลระบบ'
+  USER: MSG.export.values.role.USER,
+  ADMIN: MSG.export.values.role.ADMIN,
 }
 
 export const statusMap: Record<string, string> = {
-  active: 'ใช้งาน',
-  inactive: 'ไม่ใช้งาน'
+  active: MSG.export.values.status.active,
+  inactive: MSG.export.values.status.inactive,
 }
 
 // Reusable audit columns (createdAt, createdByName, updatedAt, updatedByName)
 export const auditColumns: ExportColumn[] = [
-  { key: 'createdAt', label: 'วันที่สร้าง', width: 20, value: formatDate },
-  { key: 'createdByName', label: 'สร้างโดย', width: 20, value: formatOptionalString },
-  { key: 'updatedAt', label: 'วันที่แก้ไข', width: 20, value: formatDate },
-  { key: 'updatedByName', label: 'แก้ไขโดย', width: 20, value: formatOptionalString }
+  { key: 'createdAt', label: MSG.export.common.createdAt, width: 20, value: formatDate },
+  { key: 'createdByName', label: MSG.export.common.createdBy, width: 20, value: formatOptionalString },
+  { key: 'updatedAt', label: MSG.export.common.updatedAt, width: 20, value: formatDate },
+  { key: 'updatedByName', label: MSG.export.common.updatedBy, width: 20, value: formatOptionalString }
 ]

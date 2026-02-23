@@ -87,6 +87,22 @@ export const MSG = {
       name: 'ชื่อหน่วยงาน',
       status: 'สถานะ',
     },
+    common: {
+      createdAt: 'วันที่สร้าง',
+      createdBy: 'สร้างโดย',
+      updatedAt: 'วันที่แก้ไข',
+      updatedBy: 'แก้ไขโดย',
+    },
+    values: {
+      role: {
+        USER: 'ผู้ใช้',
+        ADMIN: 'ผู้ดูแลระบบ',
+      },
+      status: {
+        active: 'ใช้งาน',
+        inactive: 'ไม่ใช้งาน',
+      },
+    },
   },
 
   // ── Excel import template content ──────────────────────────────────────────
