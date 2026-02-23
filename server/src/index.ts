@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { serve } from '@hono/node-server'
 import { env } from './config/env'
 import { errorHandler } from './middleware/error-handler'
@@ -28,6 +29,10 @@ const app = new Hono()
 // Global middleware
 app.use('*', securityHeaders)
 app.use('*', corsMiddleware)
+app.use('*', bodyLimit({
+  maxSize: 10 * 1024 * 1024, // 10MB
+  onError: (c) => c.json({ error: { code: 'PAYLOAD_TOO_LARGE', message: 'Request body exceeds the 10MB size limit' } }, 413)
+}))
 app.use('*', requestLogger)
 app.use('*', logMiddleware)
 app.use('*', generalApiRateLimiter)

@@ -1,17 +1,21 @@
 import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
 import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin, requireUser } from '../middleware/permission'
 import { UserService } from '../services/user.service'
-import { registerSchema, updateUserSchema, listUsersQuerySchema } from '../schemas/user'
+import { registerSchema, updateUserSchema, listUsersQuerySchema, verifyPasswordSchema } from '../schemas/user'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
 import { Role, type HonoContext, type UserWithRelations } from '../types'
 import { ExportService, userExcelColumns } from '../services/export.service'
 import { ImportService } from '../services/import.service'
 import { TemplateService } from '../services/template.service'
-import { parseUpload, validateFile } from '../middleware/upload'
-import { stream } from 'hono/streaming'
+import { sendExcelResponse } from '../utils/excel-response.utils'
+import { resolveUploadedFile } from '../utils/upload-handler.utils'
+import { requireRouteId } from '../utils/id-validator.utils'
+import { ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { strictRateLimiter } from '../middleware/rate-limit'
 
 const users = new Hono<HonoContext>()
 
@@ -19,10 +23,9 @@ users.use('/*', authMiddleware)
 users.use('/*', csrfProtection)
 
 // Create a new User
-users.post('/', requireAdmin, async (c) => {
+users.post('/', requireAdmin, zValidator('json', registerSchema), async (c) => {
   const currentUser = c.get('user')
-  const body = await c.req.json()
-  const validated = registerSchema.parse(body)
+  const validated = c.req.valid('json')
 
   const result = await UserService.create(
     validated.username,
@@ -37,41 +40,19 @@ users.post('/', requireAdmin, async (c) => {
   )
 
   c.get('logInfo')(`Created user "${validated.username}"`)
-
   return createdResponse(c, result)
 })
 
 // Get all with Pagination and Filters
-users.get('/', requireUser, async (c) => {
+users.get('/', requireUser, zValidator('query', listUsersQuerySchema), async (c) => {
   const include = c.req.query('include') === 'true'
-  const queryParams = listUsersQuerySchema.parse({
-    page: c.req.query('page'),
-    limit: c.req.query('limit'),
-    sort: c.req.query('sort'),
-    order: c.req.query('order'),
-    search: c.req.query('search'),
-    departmentId: c.req.query('departmentId'),
-    sectionId: c.req.query('sectionId'),
-    role: c.req.query('role'),
-    status: c.req.query('status')
-  })
+  const { page, limit, sort, order, search, departmentId, sectionId, role, status } = c.req.valid('query')
 
-  const pagination = {
-    page: queryParams.page,
-    limit: queryParams.limit,
-    sort: queryParams.sort,
-    order: queryParams.order
-  }
-
-  const filters = {
-    search: queryParams.search,
-    departmentId: queryParams.departmentId,
-    sectionId: queryParams.sectionId,
-    role: queryParams.role as Role | undefined,
-    status: queryParams.status
-  }
-
-  const userList = await UserService.getAll(include, pagination, filters)
+  const userList = await UserService.getAll(
+    include,
+    { page, limit, sort, order },
+    { search, departmentId, sectionId, role: role as Role | undefined, status }
+  )
   return successResponse(c, userList)
 })
 
@@ -86,148 +67,68 @@ users.get('/template', requireUser, async (c) => {
 
 // Get a single user by ID
 users.get('/:id', requireUser, async (c) => {
-  const id = Number(c.req.param('id'))
-
-  if (isNaN(id)) {
-    return c.json({ error: { code: CODES.USER_INVALID_ID, message: 'Invalid user ID' } }, 400)
-  }
-
+  const id = requireRouteId(c.req.param('id'), CODES.USER_INVALID_ID)
   const include = c.req.query('include') === 'true'
   const user = await UserService.getById(id, include)
   return successResponse(c, user)
 })
 
 // Update an existing user
-users.put('/:id', requireAdmin, async (c) => {
+users.put('/:id', requireAdmin, zValidator('json', updateUserSchema), async (c) => {
   const currentUser = c.get('user')
-  const id = Number(c.req.param('id'))
-
-  if (isNaN(id)) {
-    return c.json({ error: { code: CODES.USER_INVALID_ID, message: 'Invalid user ID' } }, 400)
-  }
-
-  const body = await c.req.json()
-  const validated = updateUserSchema.parse(body)
+  const id = requireRouteId(c.req.param('id'), CODES.USER_INVALID_ID)
+  const validated = c.req.valid('json')
 
   const user = await UserService.update(id, validated, currentUser.username)
-
   c.get('logInfo')(`Updated user #${id}`)
-
   return successResponse(c, user)
 })
 
 // Delete a user
 users.delete('/:id', requireAdmin, async (c) => {
-  const id = Number(c.req.param('id'))
-
-  if (isNaN(id)) {
-    return c.json({ error: { code: CODES.USER_INVALID_ID, message: 'Invalid user ID' } }, 400)
-  }
-
+  const id = requireRouteId(c.req.param('id'), CODES.USER_INVALID_ID)
   await UserService.delete(id)
   c.get('logInfo')(`Deleted user #${id}`)
   return noContentResponse(c)
 })
 
 // Verify Password
-users.post('/password/verify', requireUser, async (c) => {
+users.post('/password/verify', requireUser, strictRateLimiter, zValidator('json', verifyPasswordSchema), async (c) => {
   const currentUser = c.get('user')
-  const body = await c.req.json()
-
-  const { verifyPasswordSchema } = await import('../schemas/user')
-  const validated = verifyPasswordSchema.parse(body)
-
-  const isValid = await UserService.verifyPassword(currentUser.id, validated.password)
+  const { password } = c.req.valid('json')
+  const isValid = await UserService.verifyPassword(currentUser.id, password)
   return successResponse(c, { valid: isValid })
 })
 
 // Reset Password
-users.patch('/:id/password/reset', requireAdmin, async (c) => {
+users.patch('/:id/password/reset', requireAdmin, strictRateLimiter, async (c) => {
   const currentUser = c.get('user')
-  const id = Number(c.req.param('id'))
-
-  if (isNaN(id)) {
-    return c.json({ error: { code: CODES.USER_INVALID_ID, message: 'Invalid user ID' } }, 400)
-  }
-
+  const id = requireRouteId(c.req.param('id'), CODES.USER_INVALID_ID)
   const result = await UserService.resetPassword(id, currentUser.username)
   c.get('logInfo')(`Reset password for user #${id}`)
   return successResponse(c, result)
 })
 
-users.get('/export/excel', requireUser, async (c) => {
-  const queryParams = listUsersQuerySchema.parse({
-    page: c.req.query('page'),
-    limit: c.req.query('limit'),
-    sort: c.req.query('sort'),
-    order: c.req.query('order'),
-    search: c.req.query('search'),
-    departmentId: c.req.query('departmentId'),
-    sectionId: c.req.query('sectionId'),
-    role: c.req.query('role'),
-    status: c.req.query('status')
-  })
-
-  const filters = {
-    search: queryParams.search,
-    departmentId: queryParams.departmentId,
-    sectionId: queryParams.sectionId,
-    role: queryParams.role as Role | undefined,
-    status: queryParams.status
-  }
+// Export to Excel
+users.get('/export/excel', requireUser, zValidator('query', listUsersQuerySchema), async (c) => {
+  const { search, departmentId, sectionId, role, status } = c.req.valid('query')
+  const filters = { search, departmentId, sectionId, role: role as Role | undefined, status }
 
   const userList = await UserService.getAll(true, undefined, filters)
   const userData = Array.isArray(userList) ? userList : []
-
-  const result = await ExportService.exportToExcel(userData as UserWithRelations[], {
-    columns: userExcelColumns
-  })
-
+  const result = await ExportService.exportToExcel(userData as UserWithRelations[], { columns: userExcelColumns })
   const filename = `users_${new Date().toISOString().split('T')[0]}.xlsx`
-
-  if (ExportService.isStream(result)) {
-    return stream(c, async (stream) => {
-      c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-      c.header('Content-Disposition', `attachment; filename="${filename}"`)
-
-      result.on('data', (chunk) => {
-        stream.write(chunk)
-      })
-
-      return new Promise((resolve, reject) => {
-        result.on('end', () => {
-          stream.close()
-          resolve()
-        })
-        result.on('error', reject)
-      })
-    })
-  } else {
-    const buffer = await result.xlsx.writeBuffer()
-    c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    c.header('Content-Disposition', `attachment; filename="${filename}"`)
-    return c.body(buffer)
-  }
+  return sendExcelResponse(c, result, filename)
 })
 
+// Import from Excel
 users.post('/import', requireAdmin, async (c) => {
   const user = c.get('user')
-  const file = await parseUpload(c)
-
-  if (!file) {
-    return c.json({ error: { code: CODES.USER_NO_FILE_UPLOADED, message: 'No file uploaded' } }, 400)
-  }
-
-  const validation = validateFile(file)
-
-  if (!validation.valid) {
-    return c.json({ error: { code: validation.error, message: validation.error ?? 'File validation failed' } }, 400)
-  }
+  const file = await resolveUploadedFile(c)
 
   const fileValidation = ImportService.validateUserFile(file.buffer)
-
   if (!fileValidation.valid) {
-    return c.json({ error: { code: CODES.USER_INVALID_FILE_STRUCTURE, message: 'Invalid file structure', details: fileValidation.errors } }, 400)
+    throw new ValidationError(CODES.USER_INVALID_FILE_STRUCTURE, fileValidation.errors)
   }
 
   const result = await ImportService.importUsers(file.buffer, user.username)

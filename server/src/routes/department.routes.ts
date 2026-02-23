@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
 import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin } from '../middleware/permission'
@@ -9,8 +10,10 @@ import type { HonoContext, DepartmentResponse } from '../types'
 import { ExportService, departmentExcelColumns } from '../services/export.service'
 import { ImportService } from '../services/import.service'
 import { TemplateService } from '../services/template.service'
-import { parseUpload, validateFile, type UploadedFile } from '../middleware/upload'
-import { stream } from 'hono/streaming'
+import { sendExcelResponse } from '../utils/excel-response.utils'
+import { resolveUploadedFile } from '../utils/upload-handler.utils'
+import { requireRouteId } from '../utils/id-validator.utils'
+import { ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 
 const departments = new Hono<HonoContext>()
@@ -19,30 +22,11 @@ departments.use('/*', authMiddleware)
 departments.use('/*', csrfProtection)
 
 // Get all departments with optional pagination and filtering
-departments.get('/', async (c) => {
+departments.get('/', zValidator('query', listDepartmentsQuerySchema), async (c) => {
   const include = c.req.query('include') === 'true'
-  const queryParams = listDepartmentsQuerySchema.parse({
-    page: c.req.query('page'),
-    limit: c.req.query('limit'),
-    sort: c.req.query('sort'),
-    order: c.req.query('order'),
-    search: c.req.query('search'),
-    status: c.req.query('status')
-  })
+  const { page, limit, sort, order, search, status } = c.req.valid('query')
 
-  const pagination = {
-    page: queryParams.page,
-    limit: queryParams.limit,
-    sort: queryParams.sort,
-    order: queryParams.order
-  }
-
-  const filters = {
-    search: queryParams.search,
-    status: queryParams.status
-  }
-
-  const departmentList = await DepartmentService.getAll(include, pagination, filters)
+  const departmentList = await DepartmentService.getAll(include, { page, limit, sort, order }, { search, status })
   return successResponse(c, departmentList)
 })
 
@@ -57,127 +41,62 @@ departments.get('/template', async (c) => {
 
 // Get a single department by ID
 departments.get('/:id', async (c) => {
-  const id = Number(c.req.param('id'))
-
-  if (isNaN(id)) {
-    return c.json({ error: { code: CODES.DEPARTMENT_INVALID_ID, message: 'Invalid department ID' } }, 400)
-  }
-
+  const id = requireRouteId(c.req.param('id'), CODES.DEPARTMENT_INVALID_ID)
   const include = c.req.query('include') === 'true'
   const department = await DepartmentService.getById(id, include)
   return successResponse(c, department)
 })
 
 // Create a new department
-departments.post('/', requireAdmin, async (c) => {
+departments.post('/', requireAdmin, zValidator('json', createDepartmentSchema), async (c) => {
   const user = c.get('user')
-  const body = await c.req.json()
-  const validated = createDepartmentSchema.parse(body)
+  const { name } = c.req.valid('json')
 
-  const department = await DepartmentService.create(validated.name, user.username)
-  c.get('logInfo')(`Created department "${validated.name}"`)
+  const department = await DepartmentService.create(name, user.username)
+  c.get('logInfo')(`Created department "${name}"`)
   return createdResponse(c, department)
 })
 
 // Update an existing department
-departments.put('/:id', requireAdmin, async (c) => {
+departments.put('/:id', requireAdmin, zValidator('json', updateDepartmentSchema), async (c) => {
   const user = c.get('user')
-  const id = Number(c.req.param('id'))
-
-  if (isNaN(id)) {
-    return c.json({ error: { code: CODES.DEPARTMENT_INVALID_ID, message: 'Invalid department ID' } }, 400)
-  }
-
-  const body = await c.req.json()
-  const validated = updateDepartmentSchema.parse(body)
+  const id = requireRouteId(c.req.param('id'), CODES.DEPARTMENT_INVALID_ID)
+  const validated = c.req.valid('json')
 
   const oldDepartment = await DepartmentService.getById(id)
   const department = await DepartmentService.update(id, validated, user.username)
-  c.get('logInfo')(`Updated department "${oldDepartment.name}" to "${department.name}"`)
+  c.get('logInfo')(`Updated department "${(oldDepartment as DepartmentResponse).name}" to "${department.name}"`)
   return successResponse(c, department)
 })
 
 // Delete a department
 departments.delete('/:id', requireAdmin, async (c) => {
-  const id = Number(c.req.param('id'))
-
-  if (isNaN(id)) {
-    return c.json({ error: { code: CODES.DEPARTMENT_INVALID_ID, message: 'Invalid department ID' } }, 400)
-  }
-
+  const id = requireRouteId(c.req.param('id'), CODES.DEPARTMENT_INVALID_ID)
   const department = await DepartmentService.getById(id)
   await DepartmentService.delete(id)
-  c.get('logInfo')(`Deleted department "${department.name}"`)
+  c.get('logInfo')(`Deleted department "${(department as DepartmentResponse).name}"`)
   return noContentResponse(c)
 })
 
-departments.get('/export/excel', async (c) => {
-  const queryParams = listDepartmentsQuerySchema.parse({
-    page: c.req.query('page'),
-    limit: c.req.query('limit'),
-    sort: c.req.query('sort'),
-    order: c.req.query('order'),
-    search: c.req.query('search'),
-    status: c.req.query('status')
-  })
+// Export to Excel
+departments.get('/export/excel', zValidator('query', listDepartmentsQuerySchema), async (c) => {
+  const { search, status } = c.req.valid('query')
 
-  const filters = {
-    search: queryParams.search,
-    status: queryParams.status
-  }
-
-  const departmentList = await DepartmentService.getAll(false, undefined, filters)
+  const departmentList = await DepartmentService.getAll(false, undefined, { search, status })
   const departmentData = Array.isArray(departmentList) ? departmentList : []
-
-  const result = await ExportService.exportToExcel(departmentData as DepartmentResponse[], {
-    columns: departmentExcelColumns
-  })
-
+  const result = await ExportService.exportToExcel(departmentData as DepartmentResponse[], { columns: departmentExcelColumns })
   const filename = `departments_${new Date().toISOString().split('T')[0]}.xlsx`
-
-  if (ExportService.isStream(result)) {
-    return stream(c, async (stream) => {
-      c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-      c.header('Content-Disposition', `attachment; filename="${filename}"`)
-
-      result.on('data', (chunk) => {
-        stream.write(chunk)
-      })
-
-      return new Promise((resolve, reject) => {
-        result.on('end', () => {
-          stream.close()
-          resolve()
-        })
-        result.on('error', reject)
-      })
-    })
-  } else {
-    const buffer = await result.xlsx.writeBuffer()
-    c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    c.header('Content-Disposition', `attachment; filename="${filename}"`)
-    return c.body(buffer)
-  }
+  return sendExcelResponse(c, result, filename)
 })
 
+// Import from Excel
 departments.post('/import', requireAdmin, async (c) => {
   const user = c.get('user')
-  const file = await parseUpload(c)
-
-  if (!file) {
-    return c.json({ error: { code: CODES.USER_NO_FILE_UPLOADED, message: 'No file uploaded' } }, 400)
-  }
-
-  const validation = validateFile(file)
-
-  if (!validation.valid) {
-    return c.json({ error: { code: validation.error, message: validation.error ?? 'File validation failed' } }, 400)
-  }
+  const file = await resolveUploadedFile(c)
 
   const fileValidation = ImportService.validateDepartmentFile(file.buffer)
-
   if (!fileValidation.valid) {
-    return c.json({ error: { code: CODES.USER_INVALID_FILE_STRUCTURE, message: 'Invalid file structure', details: fileValidation.errors } }, 400)
+    throw new ValidationError(CODES.USER_INVALID_FILE_STRUCTURE, fileValidation.errors)
   }
 
   const result = await ImportService.importDepartments(file.buffer, user.username)

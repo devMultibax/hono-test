@@ -4,6 +4,7 @@ import { stream } from 'hono/streaming'
 import { createReadStream } from 'fs'
 import { authMiddleware } from '../middleware/auth'
 import { requireAdmin } from '../middleware/permission'
+import { strictRateLimiter } from '../middleware/rate-limit'
 import { BackupService } from '../services/backup.service'
 import { createBackupSchema } from '../schemas/backup.schema'
 import { successResponse, createdResponse } from '../lib/response'
@@ -21,7 +22,7 @@ backupRoutes.get('/', async (c) => {
 })
 
 // Create backup
-backupRoutes.post('/', zValidator('json', createBackupSchema), async (c) => {
+backupRoutes.post('/', strictRateLimiter, zValidator('json', createBackupSchema), async (c) => {
   const { prefix } = c.req.valid('json')
   const result = await BackupService.createBackup(prefix)
   c.get('logInfo')(`Created backup "${result.filename}"`)
@@ -49,7 +50,7 @@ backupRoutes.get('/:filename', async (c) => {
 })
 
 // Restore backup
-backupRoutes.post('/:filename/restore', async (c) => {
+backupRoutes.post('/:filename/restore', strictRateLimiter, async (c) => {
   const filename = c.req.param('filename')
   await BackupService.restoreBackup(filename)
   c.get('logInfo')(`Restored backup "${filename}"`)

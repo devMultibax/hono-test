@@ -7,6 +7,8 @@ import { AppError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { Role } from '../types'
 
+const MAX_IMPORT_ROWS = 1000
+
 export interface ImportRowError {
   row: number
   code: string
@@ -40,6 +42,10 @@ export class ImportService {
 
       const data = XLSX.utils.sheet_to_json<{ Name: string; Status?: string }>(worksheet)
 
+      if (data.length > MAX_IMPORT_ROWS) {
+        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, { max: MAX_IMPORT_ROWS, received: data.length })
+      }
+
       for (let i = 0; i < data.length; i++) {
         const row = data[i]
         const rowNumber = i + 2
@@ -67,6 +73,7 @@ export class ImportService {
         }
       }
     } catch (error: any) {
+      if (error instanceof AppError) throw error
       throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
     }
 
@@ -96,6 +103,10 @@ export class ImportService {
         Name: string
         Status?: string
       }>(worksheet)
+
+      if (data.length > MAX_IMPORT_ROWS) {
+        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, { max: MAX_IMPORT_ROWS, received: data.length })
+      }
 
       // Pre-load departments for name lookup
       const allDepartments = await prisma.department.findMany({
@@ -149,6 +160,7 @@ export class ImportService {
         }
       }
     } catch (error: any) {
+      if (error instanceof AppError) throw error
       throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
     }
 
@@ -183,6 +195,10 @@ export class ImportService {
         Tel?: string
         Role?: string
       }>(worksheet)
+
+      if (data.length > MAX_IMPORT_ROWS) {
+        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, { max: MAX_IMPORT_ROWS, received: data.length })
+      }
 
       // Pre-load lookup data for validation
       const [allDepartments, allSections, existingUsers] = await Promise.all([
@@ -335,6 +351,7 @@ export class ImportService {
         }
       }
     } catch (error: any) {
+      if (error instanceof AppError) throw error
       throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
     }
 

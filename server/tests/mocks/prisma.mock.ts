@@ -33,6 +33,7 @@ export const mockPrisma = {
     create: vi.fn(),
     count: vi.fn()
   },
+  $transaction: vi.fn(async (callback: (tx: any) => Promise<any>) => callback(mockPrisma)),
   $disconnect: vi.fn()
 }
 

@@ -211,30 +211,32 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
     const createdByName = await getUserFullName(createdBy)
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        username,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        departmentId,
-        sectionId,
-        email,
-        tel,
-        role,
-        createdBy,
-        createdByName,
-        updatedAt: null,
-        updatedBy: null
-      },
-      include: {
-        department: true,
-        section: true
-      }
-    })
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          username,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          departmentId,
+          sectionId,
+          email,
+          tel,
+          role,
+          createdBy,
+          createdByName,
+          updatedAt: null,
+          updatedBy: null
+        },
+        include: {
+          department: true,
+          section: true
+        }
+      })
 
-    await this.logUserAction(user, ActionType.CREATE)
+      await this.logUserAction(created, ActionType.CREATE, tx)
+      return created
+    })
 
     return {
       user: this.formatUserResponse(user),
@@ -358,16 +360,19 @@ export class UserService {
       updateData.tokenVersion = { increment: 1 }
     }
 
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: updateData,
-      include: {
-        department: true,
-        section: true
-      }
-    })
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const updated = await tx.user.update({
+        where: { id },
+        data: updateData,
+        include: {
+          department: true,
+          section: true
+        }
+      })
 
-    await this.logUserAction(updatedUser, ActionType.UPDATE)
+      await this.logUserAction(updated, ActionType.UPDATE, tx)
+      return updated
+    })
 
     return this.formatUserResponse(updatedUser)
   }
@@ -385,21 +390,15 @@ export class UserService {
       throw new NotFoundError(CODES.USER_NOT_FOUND)
     }
 
-    await this.logUserAction(user as any, ActionType.DELETE)
-
-    try {
+    await prisma.$transaction(async (tx) => {
+      await this.logUserAction(user as any, ActionType.DELETE, tx)
       // Invalidate active sessions before deleting
-      await prisma.user.update({
+      await tx.user.update({
         where: { id },
         data: { tokenVersion: { increment: 1 } }
       })
-
-      await prisma.user.delete({
-        where: { id }
-      })
-    } catch {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
-    }
+      await tx.user.delete({ where: { id } })
+    })
   }
 
   // Password Management Methods
@@ -430,23 +429,26 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
     const updatedByName = await getUserFullName(updatedBy)
 
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: {
-        password: hashedPassword,
-        isDefaultPassword: true,
-        tokenVersion: { increment: 1 },
-        updatedAt: new Date(),
-        updatedBy,
-        updatedByName
-      },
-      include: {
-        department: true,
-        section: true
-      }
-    })
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const updated = await tx.user.update({
+        where: { id },
+        data: {
+          password: hashedPassword,
+          isDefaultPassword: true,
+          tokenVersion: { increment: 1 },
+          updatedAt: new Date(),
+          updatedBy,
+          updatedByName
+        },
+        include: {
+          department: true,
+          section: true
+        }
+      })
 
-    await this.logUserAction(updatedUser as any, ActionType.RESET_PASSWORD)
+      await this.logUserAction(updated as any, ActionType.RESET_PASSWORD, tx)
+      return updated
+    })
 
     return {
       user: this.formatUserResponse(updatedUser),
@@ -479,47 +481,55 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS)
     const updatedByName = `${user.firstName} ${user.lastName}`
 
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: {
-        password: hashedPassword,
-        isDefaultPassword: false,
-        updatedAt: new Date(),
-        updatedBy: user.username,
-        updatedByName
-      },
-      include: {
-        department: true,
-        section: true
-      }
-    })
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const updated = await tx.user.update({
+        where: { id },
+        data: {
+          password: hashedPassword,
+          isDefaultPassword: false,
+          updatedAt: new Date(),
+          updatedBy: user.username,
+          updatedByName
+        },
+        include: {
+          department: true,
+          section: true
+        }
+      })
 
-    await this.logUserAction(updatedUser as any, ActionType.CHANGE_PASSWORD)
+      await this.logUserAction(updated as any, ActionType.CHANGE_PASSWORD, tx)
+      return updated
+    })
 
     return this.formatUserResponse(updatedUser)
   }
 
-  private static async logUserAction(user: any, actionType: ActionType): Promise<void> {
-    await prisma.userLog.create({
-      data: {
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        department: user.department.name,
-        section: user.section?.name || '',
-        email: user.email,
-        tel: user.tel,
-        role: user.role as Role,
-        status: user.status as 'active' | 'inactive',
-        createdAt: user.createdAt,
-        createdBy: user.createdBy,
-        createdByName: user.createdByName || '',
-        updatedAt: user.updatedAt,
-        updatedBy: user.updatedBy,
-        updatedByName: user.updatedByName,
-        actionType: actionType as any
-      }
-    })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static async logUserAction(user: any, actionType: ActionType, tx?: any): Promise<void> {
+    const data = {
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      department: user.department.name,
+      section: user.section?.name || '',
+      email: user.email,
+      tel: user.tel,
+      role: user.role as Role,
+      status: user.status as 'active' | 'inactive',
+      createdAt: user.createdAt,
+      createdBy: user.createdBy,
+      createdByName: user.createdByName || '',
+      updatedAt: user.updatedAt,
+      updatedBy: user.updatedBy,
+      updatedByName: user.updatedByName,
+      actionType: actionType as any
+    }
+
+    if (tx) {
+      await tx.userLog.create({ data })
+    } else {
+      await prisma.userLog.create({ data })
+    }
   }
 }
 

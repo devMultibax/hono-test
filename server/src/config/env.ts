@@ -83,6 +83,9 @@ function validateEnv() {
       if (parsed.COOKIE_SAME_SITE === 'none') {
         console.warn('⚠️  WARNING: COOKIE_SAME_SITE is set to "none" in production. Ensure COOKIE_SECURE is enabled.');
       }
+      if (parsed.ALLOW_ORIGINS.length === 0) {
+        console.warn('⚠️  WARNING: ALLOW_ORIGINS is not set in production. CORS will block all cross-origin requests!');
+      }
     }
 
     console.log('✅ Environment variables validated successfully');

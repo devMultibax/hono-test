@@ -1,5 +1,6 @@
 import type { Context, Next } from 'hono'
 import type { HonoContext } from '../types'
+import { FileValidatorUtils } from '../utils/file-validator.utils'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_MIME_TYPES = [
@@ -72,6 +73,13 @@ export function validateFile(file: UploadedFile): { valid: boolean; error?: stri
     return {
       valid: false,
       error: 'Invalid file extension. Only .xlsx and .xls files are allowed'
+    }
+  }
+
+  if (!FileValidatorUtils.validateMimeType(file.buffer, file.mimeType)) {
+    return {
+      valid: false,
+      error: 'File content does not match its declared type. The file may be corrupted or disguised.'
     }
   }
 

@@ -34,7 +34,8 @@ export class FileValidatorUtils {
     'image/gif': [0x47, 0x49, 0x46],
     'application/pdf': [0x25, 0x50, 0x44, 0x46],
     'application/zip': [0x50, 0x4b, 0x03, 0x04],
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [0x50, 0x4b, 0x03, 0x04]
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [0x50, 0x4b, 0x03, 0x04],
+    'application/vnd.ms-excel': [0xd0, 0xcf, 0x11, 0xe0] // Compound Document Binary Format (.xls)
   }
 
   static validateFile(
