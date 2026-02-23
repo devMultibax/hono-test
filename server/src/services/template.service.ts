@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs'
+import { MSG } from '../constants/messages'
 
 // ─── Internal Types ───────────────────────────────────────────────────────────
 
@@ -14,7 +15,7 @@ interface TemplateColumn {
 
 interface TemplateInstruction {
   field: string
-  required: 'ใช่' | 'ไม่'
+  required: string
   description: string
   example: string
   rules: string
@@ -83,7 +84,7 @@ export class TemplateService {
           {
             text:
               col.note +
-              (col.required ? '\n\n⚠️ จำเป็นต้องกรอก' : '\n\nไม่จำเป็นต้องกรอก'),
+              (col.required ? MSG.template.cellNotes.required : MSG.template.cellNotes.optional),
           },
         ],
       }
@@ -102,11 +103,7 @@ export class TemplateService {
     })
 
     exampleDataRow.getCell(1).note = {
-      texts: [
-        {
-          text: '⚠️ นี่คือแถวตัวอย่าง กรุณาลบออกก่อนนำเข้าข้อมูลจริง\n\nคลิกที่ตัวเลขแถว (2) ด้านซ้ายแล้วกด Delete',
-        },
-      ],
+      texts: [{ text: MSG.template.cellNotes.exampleRow }],
     }
 
     ws.views = [{ state: 'frozen', ySplit: 1, xSplit: 0, topLeftCell: 'A2', activeCell: 'A2' }]
@@ -119,13 +116,13 @@ export class TemplateService {
   ): void {
     const { importSheetName, instructions, additionalNotes = [] } = options
 
-    const instrSheet = workbook.addWorksheet('คำอธิบาย')
+    const instrSheet = workbook.addWorksheet(MSG.template.worksheetName)
     instrSheet.columns = [
-      { header: 'คอลัมน์', key: 'field', width: 20 },
-      { header: 'จำเป็น', key: 'required', width: 10 },
-      { header: 'คำอธิบาย', key: 'description', width: 35 },
-      { header: 'ตัวอย่าง', key: 'example', width: 25 },
-      { header: 'เงื่อนไข', key: 'rules', width: 50 },
+      { header: MSG.template.headers.column, key: 'field', width: 20 },
+      { header: MSG.template.headers.required, key: 'required', width: 10 },
+      { header: MSG.template.headers.description, key: 'description', width: 35 },
+      { header: MSG.template.headers.example, key: 'example', width: 25 },
+      { header: MSG.template.headers.rules, key: 'rules', width: 50 },
     ]
 
     // Style instruction header row
@@ -154,7 +151,7 @@ export class TemplateService {
           right: { style: 'thin', color: { argb: 'FFD0D0D0' } },
         }
       })
-      if (instr.required === 'ใช่') {
+      if (instr.required === MSG.template.required.yes) {
         row.getCell(2).font = { color: { argb: 'FFDC3545' }, bold: true }
       } else {
         row.getCell(2).font = { color: { argb: 'FF198754' } }
@@ -165,7 +162,7 @@ export class TemplateService {
 
     // Legend section
     instrSheet.addRow([])
-    const legendTitleRow = instrSheet.addRow(['คำอธิบายสัญลักษณ์'])
+    const legendTitleRow = instrSheet.addRow([MSG.template.legend.title])
     legendTitleRow.getCell(1).font = { bold: true, size: 12 }
     legendTitleRow.getCell(1).fill = {
       type: 'pattern',
@@ -173,14 +170,14 @@ export class TemplateService {
       fgColor: { argb: 'FFE9ECEF' },
     }
 
-    const legend1 = instrSheet.addRow(['⬤ คอลัมน์สีแดง', 'จำเป็นต้องกรอก (Required)'])
+    const legend1 = instrSheet.addRow([MSG.template.legend.requiredPrefix, MSG.template.legend.requiredLabel])
     legend1.getCell(1).font = { color: { argb: 'FFDC3545' }, bold: true }
-    const legend2 = instrSheet.addRow(['⬤ คอลัมน์สีเทา', 'ไม่จำเป็นต้องกรอก (Optional)'])
+    const legend2 = instrSheet.addRow([MSG.template.legend.optionalPrefix, MSG.template.legend.optionalLabel])
     legend2.getCell(1).font = { color: { argb: 'FF6C757D' }, bold: true }
 
     // หมายเหตุสำคัญ section
     instrSheet.addRow([])
-    const noteTitleRow = instrSheet.addRow(['หมายเหตุสำคัญ'])
+    const noteTitleRow = instrSheet.addRow([MSG.template.notes.title])
     noteTitleRow.getCell(1).font = { bold: true, size: 12 }
     noteTitleRow.getCell(1).fill = {
       type: 'pattern',
@@ -189,15 +186,15 @@ export class TemplateService {
     }
 
     instrSheet.addRow([
-      '⚠️ แถวตัวอย่าง',
-      `แถวที่ 2 ใน sheet "${importSheetName}" เป็นตัวอย่าง กรุณาลบออกก่อนนำเข้าข้อมูลจริง`,
+      MSG.template.notes.exampleRowPrefix,
+      MSG.template.notes.exampleRowText(importSheetName),
     ])
 
     additionalNotes.forEach((note) => instrSheet.addRow(note))
 
     instrSheet.addRow([
-      '💡 วิธีดูคำอธิบาย',
-      `วางเมาส์บนหัวคอลัมน์ใน sheet "${importSheetName}" เพื่อดูคำอธิบายเพิ่มเติม`,
+      MSG.template.notes.tipPrefix,
+      MSG.template.notes.tipText(importSheetName),
     ])
   }
 
@@ -215,7 +212,7 @@ export class TemplateService {
           key: 'username',
           width: 20,
           required: true,
-          note: 'รหัสพนักงาน 6 หลัก (ตัวเลขและตัวอักษร)\nตัวอย่าง: 100001',
+          note: MSG.template.user.columns.username,
           textFormat: true,
         },
         {
@@ -223,42 +220,42 @@ export class TemplateService {
           key: 'firstName',
           width: 20,
           required: true,
-          note: 'ชื่อจริง (ไม่เกิน 100 ตัวอักษร)',
+          note: MSG.template.user.columns.firstName,
         },
         {
           header: 'Last Name',
           key: 'lastName',
           width: 20,
           required: true,
-          note: 'นามสกุล (ไม่เกิน 100 ตัวอักษร)',
+          note: MSG.template.user.columns.lastName,
         },
         {
           header: 'Department ID',
           key: 'departmentId',
           width: 18,
           required: true,
-          note: 'รหัสฝ่าย (ตัวเลข)\nดูรหัสได้จากหน้าจัดการฝ่าย',
+          note: MSG.template.user.columns.departmentId,
         },
         {
           header: 'Section ID',
           key: 'sectionId',
           width: 15,
           required: false,
-          note: 'รหัสหน่วยงาน (ตัวเลข)\nดูรหัสได้จากหน้าจัดการหน่วยงาน',
+          note: MSG.template.user.columns.sectionId,
         },
         {
           header: 'Email',
           key: 'email',
           width: 30,
           required: false,
-          note: 'อีเมล (รูปแบบ: example@email.com)',
+          note: MSG.template.user.columns.email,
         },
         {
           header: 'Tel',
           key: 'tel',
           width: 18,
           required: false,
-          note: 'เบอร์โทร 10 หลัก (ตัวเลขเท่านั้น)\nตัวอย่าง: 0812345678',
+          note: MSG.template.user.columns.tel,
           textFormat: true,
         },
         {
@@ -266,13 +263,13 @@ export class TemplateService {
           key: 'role',
           width: 12,
           required: false,
-          note: 'สิทธิ์: USER หรือ ADMIN\n(ค่าเริ่มต้น: USER)',
+          note: MSG.template.user.columns.role,
         },
       ],
       exampleRow: {
         username: '100001',
-        firstName: 'สมชาย',
-        lastName: 'ใจดี',
+        firstName: MSG.template.user.exampleRow.firstName,
+        lastName: MSG.template.user.exampleRow.lastName,
         departmentId: 1,
         sectionId: 1,
         email: 'somchai@email.com',
@@ -286,62 +283,64 @@ export class TemplateService {
       instructions: [
         {
           field: 'Username',
-          required: 'ใช่',
-          description: 'รหัสพนักงาน',
+          required: MSG.template.required.yes,
+          description: MSG.template.user.instructions.username.description,
           example: '100001',
-          rules: 'ต้องมี 6 ตัวอักษร, ตัวเลขและตัวอักษรภาษาอังกฤษเท่านั้น',
+          rules: MSG.template.user.instructions.username.rules,
         },
         {
           field: 'First Name',
-          required: 'ใช่',
-          description: 'ชื่อจริง',
-          example: 'สมชาย',
-          rules: 'ไม่เกิน 100 ตัวอักษร',
+          required: MSG.template.required.yes,
+          description: MSG.template.user.instructions.firstName.description,
+          example: MSG.template.user.exampleRow.firstName,
+          rules: MSG.template.user.instructions.firstName.rules,
         },
         {
           field: 'Last Name',
-          required: 'ใช่',
-          description: 'นามสกุล',
-          example: 'ใจดี',
-          rules: 'ไม่เกิน 100 ตัวอักษร',
+          required: MSG.template.required.yes,
+          description: MSG.template.user.instructions.lastName.description,
+          example: MSG.template.user.exampleRow.lastName,
+          rules: MSG.template.user.instructions.lastName.rules,
         },
         {
           field: 'Department ID',
-          required: 'ใช่',
-          description: 'รหัสฝ่าย',
+          required: MSG.template.required.yes,
+          description: MSG.template.user.instructions.departmentId.description,
           example: '1',
-          rules: 'ต้องเป็นตัวเลขที่มากกว่า 0, ดูรหัสได้จากหน้าจัดการฝ่าย',
+          rules: MSG.template.user.instructions.departmentId.rules,
         },
         {
           field: 'Section ID',
-          required: 'ไม่',
-          description: 'รหัสหน่วยงาน',
+          required: MSG.template.required.no,
+          description: MSG.template.user.instructions.sectionId.description,
           example: '1',
-          rules: 'ต้องเป็นตัวเลขที่มากกว่า 0 (ถ้ากรอก), ดูรหัสได้จากหน้าจัดการหน่วยงาน',
+          rules: MSG.template.user.instructions.sectionId.rules,
         },
         {
           field: 'Email',
-          required: 'ไม่',
-          description: 'อีเมล',
+          required: MSG.template.required.no,
+          description: MSG.template.user.instructions.email.description,
           example: 'somchai@email.com',
-          rules: 'ต้องเป็นรูปแบบอีเมลที่ถูกต้อง (ถ้ากรอก)',
+          rules: MSG.template.user.instructions.email.rules,
         },
         {
           field: 'Tel',
-          required: 'ไม่',
-          description: 'เบอร์โทรศัพท์',
+          required: MSG.template.required.no,
+          description: MSG.template.user.instructions.tel.description,
           example: '0812345678',
-          rules: 'ต้องเป็นตัวเลข 10 หลักเท่านั้น (ถ้ากรอก)',
+          rules: MSG.template.user.instructions.tel.rules,
         },
         {
           field: 'Role',
-          required: 'ไม่',
-          description: 'สิทธิ์การใช้งาน',
+          required: MSG.template.required.no,
+          description: MSG.template.user.instructions.role.description,
           example: 'USER',
-          rules: 'ค่าที่รองรับ: USER, ADMIN (ค่าเริ่มต้น: USER)',
+          rules: MSG.template.user.instructions.role.rules,
         },
       ],
-      additionalNotes: [['🔑 รหัสผ่าน', 'รหัสผ่านจะถูกสร้างอัตโนมัติโดยระบบ']],
+      additionalNotes: [
+        [MSG.template.user.additionalNotes.passwordPrefix, MSG.template.user.additionalNotes.passwordText],
+      ],
     })
 
     return workbook
@@ -359,11 +358,11 @@ export class TemplateService {
           key: 'name',
           width: 30,
           required: true,
-          note: 'ชื่อฝ่าย (ไม่เกิน 100 ตัวอักษร)\nตัวอย่าง: ฝ่ายบริหาร',
+          note: MSG.template.department.columns.name,
         },
       ],
       exampleRow: {
-        name: 'ฝ่ายบริหาร',
+        name: MSG.template.department.exampleRow.name,
       },
     })
 
@@ -372,10 +371,10 @@ export class TemplateService {
       instructions: [
         {
           field: 'Name',
-          required: 'ใช่',
-          description: 'ชื่อฝ่าย',
-          example: 'ฝ่ายบริหาร',
-          rules: 'ไม่เกิน 100 ตัวอักษร, ต้องไม่ซ้ำกับชื่อฝ่ายที่มีอยู่',
+          required: MSG.template.required.yes,
+          description: MSG.template.department.instructions.name.description,
+          example: MSG.template.department.exampleRow.name,
+          rules: MSG.template.department.instructions.name.rules,
         },
       ],
     })
@@ -395,19 +394,19 @@ export class TemplateService {
           key: 'department',
           width: 30,
           required: true,
-          note: 'ชื่อฝ่าย (ต้องตรงกับชื่อฝ่ายที่มีในระบบ)\nตัวอย่าง: ฝ่ายบริหาร',
+          note: MSG.template.section.columns.department,
         },
         {
           header: 'Name',
           key: 'name',
           width: 30,
           required: true,
-          note: 'ชื่อหน่วยงาน (ไม่เกิน 100 ตัวอักษร)\nตัวอย่าง: แผนกบุคคล',
+          note: MSG.template.section.columns.name,
         },
       ],
       exampleRow: {
-        department: 'ฝ่ายบริหาร',
-        name: 'แผนกบุคคล',
+        department: MSG.template.section.exampleRow.department,
+        name: MSG.template.section.exampleRow.name,
       },
     })
 
@@ -416,21 +415,21 @@ export class TemplateService {
       instructions: [
         {
           field: 'Department',
-          required: 'ใช่',
-          description: 'ชื่อฝ่าย',
-          example: 'ฝ่ายบริหาร',
-          rules: 'ต้องตรงกับชื่อฝ่ายที่มีอยู่ในระบบ (ตัวอักษรต้องตรงกันทุกตัว)',
+          required: MSG.template.required.yes,
+          description: MSG.template.section.instructions.department.description,
+          example: MSG.template.section.exampleRow.department,
+          rules: MSG.template.section.instructions.department.rules,
         },
         {
           field: 'Name',
-          required: 'ใช่',
-          description: 'ชื่อหน่วยงาน',
-          example: 'แผนกบุคคล',
-          rules: 'ไม่เกิน 100 ตัวอักษร',
+          required: MSG.template.required.yes,
+          description: MSG.template.section.instructions.name.description,
+          example: MSG.template.section.exampleRow.name,
+          rules: MSG.template.section.instructions.name.rules,
         },
       ],
       additionalNotes: [
-        ['🔗 ชื่อฝ่าย', 'ต้องระบุชื่อฝ่ายที่ตรงกับชื่อในระบบ (ดูได้จากหน้าจัดการฝ่าย)'],
+        [MSG.template.section.additionalNotes.departmentPrefix, MSG.template.section.additionalNotes.departmentText],
       ],
     })
 

@@ -1,22 +1,23 @@
 import { z } from 'zod'
+import { MSG } from '../constants/messages'
 
 export const updateProfileSchema = z.object({
     firstName: z.string()
-        .min(1, { message: 'กรุณาระบุชื่อ' })
-        .max(100, { message: 'ชื่อต้องไม่เกิน 100 ตัวอักษร' })
+        .min(1, { message: MSG.validation.firstName.required })
+        .max(100, { message: MSG.validation.firstName.maxLength })
         .optional(),
     lastName: z.string()
-        .min(1, { message: 'กรุณาระบุนามสกุล' })
-        .max(100, { message: 'นามสกุลต้องไม่เกิน 100 ตัวอักษร' })
+        .min(1, { message: MSG.validation.lastName.required })
+        .max(100, { message: MSG.validation.lastName.maxLength })
         .optional(),
     email: z.string()
-        .email({ message: 'รูปแบบอีเมลไม่ถูกต้อง' })
-        .max(255, { message: 'อีเมลต้องไม่เกิน 255 ตัวอักษร' })
+        .email({ message: MSG.validation.email.format })
+        .max(255, { message: MSG.validation.email.maxLength })
         .optional()
         .nullable(),
     tel: z.string()
-        .length(10, { message: 'เบอร์โทรศัพท์ต้องมี 10 หลักพอดี' })
-        .regex(/^[0-9]+$/, { message: 'เบอร์โทรศัพท์ต้องเป็นตัวเลขเท่านั้น' })
+        .length(10, { message: MSG.validation.tel.length })
+        .regex(/^[0-9]+$/, { message: MSG.validation.tel.format })
         .optional()
         .nullable()
 })

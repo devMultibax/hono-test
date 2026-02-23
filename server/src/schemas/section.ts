@@ -1,25 +1,26 @@
 import { z } from 'zod'
 import { paginationQuerySchema } from '../utils/pagination.utils'
+import { MSG } from '../constants/messages'
 
 export const createSectionSchema = z.object({
-  departmentId: z.number({ message: 'กรุณาระบุรหัสฝ่าย' })
-    .int({ message: 'รหัสฝ่ายต้องเป็นจำนวนเต็ม' })
-    .positive({ message: 'รหัสฝ่ายต้องเป็นค่าบวก' }),
-  name: z.string({ message: 'กรุณาระบุชื่อแผนก' })
-    .min(1, { message: 'กรุณาระบุชื่อแผนก' })
-    .max(100, { message: 'ชื่อแผนกต้องไม่เกิน 100 ตัวอักษร' })
+  departmentId: z.number({ message: MSG.validation.departmentId.required })
+    .int({ message: MSG.validation.departmentId.int })
+    .positive({ message: MSG.validation.departmentId.positive }),
+  name: z.string({ message: MSG.validation.sectionName.required })
+    .min(1, { message: MSG.validation.sectionName.required })
+    .max(100, { message: MSG.validation.sectionName.maxLength })
 })
 
 export const updateSectionSchema = z.object({
-  departmentId: z.number({ message: 'รหัสฝ่ายต้องเป็นตัวเลข' })
-    .int({ message: 'รหัสฝ่ายต้องเป็นจำนวนเต็ม' })
-    .positive({ message: 'รหัสฝ่ายต้องเป็นค่าบวก' })
+  departmentId: z.number({ message: MSG.validation.departmentId.typeError })
+    .int({ message: MSG.validation.departmentId.int })
+    .positive({ message: MSG.validation.departmentId.positive })
     .optional(),
-  name: z.string({ message: 'ชื่อแผนกต้องเป็นข้อความ' })
-    .min(1, { message: 'กรุณาระบุชื่อแผนก' })
-    .max(100, { message: 'ชื่อแผนกต้องไม่เกิน 100 ตัวอักษร' })
+  name: z.string({ message: MSG.validation.sectionName.textType })
+    .min(1, { message: MSG.validation.sectionName.required })
+    .max(100, { message: MSG.validation.sectionName.maxLength })
     .optional(),
-  status: z.enum(['active', 'inactive'], { message: 'สถานะไม่ถูกต้อง' }).optional()
+  status: z.enum(['active', 'inactive'], { message: MSG.validation.status.invalid }).optional()
 })
 
 export const listSectionsQuerySchema = paginationQuerySchema.extend({
