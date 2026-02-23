@@ -3,195 +3,146 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
 import 'dotenv/config'
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!
-})
+// --- Constants ---
 
+const SEED_ACTOR = 'SYSTEM'
+const BCRYPT_ROUNDS = 10
+
+const DEPARTMENT_NAMES = [
+  'STD', 'ST', 'SE', 'SAF', 'PD5', 'PD3', 'PD2', 'PD1', 'PD', 'PC',
+  'PA', 'MT5', 'MT3', 'MT2', 'MT1', 'FN', 'EN', 'BIO', 'ADM', 'AC',
+  'QC', 'PN', 'IT'
+]
+
+const SECTION_DATA = [
+  { dept: 'ADM', sections: ['ADMIN'] },
+  { dept: 'PD1', sections: ['1/1', '1/2', '1/3'] },
+  { dept: 'PD2', sections: ['2/1', '2/2', '2/3'] },
+  { dept: 'PD3', sections: ['3/1', '3/2', '3/3', '3/4'] },
+  { dept: 'PD5', sections: ['5/2'] },
+  { dept: 'QC',  sections: ['QC', 'QC1', 'QC2', 'QC3', 'QC5', 'LAB', 'FG', 'CBT'] },
+  { dept: 'ST',  sections: ['DR&FG', 'PF', 'RM&EM'] }
+]
+
+const SYSTEM_SETTINGS = [
+  {
+    key: 'maintenance_mode',
+    value: 'false',
+    description: 'เปิด/ปิดโหมดปิดปรับปรุงระบบ'
+  },
+  {
+    key: 'maintenance_message',
+    value: 'ระบบปิดปรับปรุงชั่วคราว กรุณาลองใหม่ภายหลัง',
+    description: 'ข้อความแจ้งเตือนเมื่อระบบปิดปรับปรุง'
+  }
+]
+
+// --- Setup ---
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
-async function main() {
-  console.log('🌱 Starting seed...')
+// --- Seed functions ---
 
-  // 1. Seed Departments
+async function seedDepartments(): Promise<void> {
   console.log('📦 Seeding departments...')
-  const departments = [
-    'STD', 'ST', 'SE', 'SAF', 'PD5', 'PD3', 'PD2', 'PD1', 'PD', 'PC',
-    'PA', 'MT5', 'MT3', 'MT2', 'MT1', 'FN', 'EN', 'BIO', 'ADM', 'AC',
-    'QC', 'PN', 'IT'
-  ]
 
-  for (const name of departments) {
+  for (const name of DEPARTMENT_NAMES) {
     await prisma.department.upsert({
       where: { name },
       update: {},
-      create: {
-        name,
-        status: 'active',
-        createdBy: 'SYSTEM'
-      }
+      create: { name, status: 'active', createdBy: SEED_ACTOR }
     })
   }
-  console.log(`✅ Created ${departments.length} departments`)
 
-  // 2. Seed Sections
+  console.log(`✅ Seeded ${DEPARTMENT_NAMES.length} departments`)
+}
+
+async function seedSections(): Promise<void> {
   console.log('📦 Seeding sections...')
+  let count = 0
 
-  const sections = [
-    // ADM
-    { dept: 'ADM', sections: ['ADMIN'] },
+  for (const { dept, sections } of SECTION_DATA) {
+    const department = await prisma.department.findUnique({ where: { name: dept } })
+    if (!department) continue
 
-    // PD1
-    { dept: 'PD1', sections: ['1/1', '1/2', '1/3'] },
-
-    // PD2
-    { dept: 'PD2', sections: ['2/1', '2/2', '2/3'] },
-
-    // PD3
-    { dept: 'PD3', sections: ['3/1', '3/2', '3/3', '3/4'] },
-
-    // PD5
-    { dept: 'PD5', sections: ['5/2'] },
-
-    // QC
-    { dept: 'QC', sections: ['QC', 'QC1', 'QC2', 'QC3', 'QC5', 'LAB', 'FG', 'CBT'] },
-
-    // ST
-    { dept: 'ST', sections: ['DR&FG', 'PF', 'RM&EM'] }
-  ]
-
-  let sectionCount = 0
-  for (const { dept, sections: sectionNames } of sections) {
-    const department = await prisma.department.findUnique({
-      where: { name: dept }
-    })
-
-    if (department) {
-      for (const sectionName of sectionNames) {
-        await prisma.section.upsert({
-          where: {
-            departmentId_name: {
-              departmentId: department.id,
-              name: sectionName
-            }
-          },
-          update: {},
-          create: {
-            departmentId: department.id,
-            name: sectionName,
-            status: 'active',
-            createdBy: 'SYSTEM'
-          }
-        })
-        sectionCount++
-      }
+    for (const name of sections) {
+      await prisma.section.upsert({
+        where: { departmentId_name: { departmentId: department.id, name } },
+        update: {},
+        create: { departmentId: department.id, name, status: 'active', createdBy: SEED_ACTOR }
+      })
+      count++
     }
   }
-  console.log(`✅ Created ${sectionCount} sections`)
 
-  // 3. Seed Admin User
+  console.log(`✅ Seeded ${count} sections`)
+}
+
+async function seedAdminUser(): Promise<void> {
   console.log('👤 Seeding admin user...')
 
-  const itDepartment = await prisma.department.findUnique({
-    where: { name: 'IT' }
-  })
-
-  if (itDepartment) {
-    // Password จากไฟล์เดิม (password: 'password' หรือ '123456')
-    const hashedPassword = '$2b$10$BoqEuTw/adlgdaHcleYJ6.oyiGkSeIJTU/eXo3etUpySdmw50E8bi'
-
-    await prisma.user.upsert({
-      where: { username: '682732' },
-      update: {},
-      create: {
-        username: '682732',
-        password: hashedPassword,
-        firstName: 'Disakorn',
-        lastName: 'Nisakuntong',
-        departmentId: itDepartment.id,
-        email: 'it-pro@multibax.com',
-        tel: '0987654321',
-        role: 'ADMIN',
-        status: 'active',
-        createdBy: 'SYSTEM'
-      }
-    })
-    console.log('✅ Created admin user (username: 682732)')
+  const itDepartment = await prisma.department.findUnique({ where: { name: 'IT' } })
+  if (!itDepartment) {
+    console.warn('⚠️  IT department not found, skipping admin user seed')
+    return
   }
 
-  // 4. Create additional test users (optional)
-  console.log('👥 Creating test users...')
+  // Pre-hashed value for 'password'
+  const hashedPassword = '$2b$10$BoqEuTw/adlgdaHcleYJ6.oyiGkSeIJTU/eXo3etUpySdmw50E8bi'
 
-  const admDepartment = await prisma.department.findUnique({
-    where: { name: 'ADM' }
-  })
-
-  const adminSection = await prisma.section.findFirst({
-    where: {
-      departmentId: admDepartment?.id,
-      name: 'ADMIN'
+  await prisma.user.upsert({
+    where: { username: '682732' },
+    update: {},
+    create: {
+      username: '682732',
+      password: hashedPassword,
+      firstName: 'ดิษกรณ์',
+      lastName: 'นิสกุลทอง',
+      departmentId: itDepartment.id,
+      email: 'it-pro@multibax.com',
+      tel: '0987654321',
+      role: 'ADMIN',
+      status: 'active',
+      createdBy: SEED_ACTOR
     }
   })
 
-  if (admDepartment && adminSection) {
-    // Test USER account
-    const testUserPassword = await bcrypt.hash('test123', 10)
+  console.log('✅ Seeded admin user (username: 682732)')
+}
 
-    await prisma.user.upsert({
-      where: { username: 'test01' },
-      update: {},
-      create: {
-        username: 'test01',
-        password: testUserPassword,
-        firstName: 'Test',
-        lastName: 'User',
-        departmentId: admDepartment.id,
-        sectionId: adminSection.id,
-        email: 'test@multibax.com',
-        tel: '0811111111',
-        role: 'USER',
-        status: 'active',
-        createdBy: 'SYSTEM'
-      }
-    })
-    console.log('✅ Created test user (username: test01, password: test123)')
-  }
-
-  // 5. Seed System Settings
+async function seedSystemSettings(): Promise<void> {
   console.log('⚙️  Seeding system settings...')
 
-  await prisma.systemSetting.upsert({
-    where: { key: 'maintenance_mode' },
-    update: {},
-    create: {
-      key: 'maintenance_mode',
-      value: 'false',
-      description: 'เปิด/ปิดโหมดปิดปรับปรุงระบบ',
-    },
-  })
+  for (const setting of SYSTEM_SETTINGS) {
+    await prisma.systemSetting.upsert({
+      where: { key: setting.key },
+      update: {},
+      create: setting
+    })
+  }
 
-  await prisma.systemSetting.upsert({
-    where: { key: 'maintenance_message' },
-    update: {},
-    create: {
-      key: 'maintenance_message',
-      value: 'ระบบปิดปรับปรุงชั่วคราว กรุณาลองใหม่ภายหลัง',
-      description: 'ข้อความแจ้งเตือนเมื่อระบบปิดปรับปรุง',
-    },
-  })
+  console.log(`✅ Seeded ${SYSTEM_SETTINGS.length} system settings`)
+}
 
-  console.log('✅ Created system settings (maintenance_mode, maintenance_message)')
+// --- Entry point ---
+
+async function main(): Promise<void> {
+  console.log('🌱 Starting seed...')
+
+  await seedDepartments()
+  await seedSections()
+  await seedAdminUser()
+  await seedSystemSettings()
 
   console.log('\n🎉 Seed completed successfully!')
   console.log('\n📝 Login credentials:')
   console.log('   Admin: username=682732, password=(from hash)')
-  console.log('   User:  username=test01, password=test123')
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error during seed:', e)
+    console.error('❌ Seed failed:', e)
     process.exit(1)
   })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+  .finally(() => prisma.$disconnect())
