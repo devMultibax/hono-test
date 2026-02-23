@@ -965,7 +965,6 @@ export const OPENAPI_PATHS = {
               schema: {
                 type: 'object',
                 properties: {
-                  success: { type: 'boolean', example: true },
                   data: {
                     type: 'array',
                     items: {
@@ -1008,7 +1007,6 @@ export const OPENAPI_PATHS = {
               schema: {
                 type: 'object',
                 properties: {
-                  success: { type: 'boolean', example: true },
                   data: {
                     type: 'array',
                     items: {
@@ -1051,7 +1049,6 @@ export const OPENAPI_PATHS = {
               schema: {
                 type: 'object',
                 properties: {
-                  success: { type: 'boolean', example: true },
                   data: {
                     type: 'array',
                     items: {
@@ -1086,7 +1083,6 @@ export const OPENAPI_PATHS = {
               schema: {
                 type: 'object',
                 properties: {
-                  success: { type: 'boolean', example: true },
                   data: {
                     type: 'array',
                     items: {
@@ -1123,7 +1119,6 @@ export const OPENAPI_PATHS = {
               schema: {
                 type: 'object',
                 properties: {
-                  success: { type: 'boolean', example: true },
                   data: {
                     type: 'array',
                     items: { $ref: '#/components/schemas/UserFromLog' }
@@ -1275,7 +1270,6 @@ export const OPENAPI_PATHS = {
               schema: {
                 type: 'object',
                 properties: {
-                  success: { type: 'boolean', example: true },
                   data: {
                     type: 'object',
                     properties: { valid: { type: 'boolean' } }
@@ -1315,7 +1309,6 @@ export const OPENAPI_PATHS = {
               schema: {
                 type: 'object',
                 properties: {
-                  success: { type: 'boolean', example: true },
                   data: {
                     type: 'object',
                     properties: { user: { $ref: '#/components/schemas/User' } }

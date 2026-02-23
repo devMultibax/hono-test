@@ -2,13 +2,52 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError, ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
-import { ActionType, Role, type UserResponse, type UserWithRelations, Status } from '../types'
+import { ActionType, Role, type UserResponse, type UserWithRelations, type DepartmentResponse, type SectionResponse, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { generateDefaultPassword } from '../lib/password'
 import { getUserFullName } from '../utils/audit.utils'
-import type { Prisma } from '@prisma/client'
+import type { User as PrismaUser, Prisma, ActionType as PrismaActionType } from '@prisma/client'
 
 const SALT_ROUNDS = 10
+
+type UserForLog = {
+  username: string
+  firstName: string
+  lastName: string
+  email: string | null
+  tel: string | null
+  role: string
+  status: string
+  createdAt: Date
+  createdBy: string
+  createdByName: string
+  updatedAt: Date | null
+  updatedBy: string | null
+  updatedByName: string | null
+  department: { name: string }
+  section: { name: string } | null
+}
+
+type PrismaUserWithOptionalRelations = PrismaUser & {
+  department?: DepartmentResponse
+  section?: SectionResponse | null
+}
+
+interface UpdateUserPayload {
+  password?: string
+  firstName?: string
+  lastName?: string
+  departmentId?: number
+  sectionId?: number | null
+  email?: string | null
+  tel?: string | null
+  role?: Role
+  status?: 'active' | 'inactive'
+  updatedAt: Date
+  updatedBy: string
+  updatedByName: string
+  tokenVersion?: { increment: number }
+}
 
 export interface UserFilters {
   search?: string
@@ -19,7 +58,7 @@ export interface UserFilters {
 }
 
 export class UserService {
-  private static formatUserResponse(user: any): UserResponse {
+  private static formatUserResponse(user: PrismaUser): UserResponse {
     return {
       id: user.id,
       username: user.username,
@@ -130,7 +169,7 @@ export class UserService {
         prisma.user.count({ where })
       ])
 
-      const formattedUsers = users.map((user: any) => {
+      const formattedUsers = (users as PrismaUserWithOptionalRelations[]).map((user) => {
         const base = this.formatUserResponse(user)
         if (includeRelations) {
           return {
@@ -153,7 +192,7 @@ export class UserService {
       }
     })
 
-    return users.map((user: any) => {
+    return (users as PrismaUserWithOptionalRelations[]).map((user) => {
       const base = this.formatUserResponse(user)
       if (includeRelations) {
         return {
@@ -286,10 +325,11 @@ export class UserService {
 
     const base = this.formatUserResponse(user)
     if (includeRelations) {
+      const userWithRelations = user as PrismaUserWithOptionalRelations
       return {
         ...base,
-        department: (user as any).department,
-        section: (user as any).section
+        department: userWithRelations.department,
+        section: userWithRelations.section
       } as UserWithRelations
     }
     return base
@@ -344,7 +384,7 @@ export class UserService {
 
     const updatedByName = await getUserFullName(updatedBy)
 
-    const updateData: any = {
+    const updateData: UpdateUserPayload = {
       ...data,
       updatedAt: new Date(),
       updatedBy,
@@ -363,7 +403,7 @@ export class UserService {
     const updatedUser = await prisma.$transaction(async (tx) => {
       const updated = await tx.user.update({
         where: { id },
-        data: updateData,
+        data: updateData as Prisma.UserUpdateInput,
         include: {
           department: true,
           section: true
@@ -391,7 +431,7 @@ export class UserService {
     }
 
     await prisma.$transaction(async (tx) => {
-      await this.logUserAction(user as any, ActionType.DELETE, tx)
+      await this.logUserAction(user, ActionType.DELETE, tx)
       // Invalidate active sessions before deleting
       await tx.user.update({
         where: { id },
@@ -446,7 +486,7 @@ export class UserService {
         }
       })
 
-      await this.logUserAction(updated as any, ActionType.RESET_PASSWORD, tx)
+      await this.logUserAction(updated, ActionType.RESET_PASSWORD, tx)
       return updated
     })
 
@@ -497,15 +537,18 @@ export class UserService {
         }
       })
 
-      await this.logUserAction(updated as any, ActionType.CHANGE_PASSWORD, tx)
+      await this.logUserAction(updated, ActionType.CHANGE_PASSWORD, tx)
       return updated
     })
 
     return this.formatUserResponse(updatedUser)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static async logUserAction(user: any, actionType: ActionType, tx?: any): Promise<void> {
+  private static async logUserAction(
+    user: UserForLog,
+    actionType: ActionType,
+    tx?: Pick<typeof prisma, 'userLog'>
+  ): Promise<void> {
     const data = {
       username: user.username,
       firstName: user.firstName,
@@ -522,7 +565,7 @@ export class UserService {
       updatedAt: user.updatedAt,
       updatedBy: user.updatedBy,
       updatedByName: user.updatedByName,
-      actionType: actionType as any
+      actionType: actionType as unknown as PrismaActionType
     }
 
     if (tx) {

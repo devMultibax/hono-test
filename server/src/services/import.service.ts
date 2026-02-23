@@ -67,14 +67,14 @@ export class ImportService {
 
           await DepartmentService.create(name, createdBy)
           result.success++
-        } catch (error: any) {
-          result.errors.push({ row: rowNumber, code: error.message || CODES.IMPORT_UNKNOWN_ERROR })
+        } catch (error: unknown) {
+          result.errors.push({ row: rowNumber, code: error instanceof Error ? error.message : CODES.IMPORT_UNKNOWN_ERROR })
           result.failed++
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) throw error
-      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error instanceof Error ? error.message : String(error) })
     }
 
     return result
@@ -154,14 +154,14 @@ export class ImportService {
 
           await SectionService.create(departmentId, name, createdBy)
           result.success++
-        } catch (error: any) {
-          result.errors.push({ row: rowNumber, code: error.message || CODES.IMPORT_UNKNOWN_ERROR })
+        } catch (error: unknown) {
+          result.errors.push({ row: rowNumber, code: error instanceof Error ? error.message : CODES.IMPORT_UNKNOWN_ERROR })
           result.failed++
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) throw error
-      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error instanceof Error ? error.message : String(error) })
     }
 
     return result
@@ -345,14 +345,14 @@ export class ImportService {
           result.success++
           existingUsernames.add(username)
           batchUsernames.add(username)
-        } catch (error: any) {
-          result.errors.push({ row: rowNumber, code: error.message || CODES.IMPORT_UNKNOWN_ERROR })
+        } catch (error: unknown) {
+          result.errors.push({ row: rowNumber, code: error instanceof Error ? error.message : CODES.IMPORT_UNKNOWN_ERROR })
           result.failed++
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) throw error
-      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error.message })
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error instanceof Error ? error.message : String(error) })
     }
 
     return result
@@ -377,7 +377,7 @@ export class ImportService {
 
       const sheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[sheetName]
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[]
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
 
       if (data.length === 0) {
         errors.push('Excel file is empty')
@@ -394,8 +394,8 @@ export class ImportService {
         errors.push('No data rows found')
       }
 
-    } catch (error: any) {
-      errors.push(`Invalid Excel file: ${error.message}`)
+    } catch (error: unknown) {
+      errors.push(`Invalid Excel file: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     return {
@@ -423,7 +423,7 @@ export class ImportService {
 
       const sheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[sheetName]
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[]
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
 
       if (data.length === 0) {
         errors.push('Excel file is empty')
@@ -444,8 +444,8 @@ export class ImportService {
         errors.push('No data rows found')
       }
 
-    } catch (error: any) {
-      errors.push(`Invalid Excel file: ${error.message}`)
+    } catch (error: unknown) {
+      errors.push(`Invalid Excel file: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     return {
@@ -473,7 +473,7 @@ export class ImportService {
 
       const sheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[sheetName]
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[]
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
 
       if (data.length === 0) {
         errors.push('Excel file is empty')
@@ -493,8 +493,8 @@ export class ImportService {
         errors.push('No data rows found')
       }
 
-    } catch (error: any) {
-      errors.push(`Invalid Excel file: ${error.message}`)
+    } catch (error: unknown) {
+      errors.push(`Invalid Excel file: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     return {

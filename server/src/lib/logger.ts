@@ -75,3 +75,34 @@ export const logger = {
   warn: (data: Omit<LogData, 'level' | 'datetime'>) => writeLog('warn', data),
   error: (data: Omit<LogData, 'level' | 'datetime'>) => writeLog('error', data),
 }
+
+export interface SystemLogData {
+  event: string
+  [key: string]: unknown
+}
+
+function writeSystemLog(level: LogLevel, data: SystemLogData): void {
+  const entry: LogData = {
+    datetime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    level,
+    username: 'system',
+    fullName: 'System',
+    method: '-',
+    url: '-',
+    ip: '-',
+    ...data,
+  }
+
+  fileStream.write(JSON.stringify(entry))
+
+  if (env.NODE_ENV === 'development') {
+    const color = level === 'error' ? '\x1b[31m' : level === 'warn' ? '\x1b[33m' : '\x1b[36m'
+    console.log(`${color}[${level.toUpperCase()}]\x1b[0m [SYSTEM] ${data.event}`)
+  }
+}
+
+export const logSystem = {
+  info: (data: SystemLogData) => writeSystemLog('info', data),
+  warn: (data: SystemLogData) => writeSystemLog('warn', data),
+  error: (data: SystemLogData) => writeSystemLog('error', data),
+}

@@ -2,21 +2,21 @@ import { z } from 'zod'
 
 export const updateProfileSchema = z.object({
     firstName: z.string()
-        .min(1, { message: 'First name cannot be empty' })
-        .max(100, { message: 'First name is too long' })
+        .min(1, { message: 'กรุณาระบุชื่อ' })
+        .max(100, { message: 'ชื่อต้องไม่เกิน 100 ตัวอักษร' })
         .optional(),
     lastName: z.string()
-        .min(1, { message: 'Last name cannot be empty' })
-        .max(100, { message: 'Last name is too long' })
+        .min(1, { message: 'กรุณาระบุนามสกุล' })
+        .max(100, { message: 'นามสกุลต้องไม่เกิน 100 ตัวอักษร' })
         .optional(),
     email: z.string()
-        .email({ message: 'Invalid email format' })
-        .max(255, { message: 'Email is too long' })
+        .email({ message: 'รูปแบบอีเมลไม่ถูกต้อง' })
+        .max(255, { message: 'อีเมลต้องไม่เกิน 255 ตัวอักษร' })
         .optional()
         .nullable(),
     tel: z.string()
-        .length(10, { message: 'Phone number must be exactly 10 digits' })
-        .regex(/^[0-9]+$/, { message: 'Phone number must contain only digits' })
+        .length(10, { message: 'เบอร์โทรศัพท์ต้องมี 10 หลักพอดี' })
+        .regex(/^[0-9]+$/, { message: 'เบอร์โทรศัพท์ต้องเป็นตัวเลขเท่านั้น' })
         .optional()
         .nullable()
 })

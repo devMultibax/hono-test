@@ -5,6 +5,8 @@
         "moduleResolution": "node",
         "esModuleInterop": true,
         "strict": true,
+        "noImplicitOverride": true,
+        "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true,
         "outDir": "./dist",
         "rootDir": ".",

@@ -5,6 +5,7 @@ import path from 'path'
 import { env } from '../config/env'
 import { NotFoundError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { logSystem } from '../lib/logger'
 import type { BackupFile } from '../schemas/backup.schema'
 
 const BACKUP_DIR = path.resolve(process.cwd(), 'storage/backups')
@@ -134,7 +135,7 @@ export class BackupService {
         '-f', filePath
       ]
 
-      console.log(`Creating backup: ${filename}`)
+      logSystem.info({ event: `Creating backup: ${filename}` })
 
       const process_spawn = spawn(pgDump, args, {
         env: { ...process.env, PGPASSWORD: db.password }
@@ -148,17 +149,17 @@ export class BackupService {
 
       process_spawn.on('close', async (code) => {
         if (code === 0 && existsSync(filePath)) {
-          console.log(`Backup created successfully: ${filename}`)
+          logSystem.info({ event: `Backup created successfully: ${filename}` })
           resolve({ filename, path: filePath })
         } else {
-          console.error('Backup failed:', stderr)
+          logSystem.error({ event: 'Backup failed', detail: stderr })
           await this.cleanupEmptyFile(filePath)
           reject(new Error(`Backup failed: ${stderr}`))
         }
       })
 
       process_spawn.on('error', async (err) => {
-        console.error('Failed to start pg_dump:', err)
+        logSystem.error({ event: 'Failed to start pg_dump', detail: err.message })
         await this.cleanupEmptyFile(filePath)
         reject(new Error(`Failed to start pg_dump: ${err.message}`))
       })
@@ -186,7 +187,7 @@ export class BackupService {
         '-c', `CREATE DATABASE "${targetDbName}";`
       ]
 
-      console.log(`Creating database: ${targetDbName}`)
+      logSystem.info({ event: `Creating database: ${targetDbName}` })
 
       const psqlCreate = spawn(psql, createDbArgs, { env: execEnv })
 
@@ -199,12 +200,12 @@ export class BackupService {
       psqlCreate.on('close', (createCode) => {
         // Ignore "already exists" error
         if (createCode !== 0 && !createStderr.includes('already exists')) {
-          console.error('Create database error:', createStderr)
+          logSystem.error({ event: 'Create database error', detail: createStderr })
           reject(new Error(`Failed to create database: ${createStderr}`))
           return
         }
 
-        console.log(`Database "${targetDbName}" is ready`)
+        logSystem.info({ event: `Database "${targetDbName}" is ready` })
 
         // Step 2: Restore backup to target database
         const restoreArgs = [
@@ -218,7 +219,7 @@ export class BackupService {
           filePath
         ]
 
-        console.log(`Restoring backup to database: ${targetDbName}`)
+        logSystem.info({ event: `Restoring backup to database: ${targetDbName}` })
 
         const pgRestoreProcess = spawn(pgRestore, restoreArgs, { env: execEnv })
 
@@ -231,30 +232,30 @@ export class BackupService {
         pgRestoreProcess.on('close', (restoreCode) => {
           // pg_restore returns 0 for success, 1 for warnings (which is OK)
           if (restoreCode !== 0 && restoreCode !== 1) {
-            console.error('Restore error:', restoreStderr)
+            logSystem.error({ event: 'Restore error', detail: restoreStderr })
             reject(new Error(`Restore failed: ${restoreStderr}`))
             return
           }
 
           if (restoreStderr) {
-            console.log('Restore warnings:', restoreStderr)
+            logSystem.warn({ event: 'Restore warnings', detail: restoreStderr })
           }
 
           // Track restore timestamp
           this.setRestoredAt(filename)
 
-          console.log(`Database restored successfully to "${targetDbName}"`)
+          logSystem.info({ event: `Database restored successfully to "${targetDbName}"` })
           resolve()
         })
 
         pgRestoreProcess.on('error', (err) => {
-          console.error('Failed to start pg_restore:', err)
+          logSystem.error({ event: 'Failed to start pg_restore', detail: err.message })
           reject(new Error(`Failed to start pg_restore: ${err.message}`))
         })
       })
 
       psqlCreate.on('error', (err) => {
-        console.error('Failed to start psql:', err)
+        logSystem.error({ event: 'Failed to start psql', detail: err.message })
         reject(new Error(`Failed to start psql: ${err.message}`))
       })
     })

@@ -1,7 +1,7 @@
 import cron from 'node-cron'
 import fs from 'fs/promises'
 import path from 'path'
-import { LOG_DIR } from '../lib/logger'
+import { LOG_DIR, logSystem } from '../lib/logger'
 
 const RETENTION_DAYS = 30
 const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000
@@ -11,11 +11,11 @@ const LOG_FILE_PATTERN = /^app-.*\.log$/
 export class ScheduledLogService {
   static init(): void {
     cron.schedule(CRON_SCHEDULE, () => this.cleanupOldLogs())
-    console.log('[LOG] Scheduled Log Service initialized (Daily at 01:00 AM)')
+    logSystem.info({ event: 'Scheduled Log Service initialized (Daily at 01:00 AM)' })
   }
 
   private static async cleanupOldLogs(): Promise<void> {
-    console.log('[LOG] Starting scheduled log cleanup...')
+    logSystem.info({ event: 'Starting scheduled log cleanup...' })
 
     try {
       const files = await fs.readdir(LOG_DIR)
@@ -26,10 +26,10 @@ export class ScheduledLogService {
 
       if (oldFiles.length === 0) return
 
-      console.log(`[LOG] Found ${oldFiles.length} old logs to cleanup`)
+      logSystem.info({ event: `Found ${oldFiles.length} old logs to cleanup` })
       await this.deleteFiles(oldFiles)
     } catch (error) {
-      console.error(`[LOG] Failed to cleanup old logs: ${(error as Error).message}`)
+      logSystem.error({ event: 'Failed to cleanup old logs', detail: (error as Error).message })
     }
   }
 
@@ -48,7 +48,7 @@ export class ScheduledLogService {
           oldFiles.push({ file, filePath })
         }
       } catch (err) {
-        console.warn(`[LOG] Failed to stat log file ${file}: ${(err as Error).message}`)
+        logSystem.warn({ event: `Failed to stat log file ${file}`, detail: (err as Error).message })
       }
     }
 
@@ -61,9 +61,9 @@ export class ScheduledLogService {
     for (const { file, filePath } of files) {
       try {
         await fs.unlink(filePath)
-        console.log(`[LOG] Deleted old log: ${file}`)
+        logSystem.info({ event: `Deleted old log: ${file}` })
       } catch (err) {
-        console.warn(`[LOG] Failed to delete log ${file}: ${(err as Error).message}`)
+        logSystem.warn({ event: `Failed to delete log ${file}`, detail: (err as Error).message })
       }
     }
   }

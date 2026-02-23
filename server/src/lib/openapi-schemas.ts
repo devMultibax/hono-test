@@ -8,8 +8,13 @@ export const OPENAPI_SCHEMAS = {
     type: 'object',
     properties: {
       error: {
-        type: 'string',
-        example: 'Error message'
+        type: 'object',
+        properties: {
+          code: { type: 'string', example: 'USER_NOT_FOUND' },
+          message: { type: 'string', example: 'The requested resource was not found' },
+          details: {}
+        },
+        required: ['code', 'message']
       }
     },
     required: ['error']
@@ -65,6 +70,12 @@ export const OPENAPI_SCHEMAS = {
       createdAt: {
         type: 'string',
         format: 'date-time',
+        example: '2025-01-19T10:00:00.000Z'
+      },
+      updatedAt: {
+        type: 'string',
+        format: 'date-time',
+        nullable: true,
         example: '2025-01-19T10:00:00.000Z'
       },
       lastLoginAt: {
@@ -143,30 +154,34 @@ export const OPENAPI_SCHEMAS = {
   SystemLog: {
     type: 'object',
     properties: {
-      level: { type: 'string', example: 'info' },
-      time: { type: 'string', format: 'date-time', example: '2025-01-21T10:00:00.000Z' },
-      pid: { type: 'integer', example: 1234 },
-      hostname: { type: 'string', example: 'server-01' },
-      msg: { type: 'string', example: 'Request completed' },
-      reqId: { type: 'string', example: 'req-123' },
-      req: { type: 'object' },
-      res: { type: 'object' },
-      responseTime: { type: 'number', example: 45.2 }
+      datetime: { type: 'string', format: 'date-time', example: '2025-01-21 10:00:00' },
+      level: { type: 'string', enum: ['info', 'warn', 'error'], example: 'info' },
+      username: { type: 'string', example: 'user01' },
+      fullName: { type: 'string', example: 'John Doe' },
+      method: { type: 'string', example: 'GET' },
+      url: { type: 'string', example: '/users' },
+      ip: { type: 'string', example: '127.0.0.1' },
+      event: { type: 'string', example: 'GET /users' }
     }
   },
   ImportResult: {
     type: 'object',
     properties: {
-      message: { type: 'string', example: 'Import completed' },
-      result: {
+      data: {
         type: 'object',
         properties: {
           success: { type: 'integer', example: 10 },
           failed: { type: 'integer', example: 2 },
           errors: {
             type: 'array',
-            items: { type: 'string' },
-            example: ['Row 3: Invalid email', 'Row 5: Username exists']
+            items: {
+              type: 'object',
+              properties: {
+                row: { type: 'integer', example: 3 },
+                code: { type: 'string', example: 'IMPORT_USER_USERNAME_EXISTS' },
+                params: { type: 'object' }
+              }
+            }
           }
         }
       }
