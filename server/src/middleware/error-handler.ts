@@ -37,7 +37,7 @@ export const errorHandler = (error: Error, c: Context) => {
     if (error.statusCode >= 500) {
       logError?.('Server error', logData)
     } else {
-      logWarn?.(`AppError ${error.statusCode}`, logData)
+      logWarn?.(`${error.code} (${error.statusCode})`, logData)
     }
 
     return errorResponse(
