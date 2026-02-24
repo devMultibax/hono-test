@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx'
+import { validateExcelFile, type ExcelValidationResult } from '../utils/excel.utils'
 import { DepartmentService } from './department.service'
 import { SectionService } from './section.service'
 import { UserService } from './user.service'
@@ -359,148 +360,15 @@ export class ImportService {
     return result
   }
 
-  /**
-   * Validate Excel file structure for departments
-   */
-  static validateDepartmentFile(fileBuffer: Buffer): {
-    valid: boolean
-    errors: string[]
-  } {
-    const errors: string[] = []
-
-    try {
-      const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
-
-      if (workbook.SheetNames.length === 0) {
-        errors.push('Excel file has no worksheets')
-        return { valid: false, errors }
-      }
-
-      const sheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[sheetName]
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
-
-      if (data.length === 0) {
-        errors.push('Excel file is empty')
-        return { valid: false, errors }
-      }
-
-      const headers = data[0] as string[]
-
-      if (!headers.includes('Name')) {
-        errors.push('Missing required column: Name')
-      }
-
-      if (data.length === 1) {
-        errors.push('No data rows found')
-      }
-
-    } catch (error: unknown) {
-      errors.push(`Invalid Excel file: ${error instanceof Error ? error.message : String(error)}`)
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors
-    }
+  static validateDepartmentFile(fileBuffer: Buffer): ExcelValidationResult {
+    return validateExcelFile(fileBuffer, ['Name'])
   }
 
-  /**
-   * Validate Excel file structure for sections
-   */
-  static validateSectionFile(fileBuffer: Buffer): {
-    valid: boolean
-    errors: string[]
-  } {
-    const errors: string[] = []
-
-    try {
-      const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
-
-      if (workbook.SheetNames.length === 0) {
-        errors.push('Excel file has no worksheets')
-        return { valid: false, errors }
-      }
-
-      const sheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[sheetName]
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
-
-      if (data.length === 0) {
-        errors.push('Excel file is empty')
-        return { valid: false, errors }
-      }
-
-      const headers = data[0] as string[]
-
-      if (!headers.includes('Department')) {
-        errors.push('Missing required column: Department')
-      }
-
-      if (!headers.includes('Name')) {
-        errors.push('Missing required column: Name')
-      }
-
-      if (data.length === 1) {
-        errors.push('No data rows found')
-      }
-
-    } catch (error: unknown) {
-      errors.push(`Invalid Excel file: ${error instanceof Error ? error.message : String(error)}`)
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors
-    }
+  static validateSectionFile(fileBuffer: Buffer): ExcelValidationResult {
+    return validateExcelFile(fileBuffer, ['Department', 'Name'])
   }
 
-  /**
-   * Validate Excel file structure for users
-   */
-  static validateUserFile(fileBuffer: Buffer): {
-    valid: boolean
-    errors: string[]
-  } {
-    const errors: string[] = []
-
-    try {
-      const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
-
-      if (workbook.SheetNames.length === 0) {
-        errors.push('Excel file has no worksheets')
-        return { valid: false, errors }
-      }
-
-      const sheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[sheetName]
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
-
-      if (data.length === 0) {
-        errors.push('Excel file is empty')
-        return { valid: false, errors }
-      }
-
-      const headers = data[0] as string[]
-      const requiredColumns = ['Username', 'First Name', 'Last Name', 'Department ID']
-
-      for (const column of requiredColumns) {
-        if (!headers.includes(column)) {
-          errors.push(`Missing required column: ${column}`)
-        }
-      }
-
-      if (data.length === 1) {
-        errors.push('No data rows found')
-      }
-
-    } catch (error: unknown) {
-      errors.push(`Invalid Excel file: ${error instanceof Error ? error.message : String(error)}`)
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors
-    }
+  static validateUserFile(fileBuffer: Buffer): ExcelValidationResult {
+    return validateExcelFile(fileBuffer, ['Username', 'First Name', 'Last Name', 'Department ID'])
   }
 }

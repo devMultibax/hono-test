@@ -8,6 +8,7 @@ import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
 import { logSystem } from '../lib/logger'
 import { LogEvent } from '../constants/log-events'
+import { formatBytes } from '../utils/format.utils'
 import type { BackupFile } from '../schemas/backup.schema'
 
 const BACKUP_DIR = path.resolve(process.cwd(), 'storage/backups')
@@ -107,7 +108,7 @@ export class BackupService {
           modifiedAt: stats.mtime.toISOString(),
           restoredAt: fileMeta?.restoredAt ?? null,
           size: stats.size,
-          sizeFormatted: this.formatBytes(stats.size)
+          sizeFormatted: formatBytes(stats.size)
         }
       })
     )
@@ -139,17 +140,17 @@ export class BackupService {
 
       logSystem.info({ event: LogEvent.BACKUP_STARTED(filename) })
 
-      const process_spawn = spawn(pgDump, args, {
+      const childProcess = spawn(pgDump, args, {
         env: { ...process.env, PGPASSWORD: db.password }
       })
 
       let stderr = ''
 
-      process_spawn.stderr.on('data', (data) => {
+      childProcess.stderr.on('data', (data) => {
         stderr += data.toString()
       })
 
-      process_spawn.on('close', async (code) => {
+      childProcess.on('close', async (code) => {
         if (code === 0 && existsSync(filePath)) {
           logSystem.info({ event: LogEvent.BACKUP_COMPLETED(filename) })
           resolve({ filename, path: filePath })
@@ -160,7 +161,7 @@ export class BackupService {
         }
       })
 
-      process_spawn.on('error', async (err) => {
+      childProcess.on('error', async (err) => {
         logSystem.error({ event: LogEvent.BACKUP_PROCESS_FAILED, detail: err.message })
         await this.cleanupEmptyFile(filePath)
         reject(new Error(`Failed to start pg_dump: ${err.message}`))
@@ -323,13 +324,4 @@ export class BackupService {
     }
   }
 
-  private static formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 Bytes'
-
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
-  }
 }

@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma'
+import { formatBytes } from '../utils/format.utils'
 import type { DatabaseStatistics, TableStat, AnalyzeResult } from '../schemas/database.schema'
 
 const MANAGED_TABLES = ['user', 'department', 'section', 'user_log'] as const
@@ -17,7 +18,7 @@ export class DatabaseService {
       databaseName,
       totalTables: tableStats.length,
       totalRows,
-      totalSize: this.formatBytes(totalSizeBytes),
+      totalSize: formatBytes(totalSizeBytes),
       tables: tableStats
     }
   }
@@ -96,13 +97,4 @@ export class DatabaseService {
     }
   }
 
-  private static formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 Bytes'
-
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
-  }
 }

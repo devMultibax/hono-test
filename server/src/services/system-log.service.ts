@@ -3,6 +3,7 @@ import { existsSync, createReadStream } from 'fs'
 import path from 'path'
 import readline from 'readline'
 import { LOG_DIR } from '../lib/logger'
+import { formatBytes } from '../utils/format.utils'
 import type { LogEntry, LogFile, LogQuery } from '../schemas/system-log.schema'
 
 const LOG_FILE_PATTERN = /^app-(\d{4}-\d{2}-\d{2})\.log$/
@@ -27,7 +28,7 @@ export class SystemLogService {
           filename,
           date: dateMatch?.[1] ?? 'unknown',
           size: stats.size,
-          sizeFormatted: this.formatBytes(stats.size)
+          sizeFormatted: formatBytes(stats.size)
         }
       })
     )
@@ -124,13 +125,4 @@ export class SystemLogService {
     return deletedCount
   }
 
-  private static formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 Bytes'
-
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
-  }
 }

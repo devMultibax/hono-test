@@ -7,27 +7,11 @@ import { ActionType, Role, type UserResponse, type UserWithRelations, type Embed
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { generateDefaultPassword } from '../lib/password'
 import { getUserFullName } from '../utils/audit.utils'
-import type { User as PrismaUser, Prisma, ActionType as PrismaActionType } from '@prisma/client'
+import { logUserAction } from '../utils/user-log.utils'
+import type { User as PrismaUser, Prisma } from '@prisma/client'
 
 const SALT_ROUNDS = 10
 
-type UserForLog = {
-  username: string
-  firstName: string
-  lastName: string
-  email: string | null
-  tel: string | null
-  role: string
-  status: string
-  createdAt: Date
-  createdBy: string
-  createdByName: string
-  updatedAt: Date | null
-  updatedBy: string | null
-  updatedByName: string | null
-  department: { name: string }
-  section: { name: string } | null
-}
 
 type PrismaUserWithOptionalRelations = PrismaUser & {
   department?: EmbeddedRelation
@@ -249,7 +233,7 @@ export class UserService {
         }
       })
 
-      await this.logUserAction(created, ActionType.CREATE, tx)
+      await logUserAction(created, ActionType.CREATE, tx)
       return created
     })
 
@@ -357,7 +341,7 @@ export class UserService {
         }
       })
 
-      await this.logUserAction(updated, ActionType.UPDATE, tx)
+      await logUserAction(updated, ActionType.UPDATE, tx)
       return updated
     })
 
@@ -378,7 +362,7 @@ export class UserService {
     }
 
     await prisma.$transaction(async (tx) => {
-      await this.logUserAction(user, ActionType.DELETE, tx)
+      await logUserAction(user, ActionType.DELETE, tx)
       // Invalidate active sessions before deleting
       await tx.user.update({
         where: { id },
@@ -433,7 +417,7 @@ export class UserService {
         }
       })
 
-      await this.logUserAction(updated, ActionType.RESET_PASSWORD, tx)
+      await logUserAction(updated, ActionType.RESET_PASSWORD, tx)
       return updated
     })
 
@@ -480,42 +464,11 @@ export class UserService {
         }
       })
 
-      await this.logUserAction(updated, ActionType.CHANGE_PASSWORD, tx)
+      await logUserAction(updated, ActionType.CHANGE_PASSWORD, tx)
       return updated
     })
 
     return this.formatUserResponse(updatedUser)
   }
 
-  private static async logUserAction(
-    user: UserForLog,
-    actionType: ActionType,
-    tx?: Pick<typeof prisma, 'userLog'>
-  ): Promise<void> {
-    const data = {
-      username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      department: user.department.name,
-      section: user.section?.name || '',
-      email: user.email,
-      tel: user.tel,
-      role: user.role as Role,
-      status: user.status as 'active' | 'inactive',
-      createdAt: user.createdAt,
-      createdBy: user.createdBy,
-      createdByName: user.createdByName || '',
-      updatedAt: user.updatedAt,
-      updatedBy: user.updatedBy,
-      updatedByName: user.updatedByName,
-      actionType: actionType as unknown as PrismaActionType
-    }
-
-    if (tx) {
-      await tx.userLog.create({ data })
-    } else {
-      await prisma.userLog.create({ data })
-    }
-  }
 }
-

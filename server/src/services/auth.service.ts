@@ -7,6 +7,7 @@ import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
 import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations } from '../types'
 import { daysToMs } from '../utils/time.utils'
+import { logUserAction } from '../utils/user-log.utils'
 
 const TOKEN_EXPIRY = '24h'
 
@@ -203,50 +204,9 @@ export class AuthService {
       }
     })
 
-    await this.logUserAction(updatedUser, ActionType.UPDATE)
+    await logUserAction(updatedUser, ActionType.UPDATE)
 
     return this.formatUserResponse(updatedUser)
   }
 
-  private static async logUserAction(
-    user: {
-      username: string
-      firstName: string
-      lastName: string
-      email: string | null
-      tel: string | null
-      role: string
-      status: string
-      createdAt: Date
-      createdBy: string
-      createdByName: string
-      updatedAt: Date | null
-      updatedBy: string | null
-      updatedByName: string | null
-      department: { name: string }
-      section: { name: string } | null
-    },
-    actionType: ActionType
-  ): Promise<void> {
-    await prisma.userLog.create({
-      data: {
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        department: user.department.name,
-        section: user.section?.name || '',
-        email: user.email,
-        tel: user.tel,
-        role: user.role as Role,
-        status: user.status as Status,
-        createdAt: user.createdAt,
-        createdBy: user.createdBy,
-        createdByName: user.createdByName || '',
-        updatedAt: user.updatedAt,
-        updatedBy: user.updatedBy,
-        updatedByName: user.updatedByName,
-        actionType
-      }
-    })
-  }
 }
