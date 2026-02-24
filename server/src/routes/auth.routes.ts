@@ -7,6 +7,7 @@ import { authMiddleware } from '../middleware/auth'
 import { loginRateLimiter } from '../middleware/rate-limit'
 import { generateCsrfToken, csrfProtection } from '../middleware/csrf'
 import { env } from '../config/env'
+import { msToSeconds } from '../utils/time.utils'
 import { CODES } from '../constants/error-codes'
 import { UnauthorizedError } from '../lib/errors'
 import type { HonoContext } from '../types'
@@ -29,7 +30,7 @@ auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
       httpOnly: true,
       secure: env.COOKIE_SECURE,
       sameSite: env.COOKIE_SAME_SITE,
-      maxAge: env.JWT_COOKIE_MAX_AGE / 1000, // Convert milliseconds to seconds
+      maxAge: msToSeconds(env.JWT_COOKIE_MAX_AGE),
       path: '/'
     })
 
