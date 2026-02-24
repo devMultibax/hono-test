@@ -1,6 +1,16 @@
 import type { ExportColumn } from '../types/export'
 import { MSG } from '../constants/messages'
 
+// Filename timestamp: DDMMYY_HHmm  (e.g. 240226_1028)
+export function exportTimestamp(date = new Date()): string {
+  const dd = String(date.getDate()).padStart(2, '0')
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const yy = String(date.getFullYear()).slice(-2)
+  const hh = String(date.getHours()).padStart(2, '0')
+  const min = String(date.getMinutes()).padStart(2, '0')
+  return `${dd}${mm}${yy}_${hh}${min}`
+}
+
 // Value formatters
 export const formatDate = (v: unknown) =>
   v ? new Date(v as string).toLocaleString('th-TH') : ''

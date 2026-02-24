@@ -11,6 +11,7 @@ import { ExportService, userExcelColumns } from '../services/export.service'
 import { ImportService } from '../services/import.service'
 import { TemplateService } from '../services/template.service'
 import { sendExcelResponse } from '../utils/excel-response.utils'
+import { exportTimestamp } from '../lib/export-helpers'
 import { resolveUploadedFile } from '../utils/upload-handler.utils'
 import { requireRouteId } from '../utils/id-validator.utils'
 import { ValidationError } from '../lib/errors'
@@ -118,7 +119,7 @@ users.get('/export/excel', requireUser, zValidator('query', listUsersQuerySchema
   const userList = await UserService.getAll(true, undefined, filters)
   const userData = Array.isArray(userList) ? userList : []
   const result = await ExportService.exportToExcel(userData as UserWithRelations[], { columns: userExcelColumns })
-  const filename = `users_${new Date().toISOString().split('T')[0]}.xlsx`
+  const filename = `Users_Export_${exportTimestamp()}.xlsx`
   return sendExcelResponse(c, result, filename)
 })
 

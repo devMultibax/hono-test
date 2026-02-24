@@ -98,6 +98,11 @@ apiClient.interceptors.response.use(
 
 export async function downloadFile(url: string, filename: string, signal?: AbortSignal, params?: Record<string, unknown>) {
   const res = await apiClient.get(url, { responseType: 'blob', signal, params });
+  const disposition = res.headers['content-disposition'];
+  if (disposition) {
+    const match = disposition.match(/filename="([^"]+)"/);
+    if (match) filename = match[1];
+  }
   const link = document.createElement('a');
   link.href = URL.createObjectURL(new Blob([res.data]));
   link.download = filename;

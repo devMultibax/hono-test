@@ -11,6 +11,7 @@ import { ExportService, departmentExcelColumns } from '../services/export.servic
 import { ImportService } from '../services/import.service'
 import { TemplateService } from '../services/template.service'
 import { sendExcelResponse } from '../utils/excel-response.utils'
+import { exportTimestamp } from '../lib/export-helpers'
 import { resolveUploadedFile } from '../utils/upload-handler.utils'
 import { requireRouteId } from '../utils/id-validator.utils'
 import { ValidationError } from '../lib/errors'
@@ -86,7 +87,7 @@ departments.get('/export/excel', zValidator('query', listDepartmentsQuerySchema)
   const departmentList = await DepartmentService.getAll(false, undefined, { search, status })
   const departmentData = Array.isArray(departmentList) ? departmentList : []
   const result = await ExportService.exportToExcel(departmentData as DepartmentResponse[], { columns: departmentExcelColumns })
-  const filename = `departments_${new Date().toISOString().split('T')[0]}.xlsx`
+  const filename = `Departments_Export_${exportTimestamp()}.xlsx`
   return sendExcelResponse(c, result, filename)
 })
 

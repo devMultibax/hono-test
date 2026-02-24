@@ -11,6 +11,7 @@ import { ExportService, sectionExcelColumns } from '../services/export.service'
 import { ImportService } from '../services/import.service'
 import { TemplateService } from '../services/template.service'
 import { sendExcelResponse } from '../utils/excel-response.utils'
+import { exportTimestamp } from '../lib/export-helpers'
 import { resolveUploadedFile } from '../utils/upload-handler.utils'
 import { requireRouteId } from '../utils/id-validator.utils'
 import { ValidationError } from '../lib/errors'
@@ -86,7 +87,7 @@ sections.get('/export/excel', zValidator('query', listSectionsQuerySchema), asyn
   const sectionList = await SectionService.getAll(true, undefined, { search, departmentId, status })
   const sectionData = Array.isArray(sectionList) ? sectionList : []
   const result = await ExportService.exportToExcel(sectionData as SectionWithRelations[], { columns: sectionExcelColumns })
-  const filename = `sections_${new Date().toISOString().split('T')[0]}.xlsx`
+  const filename = `Sections_Export_${exportTimestamp()}.xlsx`
   return sendExcelResponse(c, result, filename)
 })
 
