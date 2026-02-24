@@ -27,14 +27,10 @@ userLogRoutes.get('/', zValidator('query', userLogQuerySchema), async (c) => {
 })
 
 // Get a single user log by ID
-userLogRoutes.get(
-  '/:id',
-  zValidator('param', userLogIdSchema),
-  async (c) => {
-    const { id } = c.req.valid('param')
-    const log = await UserLogService.getById(id)
-    return successResponse(c, log)
-  }
-)
+userLogRoutes.get('/:id', zValidator('param', userLogIdSchema), async (c) => {
+  const { id } = c.req.valid('param')
+  const log = await UserLogService.getById(id)
+  return successResponse(c, log)
+})
 
 export default userLogRoutes
