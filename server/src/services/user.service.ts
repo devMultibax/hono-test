@@ -12,7 +12,6 @@ import type { User as PrismaUser, Prisma } from '@prisma/client'
 
 const SALT_ROUNDS = 10
 
-
 type PrismaUserWithOptionalRelations = PrismaUser & {
   department?: EmbeddedRelation
   section?: EmbeddedRelation | null
@@ -65,104 +64,87 @@ export class UserService {
     }
   }
 
-  static async getAll(
-    includeRelations = false,
-    pagination?: PaginationParams,
-    filters?: UserFilters
-  ): Promise<UserResponse[] | UserWithRelations[] | PaginationResult<UserResponse> | PaginationResult<UserWithRelations>> {
+  private static buildWhereClause(filters?: UserFilters): Prisma.UserWhereInput {
     const where: Prisma.UserWhereInput = {}
+    if (filters?.search) {
+      where.OR = [
+        { username: { contains: filters.search, mode: 'insensitive' } },
+        { firstName: { contains: filters.search, mode: 'insensitive' } },
+        { lastName: { contains: filters.search, mode: 'insensitive' } }
+      ]
+    }
+    if (filters?.departmentId !== undefined) {
+      where.departmentId = filters.departmentId
+    }
+    if (filters?.sectionId !== undefined) {
+      where.sectionId = filters.sectionId
+    }
+    if (filters?.role !== undefined) {
+      where.role = filters.role
+    }
+    if (filters?.status !== undefined) {
+      where.status = filters.status
+    }
+    return where
+  }
 
-    if (filters) {
-      if (filters.search) {
-        where.OR = [
-          { username: { contains: filters.search, mode: 'insensitive' } },
-          { firstName: { contains: filters.search, mode: 'insensitive' } },
-          { lastName: { contains: filters.search, mode: 'insensitive' } }
-        ]
-      }
+  static async getAll(
+    pagination: PaginationParams,
+    filters?: UserFilters
+  ): Promise<PaginationResult<UserWithRelations>> {
+    const where = this.buildWhereClause(filters)
+    const paginationOptions = calculatePagination(pagination)
 
-      if (filters.departmentId !== undefined) {
-        where.departmentId = filters.departmentId
-      }
+    // Handle relation-based sorting for department and section
+    const relationSortFields: Record<string, string> = {
+      department: 'department',
+      section: 'section',
+    }
 
-      if (filters.sectionId !== undefined) {
-        where.sectionId = filters.sectionId
-      }
-
-      if (filters.role !== undefined) {
-        where.role = filters.role
-      }
-
-      if (filters.status !== undefined) {
-        where.status = filters.status
+    if (pagination.sort && relationSortFields[pagination.sort]) {
+      paginationOptions.orderBy = {
+        [relationSortFields[pagination.sort]]: { name: pagination.order || 'asc' },
       }
     }
 
-    const includeConfig = includeRelations
-      ? {
-        department: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } }
-      }
-      : undefined
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        include: {
+          department: { select: { id: true, name: true } },
+          section: { select: { id: true, name: true } }
+        },
+        ...paginationOptions
+      }),
+      prisma.user.count({ where })
+    ])
 
-    if (pagination) {
-      const paginationOptions = calculatePagination(pagination)
+    const formattedUsers = (users as PrismaUserWithOptionalRelations[]).map((user) => ({
+      ...this.formatUserResponse(user),
+      department: user.department,
+      section: user.section
+    })) as UserWithRelations[]
 
-      // Handle relation-based sorting for department and section
-      const relationSortFields: Record<string, string> = {
-        department: 'department',
-        section: 'section',
-      }
+    return formatPaginationResponse(formattedUsers, total, pagination)
+  }
 
-      if (pagination.sort && relationSortFields[pagination.sort]) {
-        paginationOptions.orderBy = {
-          [relationSortFields[pagination.sort]]: { name: pagination.order || 'asc' },
-        }
-      }
-
-      const [users, total] = await Promise.all([
-        prisma.user.findMany({
-          where,
-          include: includeConfig,
-          ...paginationOptions
-        }),
-        prisma.user.count({ where })
-      ])
-
-      const formattedUsers = (users as PrismaUserWithOptionalRelations[]).map((user) => {
-        const base = this.formatUserResponse(user)
-        if (includeRelations) {
-          return {
-            ...base,
-            department: user.department,
-            section: user.section
-          } as UserWithRelations
-        }
-        return base
-      })
-
-      return formatPaginationResponse(formattedUsers, total, pagination)
-    }
+  static async getAllSimple(filters?: UserFilters): Promise<UserWithRelations[]> {
+    const where = this.buildWhereClause(filters)
 
     const users = await prisma.user.findMany({
       where,
-      include: includeConfig,
-      orderBy: {
-        createdAt: 'desc'
-      }
+      include: {
+        department: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } }
+      },
+      orderBy: { createdAt: 'desc' }
     })
 
-    return (users as PrismaUserWithOptionalRelations[]).map((user) => {
-      const base = this.formatUserResponse(user)
-      if (includeRelations) {
-        return {
-          ...base,
-          department: user.department,
-          section: user.section
-        } as UserWithRelations
-      }
-      return base
-    })
+    return (users as PrismaUserWithOptionalRelations[]).map((user) => ({
+      ...this.formatUserResponse(user),
+      department: user.department,
+      section: user.section
+    })) as UserWithRelations[]
   }
 
   static async create(
@@ -176,7 +158,6 @@ export class UserService {
     role: Role,
     createdBy: string
   ): Promise<{ user: UserResponse; password: string }> {
-    // Check if username already exists
     const existingUser = await prisma.user.findUnique({
       where: { username }
     })
@@ -185,7 +166,6 @@ export class UserService {
       throw new ConflictError(CODES.USER_USERNAME_EXISTS, MSG.errors.user.usernameExists)
     }
 
-    // Verify department exists
     const department = await prisma.department.findUnique({
       where: { id: departmentId }
     })
@@ -194,7 +174,6 @@ export class UserService {
       throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
     }
 
-    // Verify section exists if provided
     if (sectionId) {
       const section = await prisma.section.findUnique({
         where: { id: sectionId }
@@ -205,7 +184,6 @@ export class UserService {
       }
     }
 
-    // Generate default password
     const password = generateDefaultPassword()
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
     const createdByName = await getUserFullName(createdBy)
@@ -372,7 +350,6 @@ export class UserService {
     })
   }
 
-  // Password Management Methods
   static async verifyPassword(id: number, password: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { id },
@@ -395,7 +372,6 @@ export class UserService {
       throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
-    // Generate new default password
     const password = generateDefaultPassword()
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
     const updatedByName = await getUserFullName(updatedBy)
@@ -470,5 +446,4 @@ export class UserService {
 
     return this.formatUserResponse(updatedUser)
   }
-
 }

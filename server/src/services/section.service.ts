@@ -40,71 +40,61 @@ export class SectionService {
     }
   }
 
-  static async getAll(
-    includeRelations = false,
-    pagination?: PaginationParams,
-    filters?: SectionFilters
-  ): Promise<SectionResponse[] | SectionWithRelations[] | PaginationResult<SectionResponse> | PaginationResult<SectionWithRelations>> {
+  private static buildWhereClause(filters?: SectionFilters): Prisma.SectionWhereInput {
     const where: Prisma.SectionWhereInput = {}
-
-    if (filters) {
-      if (filters.search) {
-        where.name = { contains: filters.search, mode: 'insensitive' }
-      }
-
-      if (filters.departmentId !== undefined) {
-        where.departmentId = filters.departmentId
-      }
-
-      if (filters.status !== undefined) {
-        where.status = filters.status
-      }
+    if (filters?.search) {
+      where.name = { contains: filters.search, mode: 'insensitive' }
     }
+    if (filters?.departmentId !== undefined) {
+      where.departmentId = filters.departmentId
+    }
+    if (filters?.status !== undefined) {
+      where.status = filters.status
+    }
+    return where
+  }
 
-    const includeConfig = includeRelations
-      ? {
+  static async getAll(
+    pagination: PaginationParams,
+    filters?: SectionFilters
+  ): Promise<PaginationResult<SectionWithRelations>> {
+    const where = this.buildWhereClause(filters)
+    const paginationOptions = calculatePagination(pagination)
+
+    const [sections, total] = await Promise.all([
+      prisma.section.findMany({
+        where,
+        include: {
           department: { select: { id: true, name: true } }
-        }
-      : undefined
+        },
+        ...paginationOptions
+      }),
+      prisma.section.count({ where })
+    ])
 
-    if (pagination) {
-      const paginationOptions = calculatePagination(pagination)
+    const formattedSections = sections.map((section) => ({
+      ...this.formatSectionResponse(section),
+      department: section.department
+    })) as SectionWithRelations[]
 
-      const [sections, total] = await Promise.all([
-        prisma.section.findMany({
-          where,
-          include: includeConfig,
-          ...paginationOptions
-        }),
-        prisma.section.count({ where })
-      ])
+    return formatPaginationResponse(formattedSections, total, pagination)
+  }
 
-      const formattedSections = sections.map((section) => {
-        const base = this.formatSectionResponse(section)
-        if (includeRelations && 'department' in section) {
-          return { ...base, department: section.department } as SectionWithRelations
-        }
-        return base
-      })
-
-      return formatPaginationResponse(formattedSections, total, pagination)
-    }
+  static async getAllSimple(filters?: SectionFilters): Promise<SectionWithRelations[]> {
+    const where = this.buildWhereClause(filters)
 
     const sections = await prisma.section.findMany({
       where,
-      include: includeConfig,
-      orderBy: {
-        createdAt: 'desc'
-      }
+      include: {
+        department: { select: { id: true, name: true } }
+      },
+      orderBy: { createdAt: 'desc' }
     })
 
-    return sections.map((section) => {
-      const base = this.formatSectionResponse(section)
-      if (includeRelations && 'department' in section) {
-        return { ...base, department: section.department } as SectionWithRelations
-      }
-      return base
-    })
+    return sections.map((section) => ({
+      ...this.formatSectionResponse(section),
+      department: section.department
+    })) as SectionWithRelations[]
   }
 
   static async getById(id: number, includeRelations = false): Promise<SectionResponse | SectionWithRelations> {
@@ -183,6 +173,11 @@ export class SectionService {
     data: { departmentId?: number; name?: string; status?: 'active' | 'inactive' },
     updatedBy: string
   ): Promise<SectionResponse> {
+    const existing = await prisma.section.findUnique({ where: { id } })
+    if (!existing) {
+      throw new NotFoundError(CODES.SECTION_NOT_FOUND, MSG.errors.section.notFound)
+    }
+
     if (data.departmentId) {
       const department = await prisma.department.findUnique({
         where: { id: data.departmentId },
@@ -195,7 +190,7 @@ export class SectionService {
     }
 
     if (data.name || data.departmentId) {
-      const existing = await prisma.section.findFirst({
+      const duplicate = await prisma.section.findFirst({
         where: {
           departmentId: data.departmentId,
           name: data.name,
@@ -203,28 +198,24 @@ export class SectionService {
         }
       })
 
-      if (existing) {
+      if (duplicate) {
         throw new ConflictError(CODES.SECTION_NAME_EXISTS, MSG.errors.section.nameExists)
       }
     }
 
     const updatedByName = await getUserFullName(updatedBy)
 
-    try {
-      const section = await prisma.section.update({
-        where: { id },
-        data: {
-          ...data,
-          updatedAt: new Date(),
-          updatedBy,
-          updatedByName
-        }
-      })
+    const section = await prisma.section.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedAt: new Date(),
+        updatedBy,
+        updatedByName
+      }
+    })
 
-      return this.formatSectionResponse(section)
-    } catch (originalError) {
-      throw new NotFoundError(CODES.SECTION_NOT_FOUND, MSG.errors.section.notFound, undefined, originalError)
-    }
+    return this.formatSectionResponse(section)
   }
 
   static async delete(id: number): Promise<void> {

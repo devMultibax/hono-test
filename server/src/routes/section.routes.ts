@@ -24,12 +24,11 @@ const sections = new Hono<HonoContext>()
 sections.use('/*', authMiddleware)
 sections.use('/*', csrfProtection)
 
-// Get all sections with optional pagination and filtering
+// Get all sections with pagination and filtering
 sections.get('/', zValidator('query', listSectionsQuerySchema), async (c) => {
-  const include = c.req.query('include') === 'true'
   const { page, limit, sort, order, search, departmentId, status } = c.req.valid('query')
 
-  const sectionList = await SectionService.getAll(include, { page, limit, sort, order }, { search, departmentId, status })
+  const sectionList = await SectionService.getAll({ page, limit, sort, order }, { search, departmentId, status })
   return successResponse(c, sectionList)
 })
 
@@ -85,9 +84,8 @@ sections.delete('/:id', requireAdmin, async (c) => {
 sections.get('/export/excel', zValidator('query', listSectionsQuerySchema), async (c) => {
   const { search, departmentId, status } = c.req.valid('query')
 
-  const sectionList = await SectionService.getAll(true, undefined, { search, departmentId, status })
-  const sectionData = Array.isArray(sectionList) ? sectionList : []
-  const result = await ExportService.exportToExcel(sectionData as SectionWithRelations[], { columns: sectionExcelColumns })
+  const sectionList = await SectionService.getAllSimple({ search, departmentId, status })
+  const result = await ExportService.exportToExcel(sectionList as SectionWithRelations[], { columns: sectionExcelColumns })
   const filename = `Sections_Export_${exportTimestamp()}.xlsx`
   return sendExcelResponse(c, result, filename)
 })

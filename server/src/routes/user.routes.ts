@@ -48,11 +48,9 @@ users.post('/', requireAdmin, zValidator('json', registerSchema), async (c) => {
 
 // Get all with Pagination and Filters
 users.get('/', requireUser, zValidator('query', listUsersQuerySchema), async (c) => {
-  const include = c.req.query('include') === 'true'
   const { page, limit, sort, order, search, departmentId, sectionId, role, status } = c.req.valid('query')
 
   const userList = await UserService.getAll(
-    include,
     { page, limit, sort, order },
     { search, departmentId, sectionId, role: role as Role | undefined, status }
   )
@@ -118,9 +116,8 @@ users.get('/export/excel', requireUser, zValidator('query', listUsersQuerySchema
   const { search, departmentId, sectionId, role, status } = c.req.valid('query')
   const filters = { search, departmentId, sectionId, role: role as Role | undefined, status }
 
-  const userList = await UserService.getAll(true, undefined, filters)
-  const userData = Array.isArray(userList) ? userList : []
-  const result = await ExportService.exportToExcel(userData as UserWithRelations[], { columns: userExcelColumns })
+  const userList = await UserService.getAllSimple(filters)
+  const result = await ExportService.exportToExcel(userList as UserWithRelations[], { columns: userExcelColumns })
   const filename = `Users_Export_${exportTimestamp()}.xlsx`
   return sendExcelResponse(c, result, filename)
 })

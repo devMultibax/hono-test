@@ -24,12 +24,11 @@ const departments = new Hono<HonoContext>()
 departments.use('/*', authMiddleware)
 departments.use('/*', csrfProtection)
 
-// Get all departments with optional pagination and filtering
+// Get all departments with pagination and filtering
 departments.get('/', zValidator('query', listDepartmentsQuerySchema), async (c) => {
-  const include = c.req.query('include') === 'true'
   const { page, limit, sort, order, search, status } = c.req.valid('query')
 
-  const departmentList = await DepartmentService.getAll(include, { page, limit, sort, order }, { search, status })
+  const departmentList = await DepartmentService.getAll({ page, limit, sort, order }, { search, status })
   return successResponse(c, departmentList)
 })
 
@@ -85,9 +84,8 @@ departments.delete('/:id', requireAdmin, async (c) => {
 departments.get('/export/excel', zValidator('query', listDepartmentsQuerySchema), async (c) => {
   const { search, status } = c.req.valid('query')
 
-  const departmentList = await DepartmentService.getAll(false, undefined, { search, status })
-  const departmentData = Array.isArray(departmentList) ? departmentList : []
-  const result = await ExportService.exportToExcel(departmentData as DepartmentResponse[], { columns: departmentExcelColumns })
+  const departmentList = await DepartmentService.getAllSimple({ search, status })
+  const result = await ExportService.exportToExcel(departmentList as DepartmentResponse[], { columns: departmentExcelColumns })
   const filename = `Departments_Export_${exportTimestamp()}.xlsx`
   return sendExcelResponse(c, result, filename)
 })

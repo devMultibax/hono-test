@@ -37,69 +37,54 @@ export class DepartmentService {
     }
   }
 
-  static async getAll(
-    includeRelations = false,
-    pagination?: PaginationParams,
-    filters?: DepartmentFilters
-  ): Promise<DepartmentResponse[] | DepartmentWithRelations[] | PaginationResult<DepartmentResponse> | PaginationResult<DepartmentWithRelations>> {
+  private static buildWhereClause(filters?: DepartmentFilters): Prisma.DepartmentWhereInput {
     const where: Prisma.DepartmentWhereInput = {}
-
-    if (filters) {
-      if (filters.search) {
-        where.name = { contains: filters.search, mode: 'insensitive' }
-      }
-
-      if (filters.status !== undefined) {
-        where.status = filters.status
-      }
+    if (filters?.search) {
+      where.name = { contains: filters.search, mode: 'insensitive' }
     }
+    if (filters?.status !== undefined) {
+      where.status = filters.status
+    }
+    return where
+  }
 
-    const includeConfig = includeRelations
-      ? {
+  static async getAll(
+    pagination: PaginationParams,
+    filters?: DepartmentFilters
+  ): Promise<PaginationResult<DepartmentWithRelations>> {
+    const where = this.buildWhereClause(filters)
+    const paginationOptions = calculatePagination(pagination)
+
+    const [departments, total] = await Promise.all([
+      prisma.department.findMany({
+        where,
+        include: {
           sections: {
             select: { id: true, name: true, status: true }
           }
-        }
-      : undefined
+        },
+        ...paginationOptions
+      }),
+      prisma.department.count({ where })
+    ])
 
-    if (pagination) {
-      const paginationOptions = calculatePagination(pagination)
+    const formattedDepartments = departments.map((dept) => ({
+      ...this.formatDepartmentResponse(dept),
+      sections: dept.sections
+    })) as DepartmentWithRelations[]
 
-      const [departments, total] = await Promise.all([
-        prisma.department.findMany({
-          where,
-          include: includeConfig,
-          ...paginationOptions
-        }),
-        prisma.department.count({ where })
-      ])
+    return formatPaginationResponse(formattedDepartments, total, pagination)
+  }
 
-      const formattedDepartments = departments.map((dept) => {
-        const base = this.formatDepartmentResponse(dept)
-        if (includeRelations && 'sections' in dept) {
-          return { ...base, sections: dept.sections } as DepartmentWithRelations
-        }
-        return base
-      })
-
-      return formatPaginationResponse(formattedDepartments, total, pagination)
-    }
+  static async getAllSimple(filters?: DepartmentFilters): Promise<DepartmentResponse[]> {
+    const where = this.buildWhereClause(filters)
 
     const departments = await prisma.department.findMany({
       where,
-      include: includeConfig,
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' }
     })
 
-    return departments.map((dept) => {
-      const base = this.formatDepartmentResponse(dept)
-      if (includeRelations && 'sections' in dept) {
-        return { ...base, sections: dept.sections } as DepartmentWithRelations
-      }
-      return base
-    })
+    return departments.map((dept) => this.formatDepartmentResponse(dept))
   }
 
   static async getById(id: number, includeRelations = false): Promise<DepartmentResponse | DepartmentWithRelations> {
@@ -154,36 +139,37 @@ export class DepartmentService {
     data: { name?: string; status?: 'active' | 'inactive' },
     updatedBy: string
   ): Promise<DepartmentResponse> {
+    const existing = await prisma.department.findUnique({ where: { id } })
+    if (!existing) {
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
+    }
+
     if (data.name) {
-      const existing = await prisma.department.findFirst({
+      const duplicate = await prisma.department.findFirst({
         where: {
           name: data.name,
           id: { not: id }
         }
       })
 
-      if (existing) {
+      if (duplicate) {
         throw new ConflictError(CODES.DEPARTMENT_NAME_EXISTS, MSG.errors.department.nameExists)
       }
     }
 
     const updatedByName = await getUserFullName(updatedBy)
 
-    try {
-      const department = await prisma.department.update({
-        where: { id },
-        data: {
-          ...data,
-          updatedAt: new Date(),
-          updatedBy,
-          updatedByName
-        }
-      })
+    const department = await prisma.department.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedAt: new Date(),
+        updatedBy,
+        updatedByName
+      }
+    })
 
-      return this.formatDepartmentResponse(department)
-    } catch (originalError) {
-      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound, undefined, originalError)
-    }
+    return this.formatDepartmentResponse(department)
   }
 
   static async delete(id: number): Promise<void> {
