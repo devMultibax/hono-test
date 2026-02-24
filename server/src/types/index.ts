@@ -133,6 +133,28 @@ export interface UserWithRelations extends UserResponse {
   section?: EmbeddedRelation | null
 }
 
+export interface PrismaUserWithRelations {
+  id: number
+  username: string
+  firstName: string
+  lastName: string
+  departmentId: number
+  sectionId: number | null
+  email: string | null
+  tel: string | null
+  role: string
+  status: string
+  createdAt: Date
+  createdBy: string
+  createdByName: string
+  updatedAt: Date | null
+  updatedBy: string | null
+  updatedByName: string | null
+  lastLoginAt: Date | null
+  department?: { id: number; name: string }
+  section?: { id: number; name: string } | null
+}
+
 // Auth Types
 export interface AuthPayload {
   id: number

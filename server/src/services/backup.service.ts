@@ -1,4 +1,3 @@
-import { spawn } from 'child_process'
 import fs from 'fs/promises'
 import { existsSync, mkdirSync, statSync, readdirSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
@@ -9,6 +8,7 @@ import { MSG } from '../constants/messages'
 import { logSystem } from '../lib/logger'
 import { LogEvent } from '../constants/log-events'
 import { formatBytes } from '../utils/format.utils'
+import { spawnCommand } from '../utils/process.utils'
 import type { BackupFile } from '../schemas/backup.schema'
 
 const BACKUP_DIR = path.resolve(process.cwd(), 'storage/backups')
@@ -126,142 +126,84 @@ export class BackupService {
     const filename = `${namePrefix}_backup_${dateSuffix}.backup`
     const filePath = path.join(BACKUP_DIR, filename)
 
-    return new Promise((resolve, reject) => {
-      const pgDump = getPgCommand('pg_dump')
+    const args = [
+      '-h', db.host,
+      '-p', db.port,
+      '-U', db.user,
+      '-d', db.database,
+      '-Fc', '-b', '-v',
+      '-f', filePath
+    ]
 
-      const args = [
-        '-h', db.host,
-        '-p', db.port,
-        '-U', db.user,
-        '-d', db.database,
-        '-Fc', '-b', '-v',
-        '-f', filePath
-      ]
+    logSystem.info({ event: LogEvent.BACKUP_STARTED(filename) })
 
-      logSystem.info({ event: LogEvent.BACKUP_STARTED(filename) })
+    try {
+      const { code, stderr } = await spawnCommand(
+        getPgCommand('pg_dump'),
+        args,
+        { ...process.env, PGPASSWORD: db.password }
+      )
 
-      const childProcess = spawn(pgDump, args, {
-        env: { ...process.env, PGPASSWORD: db.password }
-      })
+      if (code === 0 && existsSync(filePath)) {
+        logSystem.info({ event: LogEvent.BACKUP_COMPLETED(filename) })
+        return { filename, path: filePath }
+      }
 
-      let stderr = ''
-
-      childProcess.stderr.on('data', (data) => {
-        stderr += data.toString()
-      })
-
-      childProcess.on('close', async (code) => {
-        if (code === 0 && existsSync(filePath)) {
-          logSystem.info({ event: LogEvent.BACKUP_COMPLETED(filename) })
-          resolve({ filename, path: filePath })
-        } else {
-          logSystem.error({ event: LogEvent.BACKUP_FAILED(filename), detail: stderr })
-          await this.cleanupEmptyFile(filePath)
-          reject(new Error(`Backup failed: ${stderr}`))
-        }
-      })
-
-      childProcess.on('error', async (err) => {
-        logSystem.error({ event: LogEvent.BACKUP_PROCESS_FAILED, detail: err.message })
-        await this.cleanupEmptyFile(filePath)
-        reject(new Error(`Failed to start pg_dump: ${err.message}`))
-      })
-    })
+      logSystem.error({ event: LogEvent.BACKUP_FAILED(filename), detail: stderr })
+      await this.cleanupEmptyFile(filePath)
+      throw new Error(`Backup failed: ${stderr}`)
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('Backup failed:')) throw err
+      const message = err instanceof Error ? err.message : String(err)
+      logSystem.error({ event: LogEvent.BACKUP_PROCESS_FAILED, detail: message })
+      await this.cleanupEmptyFile(filePath)
+      throw new Error(`Failed to start pg_dump: ${message}`)
+    }
   }
 
   static async restoreBackup(filename: string): Promise<void> {
     const filePath = await this.validateBackupExists(filename)
     const db = getDbConnectionArgs()
-
-    // Get target database name from filename (e.g., "hono_backup_2026.backup" -> "hono_backup_2026")
     const targetDbName = this.getDatabaseNameFromFileName(filename)
+    const execEnv = { ...process.env, PGPASSWORD: db.password }
 
-    return new Promise((resolve, reject) => {
-      const psql = getPgCommand('psql')
-      const pgRestore = getPgCommand('pg_restore')
-      const execEnv = { ...process.env, PGPASSWORD: db.password }
+    // Step 1: Create database if not exists
+    logSystem.info({ event: LogEvent.DB_CREATION_STARTED(targetDbName) })
 
-      // Step 1: Create database if not exists
-      const createDbArgs = [
-        '-h', db.host,
-        '-p', db.port,
-        '-U', db.user,
-        '-d', 'postgres',
-        '-c', `CREATE DATABASE "${targetDbName}";`
-      ]
+    const { code: createCode, stderr: createStderr } = await spawnCommand(
+      getPgCommand('psql'),
+      ['-h', db.host, '-p', db.port, '-U', db.user, '-d', 'postgres', '-c', `CREATE DATABASE "${targetDbName}";`],
+      execEnv
+    )
 
-      logSystem.info({ event: LogEvent.DB_CREATION_STARTED(targetDbName) })
+    if (createCode !== 0 && !createStderr.includes('already exists')) {
+      logSystem.error({ event: LogEvent.DB_CREATION_FAILED(targetDbName), detail: createStderr })
+      throw new Error(`Failed to create database: ${createStderr}`)
+    }
 
-      const psqlCreate = spawn(psql, createDbArgs, { env: execEnv })
+    logSystem.info({ event: LogEvent.DB_CREATED(targetDbName) })
 
-      let createStderr = ''
+    // Step 2: Restore backup to target database
+    logSystem.info({ event: LogEvent.DB_RESTORE_STARTED(targetDbName) })
 
-      psqlCreate.stderr.on('data', (data) => {
-        createStderr += data.toString()
-      })
+    const { code: restoreCode, stderr: restoreStderr } = await spawnCommand(
+      getPgCommand('pg_restore'),
+      ['-h', db.host, '-p', db.port, '-U', db.user, '-d', targetDbName, '--clean', '--if-exists', '-v', filePath],
+      execEnv
+    )
 
-      psqlCreate.on('close', (createCode) => {
-        // Ignore "already exists" error
-        if (createCode !== 0 && !createStderr.includes('already exists')) {
-          logSystem.error({ event: LogEvent.DB_CREATION_FAILED(targetDbName), detail: createStderr })
-          reject(new Error(`Failed to create database: ${createStderr}`))
-          return
-        }
+    // pg_restore returns 0 for success, 1 for warnings (which is OK)
+    if (restoreCode !== 0 && restoreCode !== 1) {
+      logSystem.error({ event: LogEvent.DB_RESTORE_FAILED(targetDbName), detail: restoreStderr })
+      throw new Error(`Restore failed: ${restoreStderr}`)
+    }
 
-        logSystem.info({ event: LogEvent.DB_CREATED(targetDbName) })
+    if (restoreStderr) {
+      logSystem.warn({ event: LogEvent.DB_RESTORE_WARNINGS(targetDbName), detail: restoreStderr })
+    }
 
-        // Step 2: Restore backup to target database
-        const restoreArgs = [
-          '-h', db.host,
-          '-p', db.port,
-          '-U', db.user,
-          '-d', targetDbName,
-          '--clean',
-          '--if-exists',
-          '-v',
-          filePath
-        ]
-
-        logSystem.info({ event: LogEvent.DB_RESTORE_STARTED(targetDbName) })
-
-        const pgRestoreProcess = spawn(pgRestore, restoreArgs, { env: execEnv })
-
-        let restoreStderr = ''
-
-        pgRestoreProcess.stderr.on('data', (data) => {
-          restoreStderr += data.toString()
-        })
-
-        pgRestoreProcess.on('close', (restoreCode) => {
-          // pg_restore returns 0 for success, 1 for warnings (which is OK)
-          if (restoreCode !== 0 && restoreCode !== 1) {
-            logSystem.error({ event: LogEvent.DB_RESTORE_FAILED(targetDbName), detail: restoreStderr })
-            reject(new Error(`Restore failed: ${restoreStderr}`))
-            return
-          }
-
-          if (restoreStderr) {
-            logSystem.warn({ event: LogEvent.DB_RESTORE_WARNINGS(targetDbName), detail: restoreStderr })
-          }
-
-          // Track restore timestamp
-          this.setRestoredAt(filename)
-
-          logSystem.info({ event: LogEvent.DB_RESTORED(targetDbName) })
-          resolve()
-        })
-
-        pgRestoreProcess.on('error', (err) => {
-          logSystem.error({ event: LogEvent.DB_RESTORE_PROCESS_FAILED, detail: err.message })
-          reject(new Error(`Failed to start pg_restore: ${err.message}`))
-        })
-      })
-
-      psqlCreate.on('error', (err) => {
-        logSystem.error({ event: LogEvent.DB_CLIENT_FAILED, detail: err.message })
-        reject(new Error(`Failed to start psql: ${err.message}`))
-      })
-    })
+    this.setRestoredAt(filename)
+    logSystem.info({ event: LogEvent.DB_RESTORED(targetDbName) })
   }
 
   static async deleteBackup(filename: string): Promise<void> {

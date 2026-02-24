@@ -5,34 +5,14 @@ import { env } from '../config/env'
 import { UnauthorizedError, NotFoundError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
-import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations } from '../types'
+import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations, type PrismaUserWithRelations } from '../types'
 import { daysToMs } from '../utils/time.utils'
 import { logUserAction } from '../utils/user-log.utils'
 
 const TOKEN_EXPIRY = '24h'
 
 export class AuthService {
-  private static formatUserResponse(user: {
-    id: number
-    username: string
-    firstName: string
-    lastName: string
-    departmentId: number
-    sectionId: number | null
-    email: string | null
-    tel: string | null
-    role: string
-    status: string
-    createdAt: Date
-    createdBy: string
-    createdByName: string
-    updatedAt: Date | null
-    updatedBy: string | null
-    updatedByName: string | null
-    lastLoginAt: Date | null
-    department?: { id: number; name: string }
-    section?: { id: number; name: string } | null
-  }): UserWithRelations {
+  private static formatUserResponse(user: PrismaUserWithRelations): UserWithRelations {
     return {
       id: user.id,
       username: user.username,
