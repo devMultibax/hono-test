@@ -1,54 +1,35 @@
-import { prisma } from '../lib/prisma';
-import type { DepartmentList, SectionList, UserList, UserFromLogs, SectionSearch } from '../schemas/master-data.schema';
+import { prisma } from '../lib/prisma'
+import type { DepartmentList, SectionList, UserList, UserFromLogs, SectionSearch } from '../schemas/master-data.schema'
 
 export class MasterDataService {
-    /**
-     * Get all departments (simplified for dropdowns)
-     */
-    async getAllDepartments(): Promise<DepartmentList[]> {
-        const departments = await prisma.department.findMany({
+    static async getAllDepartments(): Promise<DepartmentList[]> {
+        return prisma.department.findMany({
             select: {
                 id: true,
                 name: true,
                 status: true,
             },
-            orderBy: {
-                name: 'asc',
-            },
-        });
-
-        return departments;
+            orderBy: { name: 'asc' },
+        })
     }
 
-    /**
-     * Get sections by department ID
-     */
-    async getSectionsByDepartment(departmentId: number): Promise<SectionList[]> {
-        const sections = await prisma.section.findMany({
-            where: {
-                departmentId,
-            },
+    static async getSectionsByDepartment(departmentId: number): Promise<SectionList[]> {
+        return prisma.section.findMany({
+            where: { departmentId },
             select: {
                 id: true,
                 name: true,
                 departmentId: true,
                 status: true,
             },
-            orderBy: {
-                name: 'asc',
-            },
-        });
-
-        return sections;
+            orderBy: { name: 'asc' },
+        })
     }
 
-    /**
-     * Search sections by name and optionally filter by department
-     */
-    async searchSections(searchData: SectionSearch): Promise<SectionList[]> {
-        const { name, departmentId } = searchData;
+    static async searchSections(searchData: SectionSearch): Promise<SectionList[]> {
+        const { name, departmentId } = searchData
 
-        const sections = await prisma.section.findMany({
+        return prisma.section.findMany({
             where: {
                 name: {
                     contains: name,
@@ -62,19 +43,12 @@ export class MasterDataService {
                 departmentId: true,
                 status: true,
             },
-            orderBy: {
-                name: 'asc',
-            },
-        });
-
-        return sections;
+            orderBy: { name: 'asc' },
+        })
     }
 
-    /**
-     * Get all users (simplified for dropdowns)
-     */
-    async getAllUsers(): Promise<UserList[]> {
-        const users = await prisma.user.findMany({
+    static async getAllUsers(): Promise<UserList[]> {
+        return prisma.user.findMany({
             select: {
                 id: true,
                 username: true,
@@ -86,19 +60,12 @@ export class MasterDataService {
                 sectionId: true,
                 status: true,
             },
-            orderBy: {
-                username: 'asc',
-            },
-        });
-
-        return users;
+            orderBy: { username: 'asc' },
+        })
     }
 
-    /**
-     * Get unique users from user logs
-     */
-    async getUsersFromLogs(): Promise<UserFromLogs[]> {
-        const users = await prisma.userLog.findMany({
+    static async getUsersFromLogs(): Promise<UserFromLogs[]> {
+        return prisma.userLog.findMany({
             distinct: ['username'],
             select: {
                 username: true,
@@ -107,11 +74,7 @@ export class MasterDataService {
                 department: true,
                 section: true,
             },
-            orderBy: {
-                username: 'asc',
-            },
-        });
-
-        return users;
+            orderBy: { username: 'asc' },
+        })
     }
 }
