@@ -244,8 +244,8 @@ export class UserService {
           updatedBy: null
         },
         include: {
-          department: { select: { id: true, name: true } },
-          section: { select: { id: true, name: true } }
+          department: { select: { name: true } },
+          section: { select: { name: true } }
         }
       })
 
@@ -302,11 +302,7 @@ export class UserService {
     updatedBy: string
   ): Promise<UserResponse> {
     const existingUser = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        department: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } }
-      }
+      where: { id }
     })
 
     if (!existingUser) {
@@ -356,8 +352,8 @@ export class UserService {
         where: { id },
         data: updateData as Prisma.UserUpdateInput,
         include: {
-          department: { select: { id: true, name: true } },
-          section: { select: { id: true, name: true } }
+          department: { select: { name: true } },
+          section: { select: { name: true } }
         }
       })
 
@@ -372,8 +368,8 @@ export class UserService {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        department: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } }
+        department: { select: { name: true } },
+        section: { select: { name: true } }
       }
     })
 
@@ -432,8 +428,8 @@ export class UserService {
           updatedByName
         },
         include: {
-          department: { select: { id: true, name: true } },
-          section: { select: { id: true, name: true } }
+          department: { select: { name: true } },
+          section: { select: { name: true } }
         }
       })
 
@@ -453,11 +449,7 @@ export class UserService {
     newPassword: string
   ): Promise<UserResponse> {
     const user = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        department: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } }
-      }
+      where: { id }
     })
 
     if (!user) {
@@ -483,8 +475,8 @@ export class UserService {
           updatedByName
         },
         include: {
-          department: { select: { id: true, name: true } },
-          section: { select: { id: true, name: true } }
+          department: { select: { name: true } },
+          section: { select: { name: true } }
         }
       })
 

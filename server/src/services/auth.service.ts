@@ -59,8 +59,8 @@ export class AuthService {
     const user = await prisma.user.findUnique({
       where: { username },
       include: {
-        department: true,
-        section: true
+        department: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } }
       }
     })
 
@@ -161,8 +161,8 @@ export class AuthService {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        department: true,
-        section: true
+        department: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } }
       }
     })
 
@@ -198,8 +198,8 @@ export class AuthService {
         updatedByName: `${user.firstName} ${user.lastName}`
       },
       include: {
-        department: true,
-        section: true
+        department: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } }
       }
     })
 

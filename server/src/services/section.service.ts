@@ -143,7 +143,8 @@ export class SectionService {
     createdBy: string
   ): Promise<SectionResponse> {
     const department = await prisma.department.findUnique({
-      where: { id: departmentId }
+      where: { id: departmentId },
+      select: { id: true }
     })
 
     if (!department) {
@@ -184,7 +185,8 @@ export class SectionService {
   ): Promise<SectionResponse> {
     if (data.departmentId) {
       const department = await prisma.department.findUnique({
-        where: { id: data.departmentId }
+        where: { id: data.departmentId },
+        select: { id: true }
       })
 
       if (!department) {
