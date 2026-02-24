@@ -274,12 +274,6 @@ export class BackupService {
     }
   }
 
-  static async getBackupInfo(filename: string): Promise<{ filePath: string; size: number }> {
-    const filePath = await this.validateBackupExists(filename)
-    const stats = statSync(filePath)
-    return { filePath, size: stats.size }
-  }
-
   private static getDatabaseNameFromFileName(fileName: string): string {
     // Remove extension (.backup, .sql, .dump)
     const dbName = fileName.replace(/\.(backup|sql|dump)$/, '')

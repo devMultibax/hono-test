@@ -1,7 +1,5 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import { stream } from 'hono/streaming'
-import { createReadStream } from 'fs'
 import { authMiddleware } from '../middleware/auth'
 import { requireAdmin } from '../middleware/permission'
 import { strictRateLimiter } from '../middleware/rate-limit'
@@ -32,37 +30,12 @@ backupRoutes.post('/', strictRateLimiter, zValidator('json', createBackupSchema)
   })
 })
 
-// Download backup
-backupRoutes.get('/:filename', async (c) => {
-  const filename = c.req.param('filename')
-  const { filePath, size } = await BackupService.getBackupInfo(filename)
-
-  c.header('Content-Type', 'application/sql')
-  c.header('Content-Disposition', `attachment; filename="${filename}"`)
-  c.header('Content-Length', size.toString())
-
-  return stream(c, async (s) => {
-    const fileStream = createReadStream(filePath)
-    for await (const chunk of fileStream) {
-      await s.write(chunk)
-    }
-  })
-})
-
 // Restore backup
 backupRoutes.post('/:filename/restore', strictRateLimiter, async (c) => {
   const filename = c.req.param('filename')
   await BackupService.restoreBackup(filename)
   c.get('logInfo')(`Restored backup "${filename}"`)
   return successResponse(c, { message: 'Database restored successfully' })
-})
-
-// Delete backup
-backupRoutes.delete('/:filename', async (c) => {
-  const filename = c.req.param('filename')
-  await BackupService.deleteBackup(filename)
-  c.get('logInfo')(`Deleted backup "${filename}"`)
-  return successResponse(c, { message: 'Backup deleted successfully' })
 })
 
 export default backupRoutes
