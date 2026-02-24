@@ -14,6 +14,11 @@ const theme = createTheme({
     primary: primaryColor,
   },
   components: {
+    Loader: {
+      defaultProps: {
+        type: 'dots',
+      },
+    },
     Button: {
       defaultProps: {
         size: 'sm',
