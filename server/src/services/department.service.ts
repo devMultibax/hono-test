@@ -57,34 +57,7 @@ export class DepartmentService {
     const includeConfig = includeRelations
       ? {
           sections: {
-            select: {
-              id: true,
-              departmentId: true,
-              name: true,
-              status: true,
-              createdAt: true,
-              createdBy: true,
-              createdByName: true,
-              updatedAt: true,
-              updatedBy: true,
-              updatedByName: true
-            }
-          },
-          users: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              departmentId: true,
-              sectionId: true,
-              email: true,
-              tel: true,
-              role: true,
-              status: true,
-              createdAt: true,
-              lastLoginAt: true
-            }
+            select: { id: true, name: true, status: true }
           }
         }
       : undefined
@@ -103,12 +76,8 @@ export class DepartmentService {
 
       const formattedDepartments = departments.map((dept) => {
         const base = this.formatDepartmentResponse(dept)
-        if (includeRelations && 'sections' in dept && 'users' in dept) {
-          return {
-            ...base,
-            sections: dept.sections,
-            users: dept.users
-          } as DepartmentWithRelations
+        if (includeRelations && 'sections' in dept) {
+          return { ...base, sections: dept.sections } as DepartmentWithRelations
         }
         return base
       })
@@ -126,12 +95,8 @@ export class DepartmentService {
 
     return departments.map((dept) => {
       const base = this.formatDepartmentResponse(dept)
-      if (includeRelations && 'sections' in dept && 'users' in dept) {
-        return {
-          ...base,
-          sections: dept.sections,
-          users: dept.users
-        } as DepartmentWithRelations
+      if (includeRelations && 'sections' in dept) {
+        return { ...base, sections: dept.sections } as DepartmentWithRelations
       }
       return base
     })
@@ -143,34 +108,7 @@ export class DepartmentService {
       include: includeRelations
         ? {
           sections: {
-            select: {
-              id: true,
-              departmentId: true,
-              name: true,
-              status: true,
-              createdAt: true,
-              createdBy: true,
-              createdByName: true,
-              updatedAt: true,
-              updatedBy: true,
-              updatedByName: true
-            }
-          },
-          users: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              departmentId: true,
-              sectionId: true,
-              email: true,
-              tel: true,
-              role: true,
-              status: true,
-              createdAt: true,
-              lastLoginAt: true
-            }
+            select: { id: true, name: true, status: true }
           }
         }
         : undefined
@@ -181,12 +119,8 @@ export class DepartmentService {
     }
 
     const base = this.formatDepartmentResponse(department)
-    if (includeRelations && 'sections' in department && 'users' in department) {
-      return {
-        ...base,
-        sections: department.sections,
-        users: department.users
-      } as DepartmentWithRelations
+    if (includeRelations && 'sections' in department) {
+      return { ...base, sections: department.sections } as DepartmentWithRelations
     }
     return base
   }

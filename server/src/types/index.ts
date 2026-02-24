@@ -51,8 +51,7 @@ export interface DepartmentResponse {
 }
 
 export interface DepartmentWithRelations extends DepartmentResponse {
-  sections?: SectionResponse[]
-  users?: UserResponse[]
+  sections?: Pick<SectionResponse, 'id' | 'name' | 'status'>[]
 }
 
 // Section Types
@@ -81,8 +80,7 @@ export interface SectionResponse {
 }
 
 export interface SectionWithRelations extends SectionResponse {
-  department?: DepartmentResponse
-  users?: UserResponse[]
+  department?: EmbeddedRelation
 }
 
 // User Types

@@ -63,35 +63,7 @@ export class SectionService {
 
     const includeConfig = includeRelations
       ? {
-          department: {
-            select: {
-              id: true,
-              name: true,
-              status: true,
-              createdAt: true,
-              createdBy: true,
-              createdByName: true,
-              updatedAt: true,
-              updatedBy: true,
-              updatedByName: true
-            }
-          },
-          users: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              departmentId: true,
-              sectionId: true,
-              email: true,
-              tel: true,
-              role: true,
-              status: true,
-              createdAt: true,
-              lastLoginAt: true
-            }
-          }
+          department: { select: { id: true, name: true } }
         }
       : undefined
 
@@ -109,12 +81,8 @@ export class SectionService {
 
       const formattedSections = sections.map((section) => {
         const base = this.formatSectionResponse(section)
-        if (includeRelations && 'department' in section && 'users' in section) {
-          return {
-            ...base,
-            department: section.department,
-            users: section.users
-          } as SectionWithRelations
+        if (includeRelations && 'department' in section) {
+          return { ...base, department: section.department } as SectionWithRelations
         }
         return base
       })
@@ -132,12 +100,8 @@ export class SectionService {
 
     return sections.map((section) => {
       const base = this.formatSectionResponse(section)
-      if (includeRelations && 'department' in section && 'users' in section) {
-        return {
-          ...base,
-          department: section.department,
-          users: section.users
-        } as SectionWithRelations
+      if (includeRelations && 'department' in section) {
+        return { ...base, department: section.department } as SectionWithRelations
       }
       return base
     })
@@ -148,35 +112,7 @@ export class SectionService {
       where: { id },
       include: includeRelations
         ? {
-          department: {
-            select: {
-              id: true,
-              name: true,
-              status: true,
-              createdAt: true,
-              createdBy: true,
-              createdByName: true,
-              updatedAt: true,
-              updatedBy: true,
-              updatedByName: true
-            }
-          },
-          users: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              departmentId: true,
-              sectionId: true,
-              email: true,
-              tel: true,
-              role: true,
-              status: true,
-              createdAt: true,
-              lastLoginAt: true
-            }
-          }
+          department: { select: { id: true, name: true } }
         }
         : undefined
     })
@@ -186,12 +122,8 @@ export class SectionService {
     }
 
     const base = this.formatSectionResponse(section)
-    if (includeRelations && 'department' in section && 'users' in section) {
-      return {
-        ...base,
-        department: section.department,
-        users: section.users
-      } as SectionWithRelations
+    if (includeRelations && 'department' in section) {
+      return { ...base, department: section.department } as SectionWithRelations
     }
     return base
   }
