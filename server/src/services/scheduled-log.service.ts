@@ -11,7 +11,7 @@ const LOG_FILE_PATTERN = /^app-.*\.log$/
 export class ScheduledLogService {
   static init(): void {
     cron.schedule(CRON_SCHEDULE, () => this.cleanupOldLogs())
-    logSystem.info({ event: 'Scheduled Log Service initialized (Daily at 01:00 AM)' })
+    console.log('\x1b[36m[INFO]\x1b[0m [SYSTEM] Scheduled Log Service initialized (Daily at 01:00 AM)')
   }
 
   private static async cleanupOldLogs(): Promise<void> {

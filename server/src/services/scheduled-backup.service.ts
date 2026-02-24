@@ -9,7 +9,7 @@ const CRON_SCHEDULE = '0 2 * * *' // Daily at 02:00 AM
 export class ScheduledBackupService {
   static init(): void {
     cron.schedule(CRON_SCHEDULE, () => this.runScheduledBackup())
-    logSystem.info({ event: 'Scheduled Backup Service initialized (Daily at 02:00 AM)' })
+    console.log('\x1b[36m[INFO]\x1b[0m [SYSTEM] Scheduled Backup Service initialized (Daily at 02:00 AM)')
   }
 
   private static async runScheduledBackup(): Promise<void> {
