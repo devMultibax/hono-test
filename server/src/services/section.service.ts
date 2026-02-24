@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { MSG } from '../constants/messages'
 import type { SectionResponse, SectionWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { getUserFullName } from '../utils/audit.utils'
@@ -181,7 +182,7 @@ export class SectionService {
     })
 
     if (!section) {
-      throw new NotFoundError(CODES.SECTION_NOT_FOUND)
+      throw new NotFoundError(CODES.SECTION_NOT_FOUND, MSG.errors.section.notFound)
     }
 
     const base = this.formatSectionResponse(section)
@@ -214,7 +215,7 @@ export class SectionService {
     })
 
     if (!department) {
-      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
     }
 
     const existing = await prisma.section.findFirst({
@@ -225,7 +226,7 @@ export class SectionService {
     })
 
     if (existing) {
-      throw new ConflictError(CODES.SECTION_NAME_EXISTS)
+      throw new ConflictError(CODES.SECTION_NAME_EXISTS, MSG.errors.section.nameExists)
     }
 
     const createdByName = await getUserFullName(createdBy)
@@ -255,7 +256,7 @@ export class SectionService {
       })
 
       if (!department) {
-        throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
+        throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
       }
     }
 
@@ -269,7 +270,7 @@ export class SectionService {
       })
 
       if (existing) {
-        throw new ConflictError(CODES.SECTION_NAME_EXISTS)
+        throw new ConflictError(CODES.SECTION_NAME_EXISTS, MSG.errors.section.nameExists)
       }
     }
 
@@ -287,8 +288,8 @@ export class SectionService {
       })
 
       return this.formatSectionResponse(section)
-    } catch {
-      throw new NotFoundError(CODES.SECTION_NOT_FOUND)
+    } catch (originalError) {
+      throw new NotFoundError(CODES.SECTION_NOT_FOUND, MSG.errors.section.notFound, undefined, originalError)
     }
   }
 
@@ -303,11 +304,11 @@ export class SectionService {
     })
 
     if (!section) {
-      throw new NotFoundError(CODES.SECTION_NOT_FOUND)
+      throw new NotFoundError(CODES.SECTION_NOT_FOUND, MSG.errors.section.notFound)
     }
 
     if (section._count.users > 0) {
-      throw new ConflictError(CODES.SECTION_HAS_USERS, { count: section._count.users })
+      throw new ConflictError(CODES.SECTION_HAS_USERS, MSG.errors.section.hasUsers, { count: section._count.users })
     }
 
     await prisma.section.delete({

@@ -54,6 +54,14 @@ export interface LogData {
   [key: string]: unknown
 }
 
+function buildDevSuffix(data: Omit<LogData, 'level' | 'datetime'>): string {
+  const parts: string[] = []
+  if (data.errorCode) parts.push(`code=${data.errorCode}`)
+  if (data.statusCode) parts.push(`status=${data.statusCode}`)
+  if (data.name) parts.push(`name=${data.name}`)
+  return parts.length ? ` | ${parts.join(' ')}` : ''
+}
+
 function writeLog(level: LogLevel, data: Omit<LogData, 'level' | 'datetime'>): void {
   const entry = {
     datetime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
@@ -66,7 +74,7 @@ function writeLog(level: LogLevel, data: Omit<LogData, 'level' | 'datetime'>): v
   // Console output in development
   if (env.NODE_ENV === 'development') {
     const color = level === 'error' ? '\x1b[31m' : level === 'warn' ? '\x1b[33m' : '\x1b[36m'
-    console.log(`${color}[${level.toUpperCase()}]\x1b[0m ${entry.method} ${entry.url} - ${entry.username} - ${data.event}`)
+    console.log(`${color}[${level.toUpperCase()}]\x1b[0m ${entry.method} ${entry.url} - ${entry.username} - ${data.event}${buildDevSuffix(data)}`)
   }
 }
 

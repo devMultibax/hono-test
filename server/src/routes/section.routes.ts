@@ -15,6 +15,7 @@ import { resolveUploadedFile } from '../utils/upload-handler.utils'
 import { requireRouteId } from '../utils/id-validator.utils'
 import { ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { MSG } from '../constants/messages'
 
 const sections = new Hono<HonoContext>()
 
@@ -96,7 +97,7 @@ sections.post('/import', requireAdmin, async (c) => {
 
   const fileValidation = ImportService.validateSectionFile(file.buffer)
   if (!fileValidation.valid) {
-    throw new ValidationError(CODES.USER_INVALID_FILE_STRUCTURE, fileValidation.errors)
+    throw new ValidationError(CODES.USER_INVALID_FILE_STRUCTURE, MSG.errors.import.invalidFileStructure, fileValidation.errors)
   }
 
   const result = await ImportService.importSections(file.buffer, user.username)

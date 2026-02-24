@@ -2,6 +2,7 @@ import type { Context } from 'hono'
 import { parseUpload, validateFile, type UploadedFile } from '../middleware/upload'
 import { ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { MSG } from '../constants/messages'
 import type { HonoContext } from '../types'
 
 /**
@@ -27,13 +28,13 @@ export async function resolveUploadedFile(c: Context<HonoContext>): Promise<Uplo
   const file = await parseUpload(c)
 
   if (!file) {
-    throw new ValidationError(CODES.USER_NO_FILE_UPLOADED)
+    throw new ValidationError(CODES.USER_NO_FILE_UPLOADED, MSG.errors.upload.noFile)
   }
 
   const validation = validateFile(file)
 
   if (!validation.valid) {
-    throw new ValidationError(validation.error!)
+    throw new ValidationError(validation.error!, MSG.errors.upload.invalidFile)
   }
 
   return file

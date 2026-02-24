@@ -5,6 +5,7 @@ import path from 'path'
 import { env } from '../config/env'
 import { NotFoundError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { MSG } from '../constants/messages'
 import { logSystem } from '../lib/logger'
 import type { BackupFile } from '../schemas/backup.schema'
 
@@ -308,7 +309,7 @@ export class BackupService {
     const filePath = path.join(BACKUP_DIR, filename)
 
     if (!existsSync(filePath)) {
-      throw new NotFoundError(CODES.BACKUP_FILE_NOT_FOUND)
+      throw new NotFoundError(CODES.BACKUP_FILE_NOT_FOUND, MSG.errors.backup.fileNotFound)
     }
 
     return filePath

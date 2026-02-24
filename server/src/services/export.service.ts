@@ -47,7 +47,7 @@ export class ExportService {
     const totalCount = data.length
 
     if (totalCount > MAX_ROWS_LIMIT) {
-      throw new ValidationError(CODES.EXPORT_ROW_LIMIT_EXCEEDED, { limit: MAX_ROWS_LIMIT })
+      throw new ValidationError(CODES.EXPORT_ROW_LIMIT_EXCEEDED, MSG.errors.export.rowLimitExceeded, { limit: MAX_ROWS_LIMIT })
     }
 
     if (totalCount <= MAX_ROWS_NORMAL) {

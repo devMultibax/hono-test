@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma'
 import { env } from '../config/env'
 import { UnauthorizedError, NotFoundError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { MSG } from '../constants/messages'
 import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations } from '../types'
 
 const TOKEN_EXPIRY = '24h'
@@ -105,17 +106,17 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new UnauthorizedError(CODES.AUTH_INVALID_CREDENTIALS)
+      throw new UnauthorizedError(CODES.AUTH_INVALID_CREDENTIALS, MSG.errors.auth.invalidCredentials)
     }
 
     if (user.status === 'inactive') {
-      throw new UnauthorizedError(CODES.AUTH_ACCOUNT_INACTIVE)
+      throw new UnauthorizedError(CODES.AUTH_ACCOUNT_INACTIVE, MSG.errors.auth.accountInactive)
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
-      throw new UnauthorizedError(CODES.AUTH_INVALID_CREDENTIALS)
+      throw new UnauthorizedError(CODES.AUTH_INVALID_CREDENTIALS, MSG.errors.auth.invalidCredentials)
     }
 
     // Detect active session before incrementing tokenVersion
@@ -169,16 +170,16 @@ export class AuthService {
         })
 
         if (!user) {
-          throw new UnauthorizedError(CODES.AUTH_ACCOUNT_DELETED)
+          throw new UnauthorizedError(CODES.AUTH_ACCOUNT_DELETED, MSG.errors.auth.accountDeleted)
         }
 
         // Check if user account is still active (before tokenVersion check)
         if (user.status === 'inactive') {
-          throw new UnauthorizedError(CODES.AUTH_ACCOUNT_INACTIVE)
+          throw new UnauthorizedError(CODES.AUTH_ACCOUNT_INACTIVE, MSG.errors.auth.accountInactive)
         }
 
         if (user.tokenVersion !== decoded.tokenVersion) {
-          throw new UnauthorizedError(CODES.AUTH_SESSION_REPLACED)
+          throw new UnauthorizedError(CODES.AUTH_SESSION_REPLACED, MSG.errors.auth.sessionReplaced)
         }
       }
 
@@ -187,7 +188,7 @@ export class AuthService {
       if (error instanceof UnauthorizedError) {
         throw error
       }
-      throw new UnauthorizedError(CODES.AUTH_INVALID_TOKEN)
+      throw new UnauthorizedError(CODES.AUTH_INVALID_TOKEN, MSG.errors.auth.invalidToken)
     }
   }
 
@@ -209,7 +210,7 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
+      throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
     return this.formatUserResponse(user)
@@ -229,7 +230,7 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
+      throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
     const updatedUser = await prisma.user.update({

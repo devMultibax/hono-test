@@ -7,7 +7,13 @@ import { CODES } from '../constants/error-codes'
 import type { HonoContext } from '../types'
 
 export const errorHandler = (error: Error, c: Context) => {
+  const logWarn  = (c as Context<HonoContext>).get('logWarn')
+  const logError = (c as Context<HonoContext>).get('logError')
+
   if (error instanceof ZodError) {
+    logWarn?.('Validation failed', {
+      issues: error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+    })
     return errorResponse(
       c,
       {
@@ -20,18 +26,36 @@ export const errorHandler = (error: Error, c: Context) => {
   }
 
   if (error instanceof AppError) {
+    const logData = {
+      errorCode:  error.code,
+      statusCode: error.statusCode,
+      details:    error.details,
+      cause:      error.cause instanceof Error ? error.cause.message : error.cause,
+      stack:      error.stack,
+    }
+
+    if (error.statusCode >= 500) {
+      logError?.('Server error', logData)
+    } else {
+      logWarn?.(`AppError ${error.statusCode}`, logData)
+    }
+
     return errorResponse(
       c,
       {
-        code: error.message,
-        message: error.message,
+        code:    error.code,
+        message: error.userMessage,
         details: error.details
       },
       error.statusCode
     )
   }
 
-  ;(c as Context<HonoContext>).get('logError')('Unhandled error', { error: error.message })
+  logError?.('Unhandled error', {
+    name:    error.name,
+    message: error.message,
+    stack:   error.stack,
+  })
 
   return errorResponse(
     c,

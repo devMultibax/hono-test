@@ -56,7 +56,7 @@ export function requireRouteId(raw: string | undefined, errorCode: string): numb
   const result = parseRouteId(raw)
 
   if ('error' in result) {
-    throw new ValidationError(errorCode)
+    throw new ValidationError(errorCode, result.error)
   }
 
   return result.id

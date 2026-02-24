@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { MSG } from '../constants/messages'
 import type { DepartmentResponse, DepartmentWithRelations, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { getUserFullName } from '../utils/audit.utils'
@@ -176,7 +177,7 @@ export class DepartmentService {
     })
 
     if (!department) {
-      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
     }
 
     const base = this.formatDepartmentResponse(department)
@@ -196,7 +197,7 @@ export class DepartmentService {
     })
 
     if (existing) {
-      throw new ConflictError(CODES.DEPARTMENT_NAME_EXISTS)
+      throw new ConflictError(CODES.DEPARTMENT_NAME_EXISTS, MSG.errors.department.nameExists)
     }
 
     const createdByName = await getUserFullName(createdBy)
@@ -228,7 +229,7 @@ export class DepartmentService {
       })
 
       if (existing) {
-        throw new ConflictError(CODES.DEPARTMENT_NAME_EXISTS)
+        throw new ConflictError(CODES.DEPARTMENT_NAME_EXISTS, MSG.errors.department.nameExists)
       }
     }
 
@@ -246,8 +247,8 @@ export class DepartmentService {
       })
 
       return this.formatDepartmentResponse(department)
-    } catch {
-      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
+    } catch (originalError) {
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound, undefined, originalError)
     }
   }
 
@@ -262,15 +263,15 @@ export class DepartmentService {
     })
 
     if (!department) {
-      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
     }
 
     if (department._count.users > 0) {
-      throw new ConflictError(CODES.DEPARTMENT_HAS_USERS, { count: department._count.users })
+      throw new ConflictError(CODES.DEPARTMENT_HAS_USERS, MSG.errors.department.hasUsers, { count: department._count.users })
     }
 
     if (department._count.sections > 0) {
-      throw new ConflictError(CODES.DEPARTMENT_HAS_SECTIONS, { count: department._count.sections })
+      throw new ConflictError(CODES.DEPARTMENT_HAS_SECTIONS, MSG.errors.department.hasSections, { count: department._count.sections })
     }
 
     await prisma.department.delete({

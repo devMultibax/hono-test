@@ -6,6 +6,7 @@ import { authMiddleware } from '../middleware/auth';
 import { successResponse } from '../lib/response';
 import { ValidationError } from '../lib/errors';
 import { CODES } from '../constants/error-codes';
+import { MSG } from '../constants/messages';
 import type { HonoContext } from '../types';
 
 const masterDataRoutes = new Hono<HonoContext>();
@@ -25,7 +26,7 @@ masterDataRoutes.get('/departments/:id/sections', async (c) => {
     const departmentId = parseInt(c.req.param('id'));
 
     if (isNaN(departmentId)) {
-        throw new ValidationError(CODES.MASTER_DATA_INVALID_DEPARTMENT_ID);
+        throw new ValidationError(CODES.MASTER_DATA_INVALID_DEPARTMENT_ID, MSG.errors.masterData.invalidDepartmentId);
     }
 
     const sections = await masterDataService.getSectionsByDepartment(departmentId);

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError, ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { MSG } from '../constants/messages'
 import { ActionType, Role, type UserResponse, type UserWithRelations, type DepartmentResponse, type SectionResponse, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { generateDefaultPassword } from '../lib/password'
@@ -222,7 +223,7 @@ export class UserService {
     })
 
     if (existingUser) {
-      throw new ConflictError(CODES.USER_USERNAME_EXISTS)
+      throw new ConflictError(CODES.USER_USERNAME_EXISTS, MSG.errors.user.usernameExists)
     }
 
     // Verify department exists
@@ -231,7 +232,7 @@ export class UserService {
     })
 
     if (!department) {
-      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
+      throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
     }
 
     // Verify section exists if provided
@@ -241,7 +242,7 @@ export class UserService {
       })
 
       if (!section) {
-        throw new NotFoundError(CODES.SECTION_NOT_FOUND)
+        throw new NotFoundError(CODES.SECTION_NOT_FOUND, MSG.errors.section.notFound)
       }
     }
 
@@ -320,7 +321,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
+      throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
     const base = this.formatUserResponse(user)
@@ -359,7 +360,7 @@ export class UserService {
     })
 
     if (!existingUser) {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
+      throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
     if (data.departmentId) {
@@ -368,7 +369,7 @@ export class UserService {
       })
 
       if (!department) {
-        throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND)
+        throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
       }
     }
 
@@ -378,7 +379,7 @@ export class UserService {
       })
 
       if (!section) {
-        throw new NotFoundError(CODES.SECTION_NOT_FOUND)
+        throw new NotFoundError(CODES.SECTION_NOT_FOUND, MSG.errors.section.notFound)
       }
     }
 
@@ -427,7 +428,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
+      throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
     await prisma.$transaction(async (tx) => {
@@ -449,7 +450,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
+      throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
     return await bcrypt.compare(password, user.password)
@@ -461,7 +462,7 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
+      throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
     // Generate new default password
@@ -510,12 +511,12 @@ export class UserService {
     })
 
     if (!user) {
-      throw new NotFoundError(CODES.USER_NOT_FOUND)
+      throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
     }
 
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
     if (!isPasswordValid) {
-      throw new ValidationError(CODES.USER_INVALID_PASSWORD)
+      throw new ValidationError(CODES.USER_INVALID_PASSWORD, MSG.errors.user.invalidPassword)
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS)

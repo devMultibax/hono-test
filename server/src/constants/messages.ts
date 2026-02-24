@@ -234,4 +234,54 @@ export const MSG = {
       },
     },
   },
+  // ── Error messages for thrown AppError / subclasses ──────────────────────
+  errors: {
+    department: {
+      notFound:    'ไม่พบข้อมูลแผนก',
+      nameExists:  'ชื่อแผนกนี้มีอยู่แล้ว',
+      hasUsers:    'ไม่สามารถลบแผนกที่มีผู้ใช้งานได้',
+      hasSections: 'ไม่สามารถลบแผนกที่มีแผนกย่อยได้',
+    },
+    section: {
+      notFound:   'ไม่พบข้อมูลแผนกย่อย',
+      nameExists: 'ชื่อแผนกย่อยนี้มีอยู่แล้ว',
+      hasUsers:   'ไม่สามารถลบแผนกย่อยที่มีผู้ใช้งานได้',
+    },
+    user: {
+      notFound:        'ไม่พบข้อมูลผู้ใช้',
+      usernameExists:  'ชื่อผู้ใช้นี้มีอยู่แล้ว',
+      invalidPassword: 'รหัสผ่านปัจจุบันไม่ถูกต้อง',
+    },
+    auth: {
+      invalidCredentials: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+      accountInactive:    'บัญชีผู้ใช้ถูกระงับการใช้งาน',
+      accountDeleted:     'บัญชีผู้ใช้ไม่มีอยู่แล้ว',
+      sessionReplaced:    'เซสชันถูกแทนที่ด้วยการเข้าสู่ระบบใหม่',
+      invalidToken:       'Token ไม่ถูกต้องหรือหมดอายุ',
+    },
+    systemSetting: {
+      notFound: 'ไม่พบการตั้งค่าระบบ',
+    },
+    backup: {
+      fileNotFound: 'ไม่พบไฟล์ Backup',
+    },
+    userLog: {
+      notFound: 'ไม่พบประวัติการใช้งาน',
+    },
+    import: {
+      rowLimitExceeded:    'จำนวนแถวเกินกว่าที่อนุญาต',
+      processFailed:       'เกิดข้อผิดพลาดในการนำเข้าข้อมูล',
+      invalidFileStructure: 'โครงสร้างไฟล์ไม่ถูกต้อง',
+    },
+    export: {
+      rowLimitExceeded: 'จำนวนแถวเกินกว่าที่อนุญาตสำหรับการส่งออก',
+    },
+    upload: {
+      noFile:      'ไม่พบไฟล์ที่อัปโหลด',
+      invalidFile: 'ไฟล์ไม่ถูกต้อง',
+    },
+    masterData: {
+      invalidDepartmentId: 'รหัสแผนกไม่ถูกต้อง',
+    },
+  },
 } as const

@@ -5,6 +5,7 @@ import { UserService } from './user.service'
 import { prisma } from '../lib/prisma'
 import { AppError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
+import { MSG } from '../constants/messages'
 import { Role } from '../types'
 
 const MAX_IMPORT_ROWS = 1000
@@ -43,7 +44,7 @@ export class ImportService {
       const data = XLSX.utils.sheet_to_json<{ Name: string; Status?: string }>(worksheet)
 
       if (data.length > MAX_IMPORT_ROWS) {
-        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, { max: MAX_IMPORT_ROWS, received: data.length })
+        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, MSG.errors.import.rowLimitExceeded, { max: MAX_IMPORT_ROWS, received: data.length })
       }
 
       for (let i = 0; i < data.length; i++) {
@@ -74,7 +75,7 @@ export class ImportService {
       }
     } catch (error: unknown) {
       if (error instanceof AppError) throw error
-      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error instanceof Error ? error.message : String(error) })
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, MSG.errors.import.processFailed, { reason: error instanceof Error ? error.message : String(error) })
     }
 
     return result
@@ -105,7 +106,7 @@ export class ImportService {
       }>(worksheet)
 
       if (data.length > MAX_IMPORT_ROWS) {
-        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, { max: MAX_IMPORT_ROWS, received: data.length })
+        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, MSG.errors.import.rowLimitExceeded, { max: MAX_IMPORT_ROWS, received: data.length })
       }
 
       // Pre-load departments for name lookup
@@ -161,7 +162,7 @@ export class ImportService {
       }
     } catch (error: unknown) {
       if (error instanceof AppError) throw error
-      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error instanceof Error ? error.message : String(error) })
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, MSG.errors.import.processFailed, { reason: error instanceof Error ? error.message : String(error) })
     }
 
     return result
@@ -197,7 +198,7 @@ export class ImportService {
       }>(worksheet)
 
       if (data.length > MAX_IMPORT_ROWS) {
-        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, { max: MAX_IMPORT_ROWS, received: data.length })
+        throw new AppError(400, CODES.IMPORT_ROW_LIMIT_EXCEEDED, MSG.errors.import.rowLimitExceeded, { max: MAX_IMPORT_ROWS, received: data.length })
       }
 
       // Pre-load lookup data for validation
@@ -352,7 +353,7 @@ export class ImportService {
       }
     } catch (error: unknown) {
       if (error instanceof AppError) throw error
-      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, { reason: error instanceof Error ? error.message : String(error) })
+      throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, MSG.errors.import.processFailed, { reason: error instanceof Error ? error.message : String(error) })
     }
 
     return result
