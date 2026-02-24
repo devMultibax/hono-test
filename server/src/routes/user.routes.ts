@@ -6,7 +6,7 @@ import { requireAdmin, requireUser } from '../middleware/permission'
 import { UserService } from '../services/user.service'
 import { registerSchema, updateUserSchema, listUsersQuerySchema, verifyPasswordSchema } from '../schemas/user'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
-import { Role, type HonoContext, type UserWithRelations } from '../types'
+import { Role, type HonoContext, type UserWithRelations, type UserResponse } from '../types'
 import { ExportService, userExcelColumns } from '../services/export.service'
 import { ImportService } from '../services/import.service'
 import { TemplateService } from '../services/template.service'
@@ -17,6 +17,7 @@ import { requireRouteId } from '../utils/id-validator.utils'
 import { ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
+import { LogEvent } from '../constants/log-events'
 import { strictRateLimiter } from '../middleware/rate-limit'
 
 const users = new Hono<HonoContext>()
@@ -41,7 +42,7 @@ users.post('/', requireAdmin, zValidator('json', registerSchema), async (c) => {
     currentUser.username
   )
 
-  c.get('logInfo')(`Created user "${validated.username}"`)
+  c.get('logInfo')(LogEvent.USER_CREATED(validated.username))
   return createdResponse(c, result)
 })
 
@@ -82,15 +83,16 @@ users.put('/:id', requireAdmin, zValidator('json', updateUserSchema), async (c) 
   const validated = c.req.valid('json')
 
   const user = await UserService.update(id, validated, currentUser.username)
-  c.get('logInfo')(`Updated user #${id}`)
+  c.get('logInfo')(LogEvent.USER_UPDATED((user as UserResponse).username))
   return successResponse(c, user)
 })
 
 // Delete a user
 users.delete('/:id', requireAdmin, async (c) => {
   const id = requireRouteId(c.req.param('id'), CODES.USER_INVALID_ID)
+  const targetUser = await UserService.getById(id) as UserResponse
   await UserService.delete(id)
-  c.get('logInfo')(`Deleted user #${id}`)
+  c.get('logInfo')(LogEvent.USER_DELETED(targetUser.username))
   return noContentResponse(c)
 })
 
@@ -107,7 +109,7 @@ users.patch('/:id/password/reset', requireAdmin, strictRateLimiter, async (c) =>
   const currentUser = c.get('user')
   const id = requireRouteId(c.req.param('id'), CODES.USER_INVALID_ID)
   const result = await UserService.resetPassword(id, currentUser.username)
-  c.get('logInfo')(`Reset password for user #${id}`)
+  c.get('logInfo')(LogEvent.USER_PASSWORD_RESET(result.user.username))
   return successResponse(c, result)
 })
 
@@ -134,7 +136,7 @@ users.post('/import', requireAdmin, async (c) => {
   }
 
   const result = await ImportService.importUsers(file.buffer, user.username)
-  c.get('logInfo')(`Imported users: ${result.success} success, ${result.failed} failed`)
+  c.get('logInfo')(LogEvent.USER_IMPORTED(result.success, result.failed))
 
   return successResponse(c, {
     imported: result.success,

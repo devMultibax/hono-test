@@ -17,6 +17,7 @@ import { requireRouteId } from '../utils/id-validator.utils'
 import { ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
+import { LogEvent } from '../constants/log-events'
 
 const sections = new Hono<HonoContext>()
 
@@ -55,7 +56,7 @@ sections.post('/', requireAdmin, zValidator('json', createSectionSchema), async 
   const { departmentId, name } = c.req.valid('json')
 
   const section = await SectionService.create(departmentId, name, user.username)
-  c.get('logInfo')(`Created section "${name}"`)
+  c.get('logInfo')(LogEvent.SECTION_CREATED(name))
   return createdResponse(c, section)
 })
 
@@ -67,7 +68,7 @@ sections.put('/:id', requireAdmin, zValidator('json', updateSectionSchema), asyn
 
   const oldSection = await SectionService.getById(id, true) as SectionWithRelations
   const section = await SectionService.update(id, validated, user.username)
-  c.get('logInfo')(`Updated section "${oldSection.name}" to "${section.name}" in department "${oldSection.department?.name ?? '-'}"`)
+  c.get('logInfo')(LogEvent.SECTION_UPDATED(section.name, oldSection.name, oldSection.department?.name ?? '-'))
   return successResponse(c, section)
 })
 
@@ -76,7 +77,7 @@ sections.delete('/:id', requireAdmin, async (c) => {
   const id = requireRouteId(c.req.param('id'), CODES.SECTION_INVALID_ID)
   const oldSection = await SectionService.getById(id, true) as SectionWithRelations
   await SectionService.delete(id)
-  c.get('logInfo')(`Deleted section "${oldSection.name}" in department "${oldSection.department?.name ?? '-'}"`)
+  c.get('logInfo')(LogEvent.SECTION_DELETED(oldSection.name, oldSection.department?.name ?? '-'))
   return noContentResponse(c)
 })
 
@@ -102,7 +103,7 @@ sections.post('/import', requireAdmin, async (c) => {
   }
 
   const result = await ImportService.importSections(file.buffer, user.username)
-  c.get('logInfo')(`Imported sections: ${result.success} success, ${result.failed} failed`)
+  c.get('logInfo')(LogEvent.SECTION_IMPORTED(result.success, result.failed))
 
   return successResponse(c, {
     imported: result.success,

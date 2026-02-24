@@ -1,6 +1,7 @@
 import cron from 'node-cron'
 import { BackupService } from './backup.service'
 import { logSystem } from '../lib/logger'
+import { LogEvent } from '../constants/log-events'
 import { daysToMs } from '../utils/time.utils'
 
 const RETENTION_DAYS = 30
@@ -14,15 +15,15 @@ export class ScheduledBackupService {
   }
 
   private static async runScheduledBackup(): Promise<void> {
-    logSystem.info({ event: 'Starting scheduled daily backup...' })
+    logSystem.info({ event: LogEvent.SCHED_BACKUP_STARTED })
 
     try {
       const { filename } = await BackupService.createBackup('auto', 'daily')
-      logSystem.info({ event: `Scheduled backup created: ${filename}` })
+      logSystem.info({ event: LogEvent.SCHED_BACKUP_COMPLETED(filename) })
 
       await this.cleanupOldBackups()
     } catch (error) {
-      logSystem.error({ event: 'Scheduled backup failed', detail: (error as Error).message })
+      logSystem.error({ event: LogEvent.SCHED_BACKUP_FAILED, detail: (error as Error).message })
     }
   }
 
@@ -38,18 +39,18 @@ export class ScheduledBackupService {
 
       if (oldBackups.length === 0) return
 
-      logSystem.info({ event: `Found ${oldBackups.length} old backups to cleanup` })
+      logSystem.info({ event: LogEvent.SCHED_FOUND_EXPIRED_BACKUPS(oldBackups.length) })
 
       for (const backup of oldBackups) {
         try {
           await BackupService.deleteBackup(backup.filename)
-          logSystem.info({ event: `Deleted old backup: ${backup.filename}` })
+          logSystem.info({ event: LogEvent.SCHED_DELETED_BACKUP(backup.filename) })
         } catch (err) {
-          logSystem.warn({ event: `Failed to delete backup ${backup.filename}`, detail: (err as Error).message })
+          logSystem.warn({ event: LogEvent.SCHED_DELETE_BACKUP_FAILED(backup.filename), detail: (err as Error).message })
         }
       }
     } catch (error) {
-      logSystem.error({ event: 'Failed to cleanup old backups', detail: (error as Error).message })
+      logSystem.error({ event: LogEvent.SCHED_CLEANUP_BACKUPS_FAILED, detail: (error as Error).message })
     }
   }
 }

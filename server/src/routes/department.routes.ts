@@ -17,6 +17,7 @@ import { requireRouteId } from '../utils/id-validator.utils'
 import { ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
+import { LogEvent } from '../constants/log-events'
 
 const departments = new Hono<HonoContext>()
 
@@ -55,7 +56,7 @@ departments.post('/', requireAdmin, zValidator('json', createDepartmentSchema), 
   const { name } = c.req.valid('json')
 
   const department = await DepartmentService.create(name, user.username)
-  c.get('logInfo')(`Created department "${name}"`)
+  c.get('logInfo')(LogEvent.DEPT_CREATED(name))
   return createdResponse(c, department)
 })
 
@@ -67,7 +68,7 @@ departments.put('/:id', requireAdmin, zValidator('json', updateDepartmentSchema)
 
   const oldDepartment = await DepartmentService.getById(id)
   const department = await DepartmentService.update(id, validated, user.username)
-  c.get('logInfo')(`Updated department "${(oldDepartment as DepartmentResponse).name}" to "${department.name}"`)
+  c.get('logInfo')(LogEvent.DEPT_UPDATED(department.name, (oldDepartment as DepartmentResponse).name))
   return successResponse(c, department)
 })
 
@@ -76,7 +77,7 @@ departments.delete('/:id', requireAdmin, async (c) => {
   const id = requireRouteId(c.req.param('id'), CODES.DEPARTMENT_INVALID_ID)
   const department = await DepartmentService.getById(id)
   await DepartmentService.delete(id)
-  c.get('logInfo')(`Deleted department "${(department as DepartmentResponse).name}"`)
+  c.get('logInfo')(LogEvent.DEPT_DELETED((department as DepartmentResponse).name))
   return noContentResponse(c)
 })
 
@@ -102,7 +103,7 @@ departments.post('/import', requireAdmin, async (c) => {
   }
 
   const result = await ImportService.importDepartments(file.buffer, user.username)
-  c.get('logInfo')(`Imported departments: ${result.success} success, ${result.failed} failed`)
+  c.get('logInfo')(LogEvent.DEPT_IMPORTED(result.success, result.failed))
 
   return successResponse(c, {
     imported: result.success,

@@ -4,6 +4,7 @@ import { AppError } from '../lib/errors'
 import { errorResponse } from '../lib/response'
 import { env } from '../config/env'
 import { CODES } from '../constants/error-codes'
+import { LogEvent } from '../constants/log-events'
 import type { HonoContext } from '../types'
 
 export const errorHandler = (error: Error, c: Context) => {
@@ -11,7 +12,7 @@ export const errorHandler = (error: Error, c: Context) => {
   const logError = (c as Context<HonoContext>).get('logError')
 
   if (error instanceof ZodError) {
-    logWarn?.('Validation failed', {
+    logWarn?.(LogEvent.SYS_VALIDATION_FAILED, {
       issues: error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
     })
     return errorResponse(
@@ -35,9 +36,9 @@ export const errorHandler = (error: Error, c: Context) => {
     }
 
     if (error.statusCode >= 500) {
-      logError?.('Server error', logData)
+      logError?.(LogEvent.SYS_SERVER_ERROR, logData)
     } else {
-      logWarn?.(`${error.code} (${error.statusCode})`, logData)
+      logWarn?.(LogEvent.SYS_REQUEST_ERROR(error.code), logData)
     }
 
     return errorResponse(
@@ -51,7 +52,7 @@ export const errorHandler = (error: Error, c: Context) => {
     )
   }
 
-  logError?.('Unhandled error', {
+  logError?.(LogEvent.SYS_UNHANDLED_ERROR, {
     name:    error.name,
     message: error.message,
     stack:   error.stack,

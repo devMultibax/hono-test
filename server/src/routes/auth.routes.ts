@@ -10,6 +10,7 @@ import { env } from '../config/env'
 import { msToSeconds } from '../utils/time.utils'
 import { CODES } from '../constants/error-codes'
 import { UnauthorizedError } from '../lib/errors'
+import { LogEvent } from '../constants/log-events'
 import type { HonoContext } from '../types'
 
 const auth = new Hono<HonoContext>()
@@ -34,23 +35,10 @@ auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
       path: '/'
     })
 
-    if (result.previousSessionTerminated) {
-      c.get('logWarn')('Session replaced: logged in from another device', {
-        username: validated.username,
-        fullName: '-',
-      })
-    }
-
-    c.get('logInfo')('Login successful', { username: validated.username })
+    c.get('logInfo')(LogEvent.AUTH_LOGGED_IN, { username: validated.username })
 
     return successResponse(c, { user: result.user, code: CODES.AUTH_LOGIN_SUCCESS })
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      c.get('logWarn')(`Login failed: ${error.message}`, {
-        username: validated.username,
-        fullName: '-',
-      })
-    }
     throw error
   }
 })
@@ -58,7 +46,7 @@ auth.post('/login', loginRateLimiter, csrfProtection, async (c) => {
 auth.post('/logout', authMiddleware, async (c) => {
   const user = c.get('user')
 
-  c.get('logInfo')('Logout successful')
+  c.get('logInfo')(LogEvent.AUTH_LOGGED_OUT)
 
   await AuthService.logout(user.id)
 

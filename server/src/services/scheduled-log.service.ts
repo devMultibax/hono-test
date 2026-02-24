@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import fs from 'fs/promises'
 import path from 'path'
 import { LOG_DIR, logSystem } from '../lib/logger'
+import { LogEvent } from '../constants/log-events'
 import { daysToMs } from '../utils/time.utils'
 
 const RETENTION_DAYS = 30
@@ -16,7 +17,7 @@ export class ScheduledLogService {
   }
 
   private static async cleanupOldLogs(): Promise<void> {
-    logSystem.info({ event: 'Starting scheduled log cleanup...' })
+    logSystem.info({ event: LogEvent.SCHED_LOG_CLEANUP_STARTED })
 
     try {
       const files = await fs.readdir(LOG_DIR)
@@ -27,10 +28,10 @@ export class ScheduledLogService {
 
       if (oldFiles.length === 0) return
 
-      logSystem.info({ event: `Found ${oldFiles.length} old logs to cleanup` })
+      logSystem.info({ event: LogEvent.SCHED_FOUND_EXPIRED_LOGS(oldFiles.length) })
       await this.deleteFiles(oldFiles)
     } catch (error) {
-      logSystem.error({ event: 'Failed to cleanup old logs', detail: (error as Error).message })
+      logSystem.error({ event: LogEvent.SCHED_CLEANUP_LOGS_FAILED, detail: (error as Error).message })
     }
   }
 
@@ -49,7 +50,7 @@ export class ScheduledLogService {
           oldFiles.push({ file, filePath })
         }
       } catch (err) {
-        logSystem.warn({ event: `Failed to stat log file ${file}`, detail: (err as Error).message })
+        logSystem.warn({ event: LogEvent.SCHED_READ_LOG_FAILED(file), detail: (err as Error).message })
       }
     }
 
@@ -62,9 +63,9 @@ export class ScheduledLogService {
     for (const { file, filePath } of files) {
       try {
         await fs.unlink(filePath)
-        logSystem.info({ event: `Deleted old log: ${file}` })
+        logSystem.info({ event: LogEvent.SCHED_DELETED_LOG(file) })
       } catch (err) {
-        logSystem.warn({ event: `Failed to delete log ${file}`, detail: (err as Error).message })
+        logSystem.warn({ event: LogEvent.SCHED_DELETE_LOG_FAILED(file), detail: (err as Error).message })
       }
     }
   }

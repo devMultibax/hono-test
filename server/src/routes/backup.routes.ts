@@ -6,6 +6,7 @@ import { strictRateLimiter } from '../middleware/rate-limit'
 import { BackupService } from '../services/backup.service'
 import { createBackupSchema } from '../schemas/backup.schema'
 import { successResponse, createdResponse } from '../lib/response'
+import { LogEvent } from '../constants/log-events'
 import type { HonoContext } from '../types'
 
 const backupRoutes = new Hono<HonoContext>()
@@ -23,7 +24,7 @@ backupRoutes.get('/', async (c) => {
 backupRoutes.post('/', strictRateLimiter, zValidator('json', createBackupSchema), async (c) => {
   const { prefix } = c.req.valid('json')
   const result = await BackupService.createBackup(prefix)
-  c.get('logInfo')(`Created backup "${result.filename}"`)
+  c.get('logInfo')(LogEvent.BACKUP_CREATED(result.filename))
   return createdResponse(c, {
     message: 'Backup created successfully',
     ...result
@@ -34,7 +35,7 @@ backupRoutes.post('/', strictRateLimiter, zValidator('json', createBackupSchema)
 backupRoutes.post('/:filename/restore', strictRateLimiter, async (c) => {
   const filename = c.req.param('filename')
   await BackupService.restoreBackup(filename)
-  c.get('logInfo')(`Restored backup "${filename}"`)
+  c.get('logInfo')(LogEvent.BACKUP_RESTORED(filename))
   return successResponse(c, { message: 'Database restored successfully' })
 })
 

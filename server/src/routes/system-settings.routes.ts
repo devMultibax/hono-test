@@ -5,6 +5,7 @@ import { requireAdmin } from '../middleware/permission'
 import { SystemSettingsService, SETTING_KEYS } from '../services/system-settings.service'
 import { updateSystemSettingSchema } from '../schemas/system-settings.schema'
 import { successResponse } from '../lib/response'
+import { LogEvent } from '../constants/log-events'
 import type { HonoContext } from '../types'
 
 const systemSettings = new Hono<HonoContext>()
@@ -45,11 +46,13 @@ systemSettings.put('/:key', requireAdmin, async (c) => {
   // Log specific event for maintenance_mode toggle
   if (key === SETTING_KEYS.MAINTENANCE_MODE) {
     const isEnabled = validated.value === 'true'
-    const event = isEnabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled'
-    const logFn = isEnabled ? c.get('logWarn') : c.get('logInfo')
-    logFn(event)
+    if (isEnabled) {
+      c.get('logWarn')(LogEvent.SETTINGS_MAINTENANCE_ON)
+    } else {
+      c.get('logInfo')(LogEvent.SETTINGS_MAINTENANCE_OFF)
+    }
   } else {
-    c.get('logInfo')(`Updated setting "${key}"`)
+    c.get('logInfo')(LogEvent.SETTINGS_UPDATED(key))
   }
 
   return successResponse(c, setting)
