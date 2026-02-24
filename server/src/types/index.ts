@@ -125,9 +125,14 @@ export interface UserResponse {
   lastLoginAt: Date | null
 }
 
+export interface EmbeddedRelation {
+  id: number
+  name: string
+}
+
 export interface UserWithRelations extends UserResponse {
-  department?: DepartmentResponse
-  section?: SectionResponse | null
+  department?: EmbeddedRelation
+  section?: EmbeddedRelation | null
 }
 
 // Auth Types

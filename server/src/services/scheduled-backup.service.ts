@@ -1,9 +1,10 @@
 import cron from 'node-cron'
 import { BackupService } from './backup.service'
 import { logSystem } from '../lib/logger'
+import { daysToMs } from '../utils/time.utils'
 
 const RETENTION_DAYS = 30
-const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000
+const RETENTION_MS = daysToMs(RETENTION_DAYS)
 const CRON_SCHEDULE = '0 2 * * *' // Daily at 02:00 AM
 
 export class ScheduledBackupService {

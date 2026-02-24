@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma'
 import { NotFoundError, ConflictError, ValidationError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
-import { ActionType, Role, type UserResponse, type UserWithRelations, type DepartmentResponse, type SectionResponse, Status } from '../types'
+import { ActionType, Role, type UserResponse, type UserWithRelations, type EmbeddedRelation, Status } from '../types'
 import { calculatePagination, formatPaginationResponse, type PaginationParams, type PaginationResult } from '../utils/pagination.utils'
 import { generateDefaultPassword } from '../lib/password'
 import { getUserFullName } from '../utils/audit.utils'
@@ -30,8 +30,8 @@ type UserForLog = {
 }
 
 type PrismaUserWithOptionalRelations = PrismaUser & {
-  department?: DepartmentResponse
-  section?: SectionResponse | null
+  department?: EmbeddedRelation
+  section?: EmbeddedRelation | null
 }
 
 interface UpdateUserPayload {
@@ -116,33 +116,8 @@ export class UserService {
 
     const includeConfig = includeRelations
       ? {
-        department: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
-            createdAt: true,
-            createdBy: true,
-            createdByName: true,
-            updatedAt: true,
-            updatedBy: true,
-            updatedByName: true
-          }
-        },
-        section: {
-          select: {
-            id: true,
-            departmentId: true,
-            name: true,
-            status: true,
-            createdAt: true,
-            createdBy: true,
-            createdByName: true,
-            updatedAt: true,
-            updatedBy: true,
-            updatedByName: true
-          }
-        }
+        department: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } }
       }
       : undefined
 
@@ -269,8 +244,8 @@ export class UserService {
           updatedBy: null
         },
         include: {
-          department: true,
-          section: true
+          department: { select: { id: true, name: true } },
+          section: { select: { id: true, name: true } }
         }
       })
 
@@ -289,33 +264,8 @@ export class UserService {
       where: { id },
       include: includeRelations
         ? {
-          department: {
-            select: {
-              id: true,
-              name: true,
-              status: true,
-              createdAt: true,
-              createdBy: true,
-              createdByName: true,
-              updatedAt: true,
-              updatedBy: true,
-              updatedByName: true
-            }
-          },
-          section: {
-            select: {
-              id: true,
-              departmentId: true,
-              name: true,
-              status: true,
-              createdAt: true,
-              createdBy: true,
-              createdByName: true,
-              updatedAt: true,
-              updatedBy: true,
-              updatedByName: true
-            }
-          }
+          department: { select: { id: true, name: true } },
+          section: { select: { id: true, name: true } }
         }
         : undefined
     })
@@ -354,8 +304,8 @@ export class UserService {
     const existingUser = await prisma.user.findUnique({
       where: { id },
       include: {
-        department: true,
-        section: true
+        department: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } }
       }
     })
 
@@ -406,8 +356,8 @@ export class UserService {
         where: { id },
         data: updateData as Prisma.UserUpdateInput,
         include: {
-          department: true,
-          section: true
+          department: { select: { id: true, name: true } },
+          section: { select: { id: true, name: true } }
         }
       })
 
@@ -422,8 +372,8 @@ export class UserService {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        department: true,
-        section: true
+        department: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } }
       }
     })
 
@@ -482,8 +432,8 @@ export class UserService {
           updatedByName
         },
         include: {
-          department: true,
-          section: true
+          department: { select: { id: true, name: true } },
+          section: { select: { id: true, name: true } }
         }
       })
 
@@ -505,8 +455,8 @@ export class UserService {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        department: true,
-        section: true
+        department: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } }
       }
     })
 
@@ -533,8 +483,8 @@ export class UserService {
           updatedByName
         },
         include: {
-          department: true,
-          section: true
+          department: { select: { id: true, name: true } },
+          section: { select: { id: true, name: true } }
         }
       })
 

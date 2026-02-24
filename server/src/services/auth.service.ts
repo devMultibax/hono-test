@@ -6,6 +6,7 @@ import { UnauthorizedError, NotFoundError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
 import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations } from '../types'
+import { daysToMs } from '../utils/time.utils'
 
 const TOKEN_EXPIRY = '24h'
 
@@ -28,29 +29,8 @@ export class AuthService {
     updatedBy: string | null
     updatedByName: string | null
     lastLoginAt: Date | null
-    department?: {
-      id: number
-      name: string
-      status: string
-      createdAt: Date
-      createdBy: string
-      createdByName: string
-      updatedAt: Date | null
-      updatedBy: string | null
-      updatedByName: string | null
-    }
-    section?: {
-      id: number
-      departmentId: number
-      name: string
-      status: string
-      createdAt: Date
-      createdBy: string
-      createdByName: string
-      updatedAt: Date | null
-      updatedBy: string | null
-      updatedByName: string | null
-    } | null
+    department?: { id: number; name: string }
+    section?: { id: number; name: string } | null
   }): UserWithRelations {
     return {
       id: user.id,
@@ -70,29 +50,8 @@ export class AuthService {
       updatedBy: user.updatedBy,
       updatedByName: user.updatedByName,
       lastLoginAt: user.lastLoginAt,
-      department: user.department ? {
-        id: user.department.id,
-        name: user.department.name,
-        status: user.department.status as Status,
-        createdAt: user.department.createdAt,
-        createdBy: user.department.createdBy,
-        createdByName: user.department.createdByName,
-        updatedAt: user.department.updatedAt,
-        updatedBy: user.department.updatedBy,
-        updatedByName: user.department.updatedByName
-      } : undefined,
-      section: user.section ? {
-        id: user.section.id,
-        departmentId: user.section.departmentId,
-        name: user.section.name,
-        status: user.section.status as Status,
-        createdAt: user.section.createdAt,
-        createdBy: user.section.createdBy,
-        createdByName: user.section.createdByName,
-        updatedAt: user.section.updatedAt,
-        updatedBy: user.section.updatedBy,
-        updatedByName: user.section.updatedByName
-      } : null
+      department: user.department ? { id: user.department.id, name: user.department.name } : undefined,
+      section: user.section ? { id: user.section.id, name: user.section.name } : null
     }
   }
 
@@ -120,10 +79,8 @@ export class AuthService {
     }
 
     // Detect active session before incrementing tokenVersion
-    const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000
-    const previousSessionTerminated =
-      !!user.lastLoginAt &&
-      Date.now() - user.lastLoginAt.getTime() < TOKEN_EXPIRY_MS
+    const TOKEN_EXPIRY_MS = daysToMs(1)
+    const previousSessionTerminated = !!user.lastLoginAt && Date.now() - user.lastLoginAt.getTime() < TOKEN_EXPIRY_MS
 
     // Increment tokenVersion to invalidate previous sessions + update lastLoginAt
     const updatedUser = await prisma.user.update({

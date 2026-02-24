@@ -2,9 +2,10 @@ import cron from 'node-cron'
 import fs from 'fs/promises'
 import path from 'path'
 import { LOG_DIR, logSystem } from '../lib/logger'
+import { daysToMs } from '../utils/time.utils'
 
 const RETENTION_DAYS = 30
-const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000
+const RETENTION_MS = daysToMs(RETENTION_DAYS)
 const CRON_SCHEDULE = '0 1 * * *' // Daily at 01:00 AM
 const LOG_FILE_PATTERN = /^app-.*\.log$/
 
