@@ -25,10 +25,10 @@ export interface ImportResult {
 
 interface UserImportRow {
   Username: string
-  'First Name': string
-  'Last Name': string
-  'Department ID': number
-  'Section ID'?: number
+  First_Name: string
+  Last_Name: string
+  Department_ID: number
+  Section_ID?: number
   Email?: string
   Tel?: string
   Role?: string
@@ -114,21 +114,21 @@ export class ImportService {
     if (!row.Username || String(row.Username).trim() === '') {
       return pushError(CODES.IMPORT_USER_USERNAME_REQUIRED)
     }
-    if (!row['First Name'] || String(row['First Name']).trim() === '') {
+    if (!row['First_Name'] || String(row['First_Name']).trim() === '') {
       return pushError(CODES.IMPORT_USER_FIRST_NAME_REQUIRED)
     }
-    if (!row['Last Name'] || String(row['Last Name']).trim() === '') {
+    if (!row['Last_Name'] || String(row['Last_Name']).trim() === '') {
       return pushError(CODES.IMPORT_USER_LAST_NAME_REQUIRED)
     }
-    if (!row['Department ID']) {
+    if (!row['Department_ID']) {
       return pushError(CODES.IMPORT_USER_DEPT_ID_REQUIRED)
     }
 
     const username = String(row.Username).trim()
-    const firstName = String(row['First Name']).trim()
-    const lastName = String(row['Last Name']).trim()
-    const departmentId = Number(row['Department ID'])
-    const sectionId = row['Section ID'] ? Number(row['Section ID']) : null
+    const firstName = String(row['First_Name']).trim()
+    const lastName = String(row['Last_Name']).trim()
+    const departmentId = Number(row['Department_ID'])
+    const sectionId = row['Section_ID'] ? Number(row['Section_ID']) : null
     const email = row.Email ? String(row.Email).trim() : null
     const tel = row.Tel ? String(row.Tel).trim() : null
     const role = row.Role && String(row.Role).trim().toUpperCase() === 'ADMIN' ? Role.ADMIN : Role.USER
@@ -281,6 +281,6 @@ export class ImportService {
   }
 
   static validateUserFile(fileBuffer: Buffer): ExcelValidationResult {
-    return validateExcelFile(fileBuffer, ['Username', 'First Name', 'Last Name', 'Department ID'])
+    return validateExcelFile(fileBuffer, ['Username', 'First_Name', 'Last_Name', 'Department_ID'])
   }
 }

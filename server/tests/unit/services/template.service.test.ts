@@ -10,9 +10,9 @@ describe('TemplateService', () => {
       expect(wb.worksheets).toHaveLength(2)
     })
 
-    it('first sheet is named "User Import"', async () => {
+    it('first sheet is named "Data"', async () => {
       const wb = await TemplateService.generateUserTemplate()
-      expect(wb.worksheets[0].name).toBe('User Import')
+      expect(wb.worksheets[0].name).toBe('Data')
     })
 
     it('second sheet is named "คำอธิบาย"', async () => {
@@ -55,9 +55,9 @@ describe('TemplateService', () => {
       expect(wb.worksheets).toHaveLength(2)
     })
 
-    it('first sheet is named "Department Import"', async () => {
+    it('first sheet is named "Data"', async () => {
       const wb = await TemplateService.generateDepartmentTemplate()
-      expect(wb.worksheets[0].name).toBe('Department Import')
+      expect(wb.worksheets[0].name).toBe('Data')
     })
 
     it('first sheet has 1 column (Name)', async () => {
@@ -80,9 +80,9 @@ describe('TemplateService', () => {
       expect(wb.worksheets).toHaveLength(2)
     })
 
-    it('first sheet is named "Section Import"', async () => {
+    it('first sheet is named "Data"', async () => {
       const wb = await TemplateService.generateSectionTemplate()
-      expect(wb.worksheets[0].name).toBe('Section Import')
+      expect(wb.worksheets[0].name).toBe('Data')
     })
 
     it('first sheet has 2 columns (Department, Name)', async () => {

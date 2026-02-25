@@ -205,7 +205,7 @@ export class TemplateService {
     const workbook = new ExcelJS.Workbook()
 
     this.buildDataSheet(workbook, {
-      worksheetName: 'User Import',
+      worksheetName: 'Data',
       columns: [
         {
           header: 'Username',
@@ -216,28 +216,28 @@ export class TemplateService {
           textFormat: true,
         },
         {
-          header: 'First Name',
+          header: 'First_Name',
           key: 'firstName',
           width: 20,
           required: true,
           note: MSG.template.user.columns.firstName,
         },
         {
-          header: 'Last Name',
+          header: 'Last_Name',
           key: 'lastName',
           width: 20,
           required: true,
           note: MSG.template.user.columns.lastName,
         },
         {
-          header: 'Department ID',
+          header: 'Department_ID',
           key: 'departmentId',
           width: 18,
           required: true,
           note: MSG.template.user.columns.departmentId,
         },
         {
-          header: 'Section ID',
+          header: 'Section_ID',
           key: 'sectionId',
           width: 15,
           required: false,
@@ -279,7 +279,7 @@ export class TemplateService {
     })
 
     this.buildInstructionSheet(workbook, {
-      importSheetName: 'User Import',
+      importSheetName: 'Data',
       instructions: [
         {
           field: 'Username',
@@ -289,28 +289,28 @@ export class TemplateService {
           rules: MSG.template.user.instructions.username.rules,
         },
         {
-          field: 'First Name',
+          field: 'First_Name',
           required: MSG.template.required.yes,
           description: MSG.template.user.instructions.firstName.description,
           example: MSG.template.user.exampleRow.firstName,
           rules: MSG.template.user.instructions.firstName.rules,
         },
         {
-          field: 'Last Name',
+          field: 'Last_Name',
           required: MSG.template.required.yes,
           description: MSG.template.user.instructions.lastName.description,
           example: MSG.template.user.exampleRow.lastName,
           rules: MSG.template.user.instructions.lastName.rules,
         },
         {
-          field: 'Department ID',
+          field: 'Department_ID',
           required: MSG.template.required.yes,
           description: MSG.template.user.instructions.departmentId.description,
           example: '1',
           rules: MSG.template.user.instructions.departmentId.rules,
         },
         {
-          field: 'Section ID',
+          field: 'Section_ID',
           required: MSG.template.required.no,
           description: MSG.template.user.instructions.sectionId.description,
           example: '1',
@@ -351,7 +351,7 @@ export class TemplateService {
     const workbook = new ExcelJS.Workbook()
 
     this.buildDataSheet(workbook, {
-      worksheetName: 'Department Import',
+      worksheetName: 'Data',
       columns: [
         {
           header: 'Name',
@@ -367,7 +367,7 @@ export class TemplateService {
     })
 
     this.buildInstructionSheet(workbook, {
-      importSheetName: 'Department Import',
+      importSheetName: 'Data',
       instructions: [
         {
           field: 'Name',
@@ -387,7 +387,7 @@ export class TemplateService {
     const workbook = new ExcelJS.Workbook()
 
     this.buildDataSheet(workbook, {
-      worksheetName: 'Section Import',
+      worksheetName: 'Data',
       columns: [
         {
           header: 'Department',
@@ -411,7 +411,7 @@ export class TemplateService {
     })
 
     this.buildInstructionSheet(workbook, {
-      importSheetName: 'Section Import',
+      importSheetName: 'Data',
       instructions: [
         {
           field: 'Department',
