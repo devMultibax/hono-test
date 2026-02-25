@@ -37,7 +37,7 @@ departments.get('/template', async (c) => {
   const workbook = await TemplateService.generateDepartmentTemplate()
   const buffer = await workbook.xlsx.writeBuffer()
   c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  c.header('Content-Disposition', 'attachment; filename="department-import-template.xlsx"')
+  c.header('Content-Disposition', 'attachment; filename="Department_Import_Template.xlsx"')
   return c.body(buffer)
 })
 

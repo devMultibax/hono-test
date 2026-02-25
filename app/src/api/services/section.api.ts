@@ -27,7 +27,7 @@ export const sectionApi = {
         downloadFile('/sections/export/excel', `sections-${Date.now()}.xlsx`, signal, params as Record<string, unknown>),
 
     downloadTemplate: () =>
-        downloadFile('/sections/template', 'section-import-template.xlsx'),
+        downloadFile('/sections/template', 'Section_Import_Template.xlsx'),
 
     import: (file: File) => {
         const formData = new FormData();

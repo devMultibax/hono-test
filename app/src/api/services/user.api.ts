@@ -35,7 +35,7 @@ export const userApi = {
     downloadFile('/users/export/excel', `users-${Date.now()}.xlsx`, signal, params as Record<string, unknown>),
 
   downloadTemplate: () =>
-    downloadFile('/users/template', 'user-import-template.xlsx'),
+    downloadFile('/users/template', 'User_Import_Template.xlsx'),
 
   import: (file: File) => {
     const formData = new FormData();

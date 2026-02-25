@@ -37,7 +37,7 @@ sections.get('/template', async (c) => {
   const workbook = await TemplateService.generateSectionTemplate()
   const buffer = await workbook.xlsx.writeBuffer()
   c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  c.header('Content-Disposition', 'attachment; filename="section-import-template.xlsx"')
+  c.header('Content-Disposition', 'attachment; filename="Section_Import_Template.xlsx"')
   return c.body(buffer)
 })
 

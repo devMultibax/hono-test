@@ -27,7 +27,7 @@ export const departmentApi = {
     downloadFile('/departments/export/excel', `departments-${Date.now()}.xlsx`, signal, params as Record<string, unknown>),
 
   downloadTemplate: () =>
-    downloadFile('/departments/template', 'department-import-template.xlsx'),
+    downloadFile('/departments/template', 'Department_Import_Template.xlsx'),
 
   import: (file: File) => {
     const formData = new FormData();
