@@ -12,12 +12,12 @@ export const SETTING_KEYS = {
 } as const
 
 export class SystemSettingsService {
-  // ── In-memory cache เพื่อลด DB load ──
-  // Middleware ทำงานทุก request → ถ้า query DB ทุกครั้งจะหนักมาก
+  // ── In-memory cache to reduce DB load ──
+  // Middleware runs on every request → querying DB each time would be too expensive
   private static cache: Map<string, { value: string; expiresAt: number }> = new Map()
-  private static CACHE_TTL = 30_000 // 30 วินาที
+  private static CACHE_TTL = 30_000 // 30 seconds
 
-  // ดึง setting ทั้งหมด (Admin page)
+  // Fetch all settings (Admin page)
   static async getAll(): Promise<SystemSettingResponse[]> {
     const settings = await prisma.systemSetting.findMany({
       orderBy: { id: 'asc' },
@@ -25,7 +25,7 @@ export class SystemSettingsService {
     return settings
   }
 
-  // ดึง setting ด้วย key
+  // Fetch setting by key
   static async getByKey(key: string): Promise<SystemSettingResponse> {
     const setting = await prisma.systemSetting.findUnique({
       where: { key },
@@ -34,29 +34,31 @@ export class SystemSettingsService {
     return setting
   }
 
-  // อัปเดต setting (Admin only) + invalidate cache
+  // Update setting (Admin only) + invalidate cache
   static async updateByKey(
     key: string,
     value: string,
     updatedBy: string
   ): Promise<SystemSettingResponse> {
+    const existing = await prisma.systemSetting.findUnique({ where: { key } })
+    if (!existing) {
+      throw new NotFoundError(CODES.SYSTEM_SETTINGS_NOT_FOUND, MSG.errors.systemSetting.notFound)
+    }
+
     const updatedByName = await getUserFullName(updatedBy)
 
-    try {
-      const setting = await prisma.systemSetting.update({
-        where: { key },
-        data: {
-          value,
-          updatedAt: new Date(),
-          updatedBy,
-          updatedByName,
-        },
-      })
-      this.cache.delete(key) // Invalidate cache ทันที
-      return setting
-    } catch (originalError) {
-      throw new NotFoundError(CODES.SYSTEM_SETTINGS_NOT_FOUND, MSG.errors.systemSetting.notFound, undefined, originalError)
-    }
+    const setting = await prisma.systemSetting.update({
+      where: { key },
+      data: {
+        value,
+        updatedAt: new Date(),
+        updatedBy,
+        updatedByName,
+      },
+    })
+
+    this.cache.delete(key)
+    return setting
   }
 
   // ── Public status endpoint ──
@@ -66,7 +68,7 @@ export class SystemSettingsService {
     return { maintenance: isMaintenance, message }
   }
 
-  // ── Cached helpers สำหรับ middleware ──
+  // ── Cached helpers for middleware ──
 
   static async isMaintenanceMode(): Promise<boolean> {
     const value = await this.getCachedValue(SETTING_KEYS.MAINTENANCE_MODE)
@@ -94,7 +96,7 @@ export class SystemSettingsService {
       }
       return value
     } catch {
-      return null // fail-open: ถ้า DB ล่ม → ปล่อยผ่าน
+      return null // fail-open: if DB is down → allow through
     }
   }
 }
