@@ -39,6 +39,8 @@ interface UserLookups {
   sectionMap: Map<number, number>
   existingUsernames: Set<string>
   batchUsernames: Set<string>
+  existingEmails: Set<string>
+  batchEmails: Set<string>
 }
 
 export class ImportService {
@@ -84,7 +86,7 @@ export class ImportService {
     const [allDepartments, allSections, existingUsers] = await Promise.all([
       prisma.department.findMany({ select: { id: true, status: true } }),
       prisma.section.findMany({ select: { id: true, departmentId: true, status: true } }),
-      prisma.user.findMany({ select: { username: true } }),
+      prisma.user.findMany({ select: { username: true, email: true } }),
     ])
 
     return {
@@ -95,7 +97,9 @@ export class ImportService {
         allSections.filter(s => s.status === 'active').map(s => [s.id, s.departmentId])
       ),
       existingUsernames: new Set(existingUsers.map(u => u.username)),
-      batchUsernames: new Set<string>()
+      batchUsernames: new Set<string>(),
+      existingEmails: new Set(existingUsers.filter(u => u.email).map(u => u.email!.toLowerCase())),
+      batchEmails: new Set<string>(),
     }
   }
 
@@ -148,13 +152,19 @@ export class ImportService {
       if (sectionDeptId !== departmentId) return pushError(CODES.IMPORT_USER_SECTION_DEPT_MISMATCH, { sectionId, departmentId })
     }
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return pushError(CODES.IMPORT_USER_EMAIL_INVALID, { email })
+    if (email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return pushError(CODES.IMPORT_USER_EMAIL_INVALID, { email })
+      const emailLower = email.toLowerCase()
+      if (lookups.existingEmails.has(emailLower)) return pushError(CODES.IMPORT_USER_EMAIL_EXISTS, { email })
+      if (lookups.batchEmails.has(emailLower)) return pushError(CODES.IMPORT_USER_EMAIL_DUPLICATE, { email })
+    }
     if (tel && (tel.length !== 10 || !/^[0-9]+$/.test(tel))) return pushError(CODES.IMPORT_USER_TEL_INVALID, { tel })
 
     try {
       await UserService.create(username, firstName, lastName, departmentId, sectionId, email, tel, role, createdBy)
       lookups.existingUsernames.add(username)
       lookups.batchUsernames.add(username)
+      if (email) lookups.batchEmails.add(email.toLowerCase())
     } catch (error: unknown) {
       pushError(error instanceof Error ? error.message : CODES.IMPORT_UNKNOWN_ERROR)
     }

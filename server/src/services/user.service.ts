@@ -166,6 +166,13 @@ export class UserService {
       throw new ConflictError(CODES.USER_USERNAME_EXISTS, MSG.errors.user.usernameExists)
     }
 
+    if (email) {
+      const emailTaken = await prisma.user.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } })
+      if (emailTaken) {
+        throw new ConflictError(CODES.USER_EMAIL_EXISTS, MSG.errors.user.emailExists)
+      }
+    }
+
     const department = await prisma.department.findUnique({
       where: { id: departmentId }
     })
@@ -269,6 +276,15 @@ export class UserService {
 
     if (!existingUser) {
       throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
+    }
+
+    if (data.email) {
+      const emailTaken = await prisma.user.findFirst({
+        where: { email: { equals: data.email, mode: 'insensitive' }, NOT: { id } }
+      })
+      if (emailTaken) {
+        throw new ConflictError(CODES.USER_EMAIL_EXISTS, MSG.errors.user.emailExists)
+      }
     }
 
     if (data.departmentId) {

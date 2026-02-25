@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../lib/prisma'
 import { env } from '../config/env'
-import { UnauthorizedError, NotFoundError } from '../lib/errors'
+import { UnauthorizedError, NotFoundError, ConflictError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
 import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations, type PrismaUserWithRelations } from '../types'
@@ -169,6 +169,15 @@ export class AuthService {
 
     if (!user) {
       throw new NotFoundError(CODES.USER_NOT_FOUND, MSG.errors.user.notFound)
+    }
+
+    if (data.email) {
+      const emailTaken = await prisma.user.findFirst({
+        where: { email: { equals: data.email, mode: 'insensitive' }, NOT: { id: userId } }
+      })
+      if (emailTaken) {
+        throw new ConflictError(CODES.USER_EMAIL_EXISTS, MSG.errors.user.emailExists)
+      }
     }
 
     const updatedUser = await prisma.user.update({

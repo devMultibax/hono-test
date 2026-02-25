@@ -20,6 +20,7 @@
   "USER_NO_FILE_UPLOADED": "ไม่ได้อัปโหลดไฟล์",
   "USER_INVALID_FILE_STRUCTURE": "โครงสร้างไฟล์ไม่ถูกต้อง",
   "USER_USERNAME_EXISTS": "ชื่อผู้ใช้งานนี้มีอยู่แล้วในระบบ",
+  "USER_EMAIL_EXISTS": "อีเมลนี้มีอยู่แล้วในระบบ",
   "USER_INVALID_PASSWORD": "รหัสผ่านปัจจุบันไม่ถูกต้อง",
 
   "DEPARTMENT_NOT_FOUND": "ไม่พบแผนก",
@@ -86,6 +87,8 @@
   "IMPORT_USER_SECTION_NOT_FOUND": "ไม่พบรหัสหน่วยงาน {{sectionId}} หรืออยู่ในสถานะไม่ใช้งาน",
   "IMPORT_USER_SECTION_DEPT_MISMATCH": "รหัสหน่วยงาน {{sectionId}} ไม่ได้อยู่ในแผนก {{departmentId}}",
   "IMPORT_USER_EMAIL_INVALID": "รูปแบบอีเมลไม่ถูกต้อง: {{email}}",
+  "IMPORT_USER_EMAIL_EXISTS": "อีเมล \"{{email}}\" มีอยู่แล้วในระบบ",
+  "IMPORT_USER_EMAIL_DUPLICATE": "อีเมล \"{{email}}\" ซ้ำกันภายในไฟล์",
   "IMPORT_USER_TEL_INVALID": "เบอร์โทรต้องมีความยาว 10 หลัก (ตัวเลขเท่านั้น): {{tel}}",
   "IMPORT_UNKNOWN_ERROR": "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ"
 }
