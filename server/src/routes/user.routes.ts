@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
+import ExcelJS from 'exceljs'
 import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin, requireUser } from '../middleware/permission'
@@ -122,7 +123,7 @@ users.get('/export/excel', requireUser, zValidator('query', listUsersQuerySchema
   return sendExcelResponse(c, result, filename)
 })
 
-// Import from Excel
+// Import from Excel — returns Users_Importing.xlsx with credentials for successfully imported users
 users.post('/import', requireAdmin, async (c) => {
   const user = c.get('user')
   const file = await resolveUploadedFile(c)
@@ -135,12 +136,24 @@ users.post('/import', requireAdmin, async (c) => {
   const result = await ImportService.importUsers(file.buffer, user.username)
   c.get('logInfo')(LogEvent.USER_IMPORTED(result.success, result.failed))
 
-  return successResponse(c, {
-    imported: result.success,
-    failed: result.failed,
-    total: result.success + result.failed,
-    errors: result.errors
-  })
+  const workbook = new ExcelJS.Workbook()
+  const sheet = workbook.addWorksheet('Users')
+  sheet.columns = [
+    { header: 'Username', key: 'username', width: 15 },
+    { header: 'Password', key: 'password', width: 20 },
+  ]
+  for (const cred of result.credentials ?? []) {
+    sheet.addRow(cred)
+  }
+  const buffer = await workbook.xlsx.writeBuffer()
+
+  c.header('X-Import-Success', String(result.success))
+  c.header('X-Import-Failed', String(result.failed))
+  c.header('X-Import-Total', String(result.success + result.failed))
+  c.header('X-Import-Errors', JSON.stringify(result.errors))
+  c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  c.header('Content-Disposition', 'attachment; filename="Users_Importing.xlsx"')
+  return c.body(buffer)
 })
 
 export default users

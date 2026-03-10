@@ -75,6 +75,8 @@
     "dropzoneTitle": "คลิกหรือลากไฟล์มาวางที่นี่",
     "dropzoneHint": "รองรับไฟล์ .xlsx, .xls ขนาดไม่เกิน {{size}} MB",
     "importAgain": "นำเข้าอีกครั้ง",
+    "downloadCredentials": "ดาวน์โหลด Username/Password",
+    "downloadCredentialsHint": "พร้อมส่งให้ผู้ใช้ {{count}} รายการ",
     "resultTitle": "ผลการนำเข้าข้อมูล",
     "success": "สำเร็จ: {{count}} รายการ",
     "failed": "ล้มเหลว: {{count}} รายการ",

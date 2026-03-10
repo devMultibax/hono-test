@@ -17,10 +17,16 @@ export interface ImportRowError {
   params?: Record<string, unknown>
 }
 
+export interface ImportCredential {
+  username: string
+  password: string
+}
+
 export interface ImportResult {
   success: number
   failed: number
   errors: ImportRowError[]
+  credentials?: ImportCredential[]
 }
 
 interface UserImportRow {
@@ -108,7 +114,8 @@ export class ImportService {
     rowNumber: number,
     lookups: UserLookups,
     createdBy: string,
-    result: ImportResult
+    result: ImportResult,
+    credentials: ImportCredential[]
   ): Promise<void> {
     const pushError = (code: string, params?: Record<string, unknown>) => {
       result.errors.push({ row: rowNumber, code, params })
@@ -161,7 +168,8 @@ export class ImportService {
     if (tel && (tel.length !== 10 || !/^[0-9]+$/.test(tel))) return pushError(CODES.IMPORT_USER_TEL_INVALID, { tel })
 
     try {
-      await UserService.create(username, firstName, lastName, departmentId, sectionId, email, tel, role, createdBy)
+      const { password } = await UserService.create(username, firstName, lastName, departmentId, sectionId, email, tel, role, createdBy)
+      credentials.push({ username, password })
       lookups.existingUsernames.add(username)
       lookups.batchUsernames.add(username)
       if (email) lookups.batchEmails.add(email.toLowerCase())
@@ -270,10 +278,12 @@ export class ImportService {
       const data = this.parseExcel<UserImportRow>(fileBuffer)
       this.validateRowLimit(data.length)
       const lookups = await this.preloadUserLookups()
+      const credentials: ImportCredential[] = []
 
-      return await this.processRows(data, async (row, rowNumber, result) => {
-        await this.processUserRow(row, rowNumber, lookups, createdBy, result)
+      const result = await this.processRows(data, async (row, rowNumber, result) => {
+        await this.processUserRow(row, rowNumber, lookups, createdBy, result, credentials)
       })
+      return { ...result, credentials }
     } catch (error: unknown) {
       if (error instanceof AppError) throw error
       throw new AppError(500, CODES.IMPORT_PROCESS_FAILED, MSG.errors.import.processFailed, {

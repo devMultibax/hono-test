@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
-import { Button, Drawer, Text, Stack, Alert, Group, UnstyledButton, RingProgress, ThemeIcon, ScrollArea, Divider } from '@mantine/core';
-import { IconCheck, IconX, IconAlertTriangle, IconFileSpreadsheet, IconUpload } from '@tabler/icons-react';
+import { Button, Drawer, Text, Stack, Alert, Group, UnstyledButton, RingProgress, ThemeIcon, ScrollArea, Divider, Paper } from '@mantine/core';
+import { IconCheck, IconX, IconAlertTriangle, IconFileSpreadsheet, IconUpload, IconDownload } from '@tabler/icons-react';
 import { apiClient } from '@/api/client';
 import { Report } from '@/utils/mantineAlertUtils';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -43,11 +43,13 @@ export function ImportButton({
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
   const resetState = useCallback(() => {
     setSelectedFile(null);
     setResult(null);
+    setResultBlob(null);
     setDragOver(false);
     if (fileRef.current) fileRef.current.value = '';
   }, []);
@@ -77,23 +79,28 @@ export function ImportButton({
     formData.append('file', selectedFile);
 
     try {
-      const response = await apiClient.post<{ data: { imported: number; failed: number; total: number; errors?: ImportRowError[] } }>(endpoint, formData, {
+      const response = await apiClient.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        responseType: 'blob',
       });
 
-      const apiData = response.data.data;
-      const importResult: ImportResult = {
-        success: apiData.imported,
-        failed: apiData.failed,
-        total: apiData.total,
-        errors: apiData.errors,
-      };
+      // Store blob for manual download
+      setResultBlob(new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }));
 
+      // Parse import metadata from response headers
+      const success = Number(response.headers['x-import-success'] ?? 0);
+      const failed = Number(response.headers['x-import-failed'] ?? 0);
+      const total = Number(response.headers['x-import-total'] ?? success + failed);
+      const errors: ImportRowError[] = JSON.parse(response.headers['x-import-errors'] ?? '[]');
+
+      const importResult: ImportResult = { success, failed, total, errors };
       setResult(importResult);
       setSelectedFile(null);
 
-      if (importResult.success > 0) {
-        Report.success(t('users:import.successMessage', { count: importResult.success }));
+      if (success > 0) {
+        Report.success(t('users:import.successMessage', { count: success }));
       }
 
       onSuccess?.();
@@ -133,7 +140,7 @@ export function ImportButton({
         size="md"
       >
         {result ? (
-          <ResultView result={result} onClose={handleClose} onRetry={resetState} />
+          <ResultView result={result} blob={resultBlob} onClose={handleClose} onRetry={resetState} />
         ) : (
           <UploadView
             file={selectedFile}
@@ -158,14 +165,24 @@ export function ImportButton({
 
 interface ResultViewProps {
   result: ImportResult;
+  blob: Blob | null;
   onClose: () => void;
   onRetry: () => void;
 }
 
-function ResultView({ result, onClose, onRetry }: ResultViewProps) {
+function ResultView({ result, blob, onClose, onRetry }: ResultViewProps) {
   const { t } = useTranslation(['users', 'common']);
   const successRate = Math.round((result.success / result.total) * 100);
   const hasErrors = result.errors && result.errors.length > 0;
+
+  const handleDownload = () => {
+    if (!blob) return;
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'Users_Importing.xlsx';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
 
   function formatRowError(err: ImportRowError): string {
     // Special synthetic error from catch block carrying an already-translated message
@@ -211,11 +228,32 @@ function ResultView({ result, onClose, onRetry }: ResultViewProps) {
         </>
       )}
 
-      <Group justify="flex-end">
+      {blob && result.success > 0 && (
+        <Paper withBorder radius="md" p="md" className="border-teal-200 bg-teal-50">
+          <Group justify="space-between" wrap="nowrap">
+            <Group gap="sm" wrap="nowrap">
+              <ThemeIcon color="teal" variant="light" size="lg" radius="md">
+                <IconFileSpreadsheet size={18} />
+              </ThemeIcon>
+              <Stack gap={2}>
+                <Text size="sm" fw={500}>{t('users:import.downloadCredentials')}</Text>
+                <Text size="xs" c="dimmed">{t('users:import.downloadCredentialsHint', { count: result.success })}</Text>
+              </Stack>
+            </Group>
+            <Button size="xs" color="teal" leftSection={<IconDownload size={14} />} onClick={handleDownload}>
+              {t('common:button.download')}
+            </Button>
+          </Group>
+        </Paper>
+      )}
+
+      <Divider />
+
+      <Group justify="space-between">
         <Button variant="subtle" color="gray" size="sm" onClick={onClose}>
           {t('common:button.close')}
         </Button>
-        <Button size="sm" onClick={onRetry}>
+        <Button variant="subtle" size="sm" onClick={onRetry}>
           {t('users:import.importAgain')}
         </Button>
       </Group>

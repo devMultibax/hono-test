@@ -19,7 +19,7 @@ export const corsMiddleware = honoCors({
   origin: getValidOrigin,
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-  exposeHeaders: ['Content-Length', 'Content-Disposition'],
+  exposeHeaders: ['Content-Length', 'Content-Disposition', 'X-Import-Success', 'X-Import-Failed', 'X-Import-Total', 'X-Import-Errors'],
   maxAge: CORS_MAX_AGE,
   credentials: true
 })
