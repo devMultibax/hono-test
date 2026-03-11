@@ -69,6 +69,7 @@ function openReport(type: ReportType, message: string, callback?: () => void) {
           color={config.color}
           fullWidth
           mt="xs"
+          data-autofocus
           onClick={() => {
             modals.closeAll();
             callback?.();
@@ -157,6 +158,7 @@ export const Confirm = {
               </Button>
               <Button
                 color="blue"
+                data-autofocus
                 onClick={() => {
                   modals.closeAll();
                   resolve(true);
