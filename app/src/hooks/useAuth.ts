@@ -26,8 +26,9 @@ export function useAuth() {
       setLoginError(null);
       try {
         const res = await apiClient.post('/auth/login', credentials);
-        setUser(res.data.data?.user);
-        navigate('/dashboard');
+        const user = res.data.data?.user;
+        setUser(user);
+        navigate(user?.isDefaultPassword ? '/force-change-password' : '/dashboard');
       } catch (err) {
         setLoginError(err as Error);
         throw err;

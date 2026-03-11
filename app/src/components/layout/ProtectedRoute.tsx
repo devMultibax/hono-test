@@ -30,6 +30,10 @@ export function ProtectedRoute() {
   if (!isHydrated) return <LoadingOverlay visible />;
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
 
+  if (user?.isDefaultPassword) {
+    return <Navigate to="/force-change-password" replace />;
+  }
+
   // Redirect non-admin users to maintenance page when maintenance is active
   if (maintenanceStatus?.maintenance && user?.role !== 'ADMIN') {
     return <Navigate to="/maintenance" replace />;

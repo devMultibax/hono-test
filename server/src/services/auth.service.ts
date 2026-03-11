@@ -31,6 +31,7 @@ export class AuthService {
       updatedBy: user.updatedBy,
       updatedByName: user.updatedByName,
       lastLoginAt: user.lastLoginAt,
+      isDefaultPassword: user.isDefaultPassword,
       department: user.department ? { id: user.department.id, name: user.department.name } : undefined,
       section: user.section ? { id: user.section.id, name: user.section.name } : null
     }

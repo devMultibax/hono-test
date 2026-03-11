@@ -121,6 +121,7 @@ export interface UserResponse {
   updatedBy: string | null
   updatedByName: string | null
   lastLoginAt: Date | null
+  isDefaultPassword: boolean
 }
 
 export interface EmbeddedRelation {
@@ -151,6 +152,7 @@ export interface PrismaUserWithRelations {
   updatedBy: string | null
   updatedByName: string | null
   lastLoginAt: Date | null
+  isDefaultPassword: boolean
   department?: { id: number; name: string }
   section?: { id: number; name: string } | null
 }

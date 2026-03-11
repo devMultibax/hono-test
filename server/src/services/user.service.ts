@@ -60,7 +60,8 @@ export class UserService {
       updatedAt: user.updatedAt,
       updatedBy: user.updatedBy,
       updatedByName: user.updatedByName,
-      lastLoginAt: user.lastLoginAt
+      lastLoginAt: user.lastLoginAt,
+      isDefaultPassword: user.isDefaultPassword
     }
   }
 
