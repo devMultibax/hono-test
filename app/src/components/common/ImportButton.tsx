@@ -26,6 +26,7 @@ interface Props {
   onDownloadTemplate?: () => void;
   accept?: string;
   maxSize?: number; // MB
+  expectedFileName?: string;
 }
 
 export function ImportButton({
@@ -34,6 +35,7 @@ export function ImportButton({
   onDownloadTemplate,
   accept = '.xlsx,.xls',
   maxSize = 5,
+  expectedFileName,
 }: Props) {
   const { t } = useTranslation(['users', 'common']);
   const { confirm } = useConfirm();
@@ -60,6 +62,13 @@ export function ImportButton({
   }, [resetState]);
 
   const handleFileSelect = useCallback((file: File) => {
+    if (expectedFileName && file.name.toLowerCase() !== expectedFileName.toLowerCase()) {
+      setResult({
+        success: 0, failed: 1, total: 1,
+        errors: [{ row: 0, code: 'IMPORT_INVALID_FILENAME', params: { expected: expectedFileName } }],
+      });
+      return;
+    }
     if (file.size > maxSize * 1024 * 1024) {
       setResult({
         success: 0, failed: 1, total: 1,
@@ -69,7 +78,7 @@ export function ImportButton({
     }
     setSelectedFile(file);
     setResult(null);
-  }, [maxSize]);
+  }, [maxSize, expectedFileName]);
 
   const handleImport = useCallback(async () => {
     if (!selectedFile) return;
@@ -189,6 +198,8 @@ function ResultView({ result, blob, onClose, onRetry }: ResultViewProps) {
     if (err.code === '__message__') return String(err.params?.message ?? '');
     // File-too-large error is handled client-side with existing i18n key
     if (err.code === 'IMPORT_FILE_TOO_LARGE') return t('users:import.fileSizeError', { size: err.params?.size });
+    // Invalid filename error is handled client-side
+    if (err.code === 'IMPORT_INVALID_FILENAME') return t('users:import.invalidFilenameError', { expected: err.params?.expected });
     const apiKey = `api:${err.code}`;
     const translated = i18n.exists(apiKey) ? i18n.t(apiKey, err.params ?? {}) : err.code;
     return err.row > 0 ? `แถวที่ ${err.row}: ${translated}` : translated;

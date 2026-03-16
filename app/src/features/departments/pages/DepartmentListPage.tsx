@@ -83,7 +83,7 @@ export function DepartmentListPage() {
         {t('common:button.downloadReport')}
       </Button>
       {isAdmin && (
-        <ImportButton endpoint="/departments/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => departmentApi.downloadTemplate()} />
+        <ImportButton endpoint="/departments/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => departmentApi.downloadTemplate()} expectedFileName="Department_Import_Template.xlsx" />
       )}
       <Button variant="filled" size="xs" onClick={openCreate}>
         {t('departments:action.addDepartment')}

@@ -90,7 +90,7 @@ export function UserListPage() {
         {t('common:button.downloadReport')}
       </Button>
       {isAdmin && (
-        <ImportButton endpoint="/users/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} />
+        <ImportButton endpoint="/users/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} expectedFileName="User_Import_Template.xlsx" />
       )}
       <Button variant="filled" size="xs" onClick={openCreate}>
         {t('users:action.addUser')}
