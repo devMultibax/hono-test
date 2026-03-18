@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { TextInput, Select, Button, Stack, Group } from '@mantine/core';
+import { FormOverlay } from '@/components/common/FormOverlay';
 import { useForm } from '@mantine/form';
 import { useTranslation } from '@/lib/i18n';
 import { getStatusOptions } from '@/constants/options';
@@ -46,6 +47,7 @@ export function DepartmentForm({ initialData, onSubmit, onCancel, isLoading }: P
   });
 
   return (
+    <FormOverlay loading={!!isLoading}>
     <form onSubmit={handleSubmit}>
       <Stack gap="md">
         <TextInput
@@ -66,11 +68,12 @@ export function DepartmentForm({ initialData, onSubmit, onCancel, isLoading }: P
           <Button variant="subtle" color="gray" onClick={onCancel}>
             {t('common:button.cancel')}
           </Button>
-          <Button type="submit" loading={isLoading}>
+          <Button type="submit">
             {t('common:button.confirm')}
           </Button>
         </Group>
       </Stack>
     </form>
+    </FormOverlay>
   );
 }

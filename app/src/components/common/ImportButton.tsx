@@ -27,6 +27,7 @@ interface Props {
   accept?: string;
   maxSize?: number; // MB
   expectedFileName?: string;
+  showCredentials?: boolean;
 }
 
 export function ImportButton({
@@ -36,6 +37,7 @@ export function ImportButton({
   accept = '.xlsx,.xls',
   maxSize = 5,
   expectedFileName,
+  showCredentials = false,
 }: Props) {
   const { t } = useTranslation(['users', 'common']);
   const { confirm } = useConfirm();
@@ -149,7 +151,7 @@ export function ImportButton({
         size="md"
       >
         {result ? (
-          <ResultView result={result} blob={resultBlob} onClose={handleClose} onRetry={resetState} />
+          <ResultView result={result} blob={resultBlob} showCredentials={showCredentials} onClose={handleClose} onRetry={resetState} />
         ) : (
           <UploadView
             file={selectedFile}
@@ -175,11 +177,12 @@ export function ImportButton({
 interface ResultViewProps {
   result: ImportResult;
   blob: Blob | null;
+  showCredentials: boolean;
   onClose: () => void;
   onRetry: () => void;
 }
 
-function ResultView({ result, blob, onClose, onRetry }: ResultViewProps) {
+function ResultView({ result, blob, showCredentials, onClose, onRetry }: ResultViewProps) {
   const { t } = useTranslation(['users', 'common']);
   const successRate = Math.round((result.success / result.total) * 100);
   const hasErrors = result.errors && result.errors.length > 0;
@@ -239,7 +242,7 @@ function ResultView({ result, blob, onClose, onRetry }: ResultViewProps) {
         </>
       )}
 
-      {blob && result.success > 0 && (
+      {showCredentials && blob && result.success > 0 && (
         <Paper withBorder radius="md" p="md" className="border-teal-200 bg-teal-50">
           <Group justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap">

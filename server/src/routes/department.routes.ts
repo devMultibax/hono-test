@@ -103,6 +103,11 @@ departments.post('/import', requireAdmin, async (c) => {
   const result = await ImportService.importDepartments(file.buffer, user.username)
   c.get('logInfo')(LogEvent.DEPT_IMPORTED(result.success, result.failed))
 
+  c.header('X-Import-Success', String(result.success))
+  c.header('X-Import-Failed', String(result.failed))
+  c.header('X-Import-Total', String(result.success + result.failed))
+  c.header('X-Import-Errors', JSON.stringify(result.errors))
+
   return successResponse(c, {
     imported: result.success,
     failed: result.failed,
