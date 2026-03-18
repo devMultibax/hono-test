@@ -104,7 +104,7 @@ export function ImportButton({
       const success = Number(response.headers['x-import-success'] ?? 0);
       const failed = Number(response.headers['x-import-failed'] ?? 0);
       const total = Number(response.headers['x-import-total'] ?? success + failed);
-      const errors: ImportRowError[] = JSON.parse(response.headers['x-import-errors'] ?? '[]');
+      const errors: ImportRowError[] = JSON.parse(decodeURIComponent(response.headers['x-import-errors'] ?? '[]'));
 
       const importResult: ImportResult = { success, failed, total, errors };
       setResult(importResult);

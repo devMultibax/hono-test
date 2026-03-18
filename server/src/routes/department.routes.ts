@@ -106,7 +106,7 @@ departments.post('/import', requireAdmin, async (c) => {
   c.header('X-Import-Success', String(result.success))
   c.header('X-Import-Failed', String(result.failed))
   c.header('X-Import-Total', String(result.success + result.failed))
-  c.header('X-Import-Errors', JSON.stringify(result.errors))
+  c.header('X-Import-Errors', encodeURIComponent(JSON.stringify(result.errors)))
 
   return successResponse(c, {
     imported: result.success,
