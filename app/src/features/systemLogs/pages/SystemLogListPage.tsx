@@ -9,6 +9,7 @@ dayjs.extend(isBetween);
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { SystemLogFilters } from '../components/SystemLogFilters';
 import { useRefresh } from '@/hooks/useRefresh';
+import { useNavigationProgress } from '@/hooks/useNavigationProgress';
 import { useSystemLogs } from '../hooks/useSystemLogs';
 import { useSystemLogColumns } from '../systemLogTable.config';
 import type { SystemLog, SystemLogQueryParams } from '../types';
@@ -60,8 +61,9 @@ export function SystemLogListPage() {
 
   // ─── 3. Data Fetching ───
   // Fetch logs with initial date range
-  const { data, isLoading, refetch, isRefetching } = useSystemLogs(INITIAL_PARAMS, true);
+  const { data, isLoading, isFetching, refetch, isRefetching } = useSystemLogs(INITIAL_PARAMS, true);
   const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+  useNavigationProgress(isFetching);
 
   // Refetch when date range changes significantly
   useEffect(() => {

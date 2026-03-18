@@ -19,6 +19,7 @@ interface Props {
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  isDeleting?: boolean;
 }
 
 const ACTION_BUTTONS: ActionButtonConfig[] = [
@@ -42,7 +43,7 @@ const ACTION_BUTTONS: ActionButtonConfig[] = [
   },
 ];
 
-export function SectionActionMenu({ currentUserRole, onView, onEdit, onDelete }: Props) {
+export function SectionActionMenu({ currentUserRole, onView, onEdit, onDelete, isDeleting }: Props) {
   const { t } = useTranslation(['sections']);
 
   const actionHandlers: Record<Action, () => void> = {
@@ -66,6 +67,8 @@ export function SectionActionMenu({ currentUserRole, onView, onEdit, onDelete }:
           size="xs"
           color={button.color}
           onClick={() => actionHandlers[button.action]()}
+          loading={button.action === 'delete' && isDeleting}
+          disabled={button.action === 'delete' && isDeleting}
         >
           {t(button.labelKey)}
         </Button>

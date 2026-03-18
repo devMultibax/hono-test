@@ -5,6 +5,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useUser, useAuthStore } from '@/stores/auth.store';
 import { authApi } from '@/api/services/auth.api';
 import { Report, Confirm, handleError } from '@/utils/mantineAlertUtils';
+import { FormOverlay } from '@/components/common/FormOverlay';
 import { InfoField } from '@/components/common/InfoField';
 import { RoleBadge } from '@/components/common/RoleBadge';
 
@@ -103,58 +104,53 @@ export function ProfileForm() {
                     {t('profile:section.personalInfo')}
                 </Title>
 
-                <form onSubmit={handleSubmit}>
-                    <Stack gap="md">
-                        <Grid>
-                            <Grid.Col span={{ base: 12, md: 6 }}>
-                                <TextInput
-                                    label={t('profile:field.firstName')}
-                                    required
-                                    disabled={loading}
-                                    {...form.getInputProps('firstName')}
-                                />
-                            </Grid.Col>
-                            <Grid.Col span={{ base: 12, md: 6 }}>
-                                <TextInput
-                                    label={t('profile:field.lastName')}
-                                    required
-                                    disabled={loading}
-                                    {...form.getInputProps('lastName')}
-                                />
-                            </Grid.Col>
-                            <Grid.Col span={{ base: 12, md: 6 }}>
-                                <TextInput
-                                    label={t('profile:field.email')}
-                                    type="email"
-                                    placeholder={t('common:placeholder.enterEmail')}
-                                    disabled={loading}
-                                    {...form.getInputProps('email')}
-                                />
-                            </Grid.Col>
-                            <Grid.Col span={{ base: 12, md: 6 }}>
-                                <TextInput
-                                    label={t('profile:field.tel')}
-                                    type="tel"
-                                    placeholder={t('common:placeholder.enterTel')}
-                                    maxLength={10}
-                                    disabled={loading}
-                                    {...form.getInputProps('tel')}
-                                />
-                            </Grid.Col>
-                        </Grid>
+                <FormOverlay loading={loading}>
+                    <form onSubmit={handleSubmit}>
+                        <Stack gap="md">
+                            <Grid>
+                                <Grid.Col span={{ base: 12, md: 6 }}>
+                                    <TextInput
+                                        label={t('profile:field.firstName')}
+                                        required
+                                        {...form.getInputProps('firstName')}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={{ base: 12, md: 6 }}>
+                                    <TextInput
+                                        label={t('profile:field.lastName')}
+                                        required
+                                        {...form.getInputProps('lastName')}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={{ base: 12, md: 6 }}>
+                                    <TextInput
+                                        label={t('profile:field.email')}
+                                        type="email"
+                                        placeholder={t('common:placeholder.enterEmail')}
+                                        {...form.getInputProps('email')}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={{ base: 12, md: 6 }}>
+                                    <TextInput
+                                        label={t('profile:field.tel')}
+                                        type="tel"
+                                        placeholder={t('common:placeholder.enterTel')}
+                                        maxLength={10}
+                                        {...form.getInputProps('tel')}
+                                    />
+                                </Grid.Col>
+                            </Grid>
 
-                        <Divider />
+                            <Divider />
 
-                        <Group justify="flex-end">
-                            <Button
-                                type="submit"
-                                loading={loading}
-                            >
-                                {t('common:button.save')}
-                            </Button>
-                        </Group>
-                    </Stack>
-                </form>
+                            <Group justify="flex-end">
+                                <Button type="submit">
+                                    {t('common:button.save')}
+                                </Button>
+                            </Group>
+                        </Stack>
+                    </form>
+                </FormOverlay>
             </Paper>
         </Stack>
     );

@@ -5,7 +5,7 @@ import { createQueryKeys } from '@/hooks/createQueryKeys';
 import { createCrudHooks } from '@/hooks/createCrudHooks';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
-import { Report } from '@/utils/mantineAlertUtils';
+import { Report, ConfirmAsync } from '@/utils/mantineAlertUtils';
 import type { UserQueryParams, CreateUserRequest, UpdateUserRequest, User, Status } from '../types';
 
 // === Query Keys ===
@@ -89,16 +89,16 @@ export function useUserActions() {
   const updateUserStatus = useUpdateUserStatus();
   const bulkDeleteUsers = useBulkDelete();
 
-  const handleDelete = useCallback(async (user: User) => {
-    const confirmed = await confirm({
+  const handleDelete = useCallback((user: User) => {
+    ConfirmAsync.show({
       title: t('users:confirm.delete.title'),
       message: t('users:confirm.delete.user', { name: `${user.firstName} ${user.lastName}` }),
       note: t('users:confirm.irreversibleNote'),
+      onConfirm: async () => {
+        await deleteUser.mutateAsync(user.id);
+      },
     });
-    if (!confirmed) return;
-
-    deleteUser.mutate(user.id);
-  }, [confirm, deleteUser, t]);
+  }, [deleteUser, t]);
 
   const handleStatusChange = useCallback(
     async (user: User, status: Status) => {
@@ -141,5 +141,7 @@ export function useUserActions() {
     handleStatusChange,
     handleBulkDelete,
     handleImportSuccess,
+    statusPendingId: updateUserStatus.isPending ? updateUserStatus.variables?.id : undefined,
+    deletePendingId: deleteUser.isPending ? deleteUser.variables : undefined,
   };
 }

@@ -9,6 +9,7 @@ import { useTranslation } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/date';
 import { usePageActions } from '@/contexts/PageHeaderContext';
 import { useRefresh } from '@/hooks/useRefresh';
+import { useNavigationProgress } from '@/hooks/useNavigationProgress';
 import { useUserLogs } from '../hooks/useUserLogs';
 import type { UserLog, ActionType, SortOrder } from '@/types';
 
@@ -35,13 +36,14 @@ export function UserLogPage() {
   const [order, setOrder] = useState<SortOrder>('desc');
 
   // ─── 3. Data Fetching ───
-  const { data, isLoading, refetch, isRefetching } = useUserLogs(username ?? '', {
+  const { data, isLoading, isFetching, refetch, isRefetching } = useUserLogs(username ?? '', {
     page,
     limit: 10,
     sort,
     order,
   });
   const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+  useNavigationProgress(isFetching);
 
   // ─── 4. Column Config ───
   const columns = useMemo(

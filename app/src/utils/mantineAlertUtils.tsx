@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Text, Button, Group, Stack, ThemeIcon, Alert, Loader, Progress } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import {
@@ -170,6 +171,107 @@ export const Confirm = {
           </Stack>
         ),
       });
+    });
+  },
+};
+
+interface ConfirmAsyncShowOptions {
+  message: string;
+  title?: string;
+  note?: string;
+  onConfirm: () => Promise<void>;
+}
+
+const CONFIRM_ASYNC_MODAL_ID = 'confirm-async';
+
+function ConfirmAsyncContent({
+  title,
+  message,
+  note,
+  onConfirm,
+  onCancel,
+}: {
+  title?: string;
+  message: string;
+  note?: string;
+  onConfirm: () => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await onConfirm();
+      modals.close(CONFIRM_ASYNC_MODAL_ID);
+    } catch {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Stack align="center" gap="md" py="sm">
+      <ThemeIcon size={64} variant="transparent" color="#1c7ed6">
+        <IconInfoCircle size={64} stroke={1.5} />
+      </ThemeIcon>
+      <Text fw={600} size="lg">
+        {title || t('common:confirm.confirm')}
+      </Text>
+      <Text
+        c="gray.7"
+        ta="center"
+        size="sm"
+        dangerouslySetInnerHTML={{ __html: boldQuoted(message, '#1c7ed6') }}
+      />
+      {note && (
+        <Alert
+          variant="light"
+          color="orange"
+          icon={<IconAlertTriangle size={18} />}
+          w="100%"
+          py="xs"
+        >
+          <Text size="xs">{note}</Text>
+        </Alert>
+      )}
+      <Group w="100%" grow mt="xs">
+        <Button
+          variant="default"
+          onClick={onCancel}
+          disabled={loading}
+        >
+          {t('common:button.cancel')}
+        </Button>
+        <Button
+          color="blue"
+          data-autofocus
+          onClick={handleConfirm}
+          loading={loading}
+        >
+          {t('common:button.confirm')}
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
+export const ConfirmAsync = {
+  show: (options: ConfirmAsyncShowOptions): void => {
+    modals.open({
+      modalId: CONFIRM_ASYNC_MODAL_ID,
+      withCloseButton: false,
+      closeOnClickOutside: false,
+      closeOnEscape: false,
+      size: 400,
+      children: (
+        <ConfirmAsyncContent
+          title={options.title}
+          message={options.message}
+          note={options.note}
+          onConfirm={options.onConfirm}
+          onCancel={() => modals.close(CONFIRM_ASYNC_MODAL_ID)}
+        />
+      ),
     });
   },
 };

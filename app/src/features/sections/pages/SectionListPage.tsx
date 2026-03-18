@@ -11,6 +11,7 @@ import { useSections, useSectionActions } from '../hooks/useSections';
 import { useSectionColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../sectionTable.config';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useRefresh } from '@/hooks/useRefresh';
+import { useNavigationProgress } from '@/hooks/useNavigationProgress';
 import { useUserRole } from '@/stores/auth.store';
 import { usePageActions } from '@/contexts/PageHeaderContext';
 import { ROLE_ID } from '@/constants/roleConstants';
@@ -55,8 +56,9 @@ export function SectionListPage() {
   });
 
   // ─── 6. Data Fetching ───
-  const { data, isLoading, refetch, isRefetching } = useSections(params);
+  const { data, isLoading, isFetching, refetch, isRefetching } = useSections(params);
   const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
+  useNavigationProgress(isFetching);
 
   // ─── 7. Column Config ───
   const columns = useSectionColumns({
@@ -65,6 +67,8 @@ export function SectionListPage() {
     onDelete: actions.handleDelete,
     onStatusChange: actions.handleStatusChange,
     currentUserRole: userRole,
+    statusPendingId: actions.statusPendingId,
+    deletePendingId: actions.deletePendingId,
   });
 
   // ─── 8. Header Actions ───

@@ -5,7 +5,7 @@ import { createQueryKeys } from '@/hooks/createQueryKeys';
 import { createCrudHooks } from '@/hooks/createCrudHooks';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
-import { Report } from '@/utils/mantineAlertUtils';
+import { Report, ConfirmAsync } from '@/utils/mantineAlertUtils';
 import type { SectionQueryParams, CreateSectionRequest, UpdateSectionRequest, Section, Status } from '../types';
 
 // === Query Keys ===
@@ -85,16 +85,16 @@ export function useSectionActions() {
   const updateSectionStatus = useUpdateSectionStatus();
   const bulkDeleteSections = useBulkDelete();
 
-  const handleDelete = useCallback(async (section: Section) => {
-    const confirmed = await confirm({
+  const handleDelete = useCallback((section: Section) => {
+    ConfirmAsync.show({
       title: t('sections:confirm.delete.title'),
       message: t('sections:confirm.delete.message', { name: section.name }),
       note: t('sections:confirm.irreversibleNote'),
+      onConfirm: async () => {
+        await deleteSection.mutateAsync(section.id);
+      },
     });
-    if (!confirmed) return;
-
-    deleteSection.mutate(section.id);
-  }, [confirm, deleteSection, t]);
+  }, [deleteSection, t]);
 
   const handleStatusChange = useCallback(
     async (section: Section, status: Status) => {
@@ -137,5 +137,7 @@ export function useSectionActions() {
     handleStatusChange,
     handleBulkDelete,
     handleImportSuccess,
+    statusPendingId: updateSectionStatus.isPending ? updateSectionStatus.variables?.id : undefined,
+    deletePendingId: deleteSection.isPending ? deleteSection.variables : undefined,
   };
 }

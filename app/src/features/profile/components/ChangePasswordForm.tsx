@@ -9,6 +9,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/api/services/auth.api';
 import { Report, Confirm, handleError } from '@/utils/mantineAlertUtils';
+import { FormOverlay } from '@/components/common/FormOverlay';
 
 interface PasswordFormValues {
     currentPassword: string;
@@ -101,58 +102,53 @@ export function ChangePasswordForm() {
                     {t('profile:password.change')}
                 </Title>
 
-                <form onSubmit={handleSubmit}>
-                    <Stack gap="md">
-                        <PasswordInput
-                            label={t('profile:password.current')}
-                            placeholder={t('profile:password.current')}
-                            required
-                            disabled={loading}
-                            autoComplete="current-password"
-                            {...form.getInputProps('currentPassword')}
-                        />
+                <FormOverlay loading={loading}>
+                    <form onSubmit={handleSubmit}>
+                        <Stack gap="md">
+                            <PasswordInput
+                                label={t('profile:password.current')}
+                                placeholder={t('profile:password.current')}
+                                required
+                                autoComplete="current-password"
+                                {...form.getInputProps('currentPassword')}
+                            />
 
-                        <PasswordInput
-                            label={t('profile:password.new')}
-                            placeholder={t('profile:password.new')}
-                            required
-                            disabled={loading}
-                            autoComplete="new-password"
-                            {...form.getInputProps('newPassword')}
-                        />
+                            <PasswordInput
+                                label={t('profile:password.new')}
+                                placeholder={t('profile:password.new')}
+                                required
+                                autoComplete="new-password"
+                                {...form.getInputProps('newPassword')}
+                            />
 
-                        <PasswordInput
-                            label={t('profile:password.confirm')}
-                            placeholder={t('profile:password.confirm')}
-                            required
-                            disabled={loading}
-                            autoComplete="new-password"
-                            {...form.getInputProps('confirmPassword')}
-                        />
+                            <PasswordInput
+                                label={t('profile:password.confirm')}
+                                placeholder={t('profile:password.confirm')}
+                                required
+                                autoComplete="new-password"
+                                {...form.getInputProps('confirmPassword')}
+                            />
 
-                        {/* Password Requirements */}
-                        <Paper withBorder p="md" radius="md" bg="gray.0">
-                            <Text fw={500} size="sm" mb="xs">
-                                {t('profile:password.requirements.title')}
-                            </Text>
-                            <List spacing="xs" size="sm">
-                                <RequirementItem met={hasMinLength} text={t('profile:password.requirements.minLength')} />
-                                <RequirementItem met={hasLetterAndNumber} text={t('profile:password.requirements.requireLetterAndNumber')} />
-                                <RequirementItem met={passwordsMatch} text={t('profile:password.requirements.mustMatch')} />
-                            </List>
-                        </Paper>
+                            {/* Password Requirements */}
+                            <Paper withBorder p="md" radius="md" bg="gray.0">
+                                <Text fw={500} size="sm" mb="xs">
+                                    {t('profile:password.requirements.title')}
+                                </Text>
+                                <List spacing="xs" size="sm">
+                                    <RequirementItem met={hasMinLength} text={t('profile:password.requirements.minLength')} />
+                                    <RequirementItem met={hasLetterAndNumber} text={t('profile:password.requirements.requireLetterAndNumber')} />
+                                    <RequirementItem met={passwordsMatch} text={t('profile:password.requirements.mustMatch')} />
+                                </List>
+                            </Paper>
 
-                        <Divider />
+                            <Divider />
 
-                        <Button
-                            type="submit"
-                            fullWidth
-                            loading={loading}
-                        >
-                            {t('profile:password.change')}
-                        </Button>
-                    </Stack>
-                </form>
+                            <Button type="submit" fullWidth>
+                                {t('profile:password.change')}
+                            </Button>
+                        </Stack>
+                    </form>
+                </FormOverlay>
             </Paper>
         </Container>
     );

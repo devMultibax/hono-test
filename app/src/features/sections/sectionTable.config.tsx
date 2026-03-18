@@ -28,9 +28,11 @@ interface UseSectionColumnsOptions {
     onDelete: (section: Section) => void;
     onStatusChange: (section: Section, status: Status) => void;
     currentUserRole: RoleId;
+    statusPendingId?: number;
+    deletePendingId?: number;
 }
 
-export function useSectionColumns({ onView, onEdit, onDelete, onStatusChange, currentUserRole }: UseSectionColumnsOptions) {
+export function useSectionColumns({ onView, onEdit, onDelete, onStatusChange, currentUserRole, statusPendingId, deletePendingId }: UseSectionColumnsOptions) {
     const { t } = useTranslation(['sections']);
 
     const canEdit = hasRole([ROLE_ID.ADMIN], currentUserRole);
@@ -51,7 +53,7 @@ export function useSectionColumns({ onView, onEdit, onDelete, onStatusChange, cu
                     <StatusSwitch
                         status={row.original.status}
                         onChange={(status) => onStatusChange(row.original, status)}
-                        disabled={!canEdit}
+                        disabled={!canEdit || statusPendingId === row.original.id}
                     />
                 ),
             }),
@@ -67,10 +69,11 @@ export function useSectionColumns({ onView, onEdit, onDelete, onStatusChange, cu
                         onView={() => onView(row.original)}
                         onEdit={() => onEdit(row.original)}
                         onDelete={() => onDelete(row.original)}
+                        isDeleting={deletePendingId === row.original.id}
                     />
                 ),
             }),
         ],
-        [onView, onEdit, onDelete, onStatusChange, currentUserRole, canEdit, t],
+        [onView, onEdit, onDelete, onStatusChange, currentUserRole, canEdit, statusPendingId, deletePendingId, t],
     );
 }

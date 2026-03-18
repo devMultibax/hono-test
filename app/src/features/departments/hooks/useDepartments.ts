@@ -5,7 +5,7 @@ import { createQueryKeys } from '@/hooks/createQueryKeys';
 import { createCrudHooks } from '@/hooks/createCrudHooks';
 import { useTranslation } from '@/lib/i18n';
 import { useConfirm } from '@/hooks/useConfirm';
-import { Report } from '@/utils/mantineAlertUtils';
+import { Report, ConfirmAsync } from '@/utils/mantineAlertUtils';
 import type { DepartmentQueryParams, CreateDepartmentRequest, UpdateDepartmentRequest, Department, Status } from '../types';
 
 // === Query Keys ===
@@ -85,16 +85,16 @@ export function useDepartmentActions() {
   const updateDepartmentStatus = useUpdateDepartmentStatus();
   const bulkDeleteDepartments = useBulkDelete();
 
-  const handleDelete = useCallback(async (department: Department) => {
-    const confirmed = await confirm({
+  const handleDelete = useCallback((department: Department) => {
+    ConfirmAsync.show({
       title: t('departments:confirm.delete.title'),
       message: t('departments:confirm.delete.message', { name: department.name }),
       note: t('departments:confirm.irreversibleNote'),
+      onConfirm: async () => {
+        await deleteDepartment.mutateAsync(department.id);
+      },
     });
-    if (!confirmed) return;
-
-    deleteDepartment.mutate(department.id);
-  }, [confirm, deleteDepartment, t]);
+  }, [deleteDepartment, t]);
 
   const handleStatusChange = useCallback(
     async (department: Department, status: Status) => {
@@ -137,5 +137,7 @@ export function useDepartmentActions() {
     handleStatusChange,
     handleBulkDelete,
     handleImportSuccess,
+    statusPendingId: updateDepartmentStatus.isPending ? updateDepartmentStatus.variables?.id : undefined,
+    deletePendingId: deleteDepartment.isPending ? deleteDepartment.variables : undefined,
   };
 }

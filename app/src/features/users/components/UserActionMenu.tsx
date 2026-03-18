@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Group, Button, Modal, Stack, Text, Alert } from '@mantine/core';
 import { PasswordDisplay } from '@/components/common/PasswordDisplay';
 import { useTranslation } from '@/lib/i18n';
-import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmAsync } from '@/utils/mantineAlertUtils';
 import { useResetPassword } from '../hooks/useUsers';
 import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
@@ -24,6 +24,7 @@ interface Props {
   onDelete: () => void;
   onView?: () => void;
   onViewLogs?: () => void;
+  isDeleting?: boolean;
 }
 
 const ACTION_BUTTONS: ActionButtonConfig[] = [
@@ -59,22 +60,21 @@ const ACTION_BUTTONS: ActionButtonConfig[] = [
   },
 ];
 
-export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView, onViewLogs }: Props) {
+export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView, onViewLogs, isDeleting }: Props) {
   const { t } = useTranslation(['users', 'common']);
-  const { confirm } = useConfirm();
   const resetPassword = useResetPassword();
   const [resetResult, setResetResult] = useState<{ username: string; password: string } | null>(null);
 
-  const handleResetPassword = async () => {
-    const confirmed = await confirm({
+  const handleResetPassword = () => {
+    ConfirmAsync.show({
       title: t('users:resetPassword.title'),
       message: t('users:resetPassword.confirmMessage', { name: `${user.firstName} ${user.lastName}` }),
       note: t('users:resetPassword.autoGenerate'),
+      onConfirm: async () => {
+        const res = await resetPassword.mutateAsync(user.id);
+        setResetResult({ username: user.username, password: res.data.data?.password });
+      },
     });
-    if (!confirmed) return;
-
-    const res = await resetPassword.mutateAsync(user.id);
-    setResetResult({ username: user.username, password: res.data.data?.password });
   };
 
   const actionHandlers: Record<Action, (() => void) | undefined> = {
@@ -103,6 +103,8 @@ export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView
             size="xs"
             color={button.color}
             onClick={() => actionHandlers[button.action]?.()}
+            loading={button.action === 'delete' && isDeleting}
+            disabled={button.action === 'delete' && isDeleting}
           >
             {t(button.labelKey)}
           </Button>

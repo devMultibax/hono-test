@@ -30,9 +30,11 @@ interface UseUserColumnsOptions {
   onViewLogs: (user: User) => void;
   onStatusChange: (user: User, status: Status) => void;
   currentUserRole: RoleId;
+  statusPendingId?: number;
+  deletePendingId?: number;
 }
 
-export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusChange, currentUserRole }: UseUserColumnsOptions) {
+export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusChange, currentUserRole, statusPendingId, deletePendingId }: UseUserColumnsOptions) {
   const { t } = useTranslation(['users']);
 
   const canEdit = hasRole([ROLE_ID.ADMIN], currentUserRole);
@@ -68,7 +70,7 @@ export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusC
           <StatusSwitch
             status={row.original.status}
             onChange={(status) => onStatusChange(row.original, status)}
-            disabled={!canEdit}
+            disabled={!canEdit || statusPendingId === row.original.id}
           />
         ),
       }),
@@ -85,10 +87,11 @@ export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusC
             onViewLogs={() => onViewLogs(row.original)}
             onEdit={() => onEdit(row.original)}
             onDelete={() => onDelete(row.original)}
+            isDeleting={deletePendingId === row.original.id}
           />
         ),
       }),
     ],
-    [onView, onEdit, onDelete, onViewLogs, onStatusChange, currentUserRole, canEdit, t]
+    [onView, onEdit, onDelete, onViewLogs, onStatusChange, currentUserRole, canEdit, statusPendingId, deletePendingId, t]
   );
 }
