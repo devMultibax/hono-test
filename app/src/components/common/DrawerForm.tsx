@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Drawer, LoadingOverlay, Alert } from '@mantine/core';
+import { Drawer, LoadingOverlay, Alert, Box } from '@mantine/core';
 import { AlertCircle } from 'lucide-react';
 
 interface DrawerFormProps {
@@ -25,15 +25,19 @@ export function DrawerForm({
 }: DrawerFormProps) {
   return (
     <Drawer opened={opened} onClose={onClose} title={title} position="right" size={size}>
-      <LoadingOverlay visible={!!isLoading} />
+      <Box pos="relative" style={{ minHeight: 100 }}>
+        <LoadingOverlay visible={!!isLoading} zIndex={10} overlayProps={{ radius: 'sm', blur: 2 }} />
 
-      {error ? (
-        <Alert icon={<AlertCircle size={16} />} color="red">
-          {errorMessage ?? error.message}
-        </Alert>
-      ) : (
-        !isLoading && children
-      )}
+        {!isLoading && (
+          error ? (
+            <Alert icon={<AlertCircle size={16} />} color="red">
+              {errorMessage ?? error.message}
+            </Alert>
+          ) : (
+            children
+          )
+        )}
+      </Box>
     </Drawer>
   );
 }
