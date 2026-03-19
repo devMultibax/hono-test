@@ -61,6 +61,9 @@ function CreateContent({ opened, onClose }: { opened: boolean; onClose: () => vo
       title={t('sections:page.createTitle')}
       position="right"
       size="lg"
+      closeOnClickOutside={!createSection.isPending}
+      closeOnEscape={!createSection.isPending}
+      withCloseButton={!createSection.isPending}
     >
       <SectionForm onSubmit={handleSubmit} onCancel={onClose} isLoading={createSection.isPending} />
     </Drawer>
@@ -92,6 +95,7 @@ function EditContent({ opened, sectionId, onClose }: { opened: boolean; sectionI
       onClose={onClose}
       title={t('sections:page.editTitle')}
       isLoading={isLoading}
+      isSubmitting={updateSection.isPending}
       error={error}
       errorMessage={t('sections:message.sectionNotFound')}
     >

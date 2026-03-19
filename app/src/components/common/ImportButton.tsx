@@ -6,6 +6,7 @@ import { Report } from '@/utils/mantineAlertUtils';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from '@/lib/i18n';
 import i18n from '@/lib/i18n/config';
+import { FormOverlay } from './FormOverlay';
 
 export interface ImportRowError {
   row: number;
@@ -149,24 +150,29 @@ export function ImportButton({
         title={result ? t('users:import.resultTitle') : t('users:import.modalTitle')}
         position="right"
         size="md"
+        closeOnClickOutside={!loading}
+        closeOnEscape={!loading}
+        withCloseButton={!loading}
       >
-        {result ? (
-          <ResultView result={result} blob={resultBlob} showCredentials={showCredentials} onClose={handleClose} onRetry={resetState} />
-        ) : (
-          <UploadView
-            file={selectedFile}
-            dragOver={dragOver}
-            loading={loading}
-            fileRef={fileRef}
-            accept={accept}
-            maxSize={maxSize}
-            onDownloadTemplate={onDownloadTemplate}
-            onFileSelect={handleFileSelect}
-            onDragOverChange={setDragOver}
-            onClose={handleClose}
-            onImport={handleConfirmImport}
-          />
-        )}
+        <FormOverlay loading={loading}>
+          {result ? (
+            <ResultView result={result} blob={resultBlob} showCredentials={showCredentials} onClose={handleClose} onRetry={resetState} />
+          ) : (
+            <UploadView
+              file={selectedFile}
+              dragOver={dragOver}
+              loading={loading}
+              fileRef={fileRef}
+              accept={accept}
+              maxSize={maxSize}
+              onDownloadTemplate={onDownloadTemplate}
+              onFileSelect={handleFileSelect}
+              onDragOverChange={setDragOver}
+              onClose={handleClose}
+              onImport={handleConfirmImport}
+            />
+          )}
+        </FormOverlay>
       </Drawer>
     </>
   );
@@ -392,7 +398,7 @@ function UploadView({
         <Button variant="subtle" color="gray" onClick={onClose}>
           {t('common:button.cancel')}
         </Button>
-        <Button onClick={onImport} loading={loading} disabled={!file}>
+        <Button onClick={onImport} disabled={!file || loading}>
           {t('users:import.uploadFile')}
         </Button>
       </Group>

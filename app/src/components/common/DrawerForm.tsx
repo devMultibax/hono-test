@@ -7,6 +7,7 @@ interface DrawerFormProps {
   onClose: () => void;
   title: string;
   isLoading?: boolean;
+  isSubmitting?: boolean;
   error?: Error | null;
   errorMessage?: string;
   children: ReactNode;
@@ -18,13 +19,24 @@ export function DrawerForm({
   onClose,
   title,
   isLoading,
+  isSubmitting,
   error,
   errorMessage,
   children,
   size = 'lg',
 }: DrawerFormProps) {
+  const locked = !!isLoading || !!isSubmitting;
   return (
-    <Drawer opened={opened} onClose={onClose} title={title} position="right" size={size}>
+    <Drawer
+      opened={opened}
+      onClose={onClose}
+      title={title}
+      position="right"
+      size={size}
+      closeOnClickOutside={!locked}
+      closeOnEscape={!locked}
+      withCloseButton={!locked}
+    >
       <Box pos="relative" style={{ minHeight: 100 }}>
         <LoadingOverlay visible={!!isLoading} zIndex={10} overlayProps={{ radius: 'sm', blur: 2 }} />
 

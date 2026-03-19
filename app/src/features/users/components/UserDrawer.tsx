@@ -73,6 +73,9 @@ function CreateContent({ opened, onClose }: { opened: boolean; onClose: () => vo
         title={t('users:page.createTitle')}
         position="right"
         size="lg"
+        closeOnClickOutside={!createUser.isPending}
+        closeOnEscape={!createUser.isPending}
+        withCloseButton={!createUser.isPending}
       >
         <UserForm onSubmit={handleSubmit} onCancel={handleClose} isLoading={createUser.isPending} />
       </Drawer>
@@ -128,6 +131,7 @@ function EditContent({ opened, userId, onClose }: { opened: boolean; userId: num
       onClose={onClose}
       title={t('users:page.editTitle')}
       isLoading={isLoading}
+      isSubmitting={updateUser.isPending}
       error={error}
       errorMessage={t('users:message.userNotFound')}
     >

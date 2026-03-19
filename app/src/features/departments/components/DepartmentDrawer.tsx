@@ -61,6 +61,9 @@ function CreateContent({ opened, onClose }: { opened: boolean; onClose: () => vo
       title={t('departments:page.createTitle')}
       position="right"
       size="lg"
+      closeOnClickOutside={!createDepartment.isPending}
+      closeOnEscape={!createDepartment.isPending}
+      withCloseButton={!createDepartment.isPending}
     >
       <DepartmentForm onSubmit={handleSubmit} onCancel={onClose} isLoading={createDepartment.isPending} />
     </Drawer>
@@ -92,6 +95,7 @@ function EditContent({ opened, departmentId, onClose }: { opened: boolean; depar
       onClose={onClose}
       title={t('departments:page.editTitle')}
       isLoading={isLoading}
+      isSubmitting={updateDepartment.isPending}
       error={error}
       errorMessage={t('departments:message.departmentNotFound')}
     >
