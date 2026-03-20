@@ -208,6 +208,48 @@ export interface UserLog {
   updatedByName: string | null;
 }
 
+// ============ Changelog ============
+export type UpdateType = 'FEATURE' | 'BUGFIX' | 'IMPROVEMENT' | 'SECURITY' | 'OTHER';
+
+export interface Changelog {
+  id: number;
+  title: string;
+  description: string | null;
+  updateType: UpdateType;
+  gitRef: string | null;
+  updatedDate: string;
+  createdAt: string;
+  createdBy: string;
+  createdByName: string;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  updatedByName: string | null;
+}
+
+export interface CreateChangelogRequest {
+  title: string;
+  description?: string;
+  updateType: UpdateType;
+  gitRef?: string;
+  updatedDate: string;
+}
+
+export interface UpdateChangelogRequest {
+  title?: string;
+  description?: string | null;
+  updateType?: UpdateType;
+  gitRef?: string | null;
+  updatedDate?: string;
+}
+
+export interface ChangelogQueryParams extends BaseQueryParams {
+  updateType?: UpdateType;
+  startDate?: string;
+  endDate?: string;
+}
+
+export type ChangelogListResponse = PaginatedResponse<Changelog>;
+
 // ============ Backup ============
 export type BackupType = 'yearly' | 'daily' | 'manual';
 

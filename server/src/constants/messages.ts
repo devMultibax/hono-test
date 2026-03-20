@@ -62,6 +62,12 @@ export const MSG = {
     systemSetting: {
       valueRequired: 'กรุณาระบุค่า',
     },
+    changelog: {
+      titleRequired: 'กรุณาระบุหัวข้อ',
+      titleMaxLength: 'หัวข้อต้องไม่เกิน 200 ตัวอักษร',
+      updateTypeInvalid: 'ประเภทการอัปเดตไม่ถูกต้อง',
+      updatedDateRequired: 'กรุณาระบุวันที่อัปเดต',
+    },
   },
 
   // ── Excel export column headers ────────────────────────────────────────────
@@ -268,6 +274,9 @@ export const MSG = {
     },
     userLog: {
       notFound: 'ไม่พบประวัติการใช้งาน',
+    },
+    changelog: {
+      notFound: 'ไม่พบบันทึกการอัปเดต',
     },
     import: {
       rowLimitExceeded:    'จำนวนแถวเกินกว่าที่อนุญาต',

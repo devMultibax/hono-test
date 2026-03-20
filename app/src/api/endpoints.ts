@@ -38,6 +38,10 @@ export const API_ENDPOINTS = {
     BASE: '/user-logs',
     BY_ID: (id: number) => `/user-logs/${id}`,
   },
+  CHANGELOGS: {
+    BASE: '/changelogs',
+    BY_ID: (id: number) => `/changelogs/${id}`,
+  },
   SYSTEM_LOGS: {
     BASE: '/system-log',
   },

@@ -10,7 +10,8 @@ import type {
   SectionResponse,
   SectionWithRelations,
   AuthPayload,
-  UserLog
+  UserLog,
+  ChangelogResponse
 } from '../../src/types'
 
 export const mockDepartment: Department = {
@@ -186,5 +187,45 @@ export function createMockSections(count: number, departmentId = 1): Section[] {
     id: i + 1,
     departmentId,
     name: `Section ${i + 1}`
+  }))
+}
+
+// Changelog mocks
+
+export const mockChangelog = {
+  id: 1,
+  title: 'Initial Release',
+  description: 'First release of the system',
+  updateType: 'FEATURE',
+  gitRef: 'a626f4d',
+  updatedDate: new Date('2024-01-15'),
+  createdAt: new Date('2024-01-15'),
+  createdBy: 'admin',
+  createdByName: 'Admin User',
+  updatedAt: null,
+  updatedBy: null,
+  updatedByName: null,
+}
+
+export const mockChangelogResponse: ChangelogResponse = {
+  id: 1,
+  title: 'Initial Release',
+  description: 'First release of the system',
+  updateType: 'FEATURE',
+  gitRef: 'a626f4d',
+  updatedDate: new Date('2024-01-15'),
+  createdAt: new Date('2024-01-15'),
+  createdBy: 'admin',
+  createdByName: 'Admin User',
+  updatedAt: null,
+  updatedBy: null,
+  updatedByName: null,
+}
+
+export function createMockChangelogs(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    ...mockChangelog,
+    id: i + 1,
+    title: `Update ${i + 1}`,
   }))
 }

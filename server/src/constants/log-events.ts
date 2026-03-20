@@ -55,6 +55,11 @@ export const LogEvent = {
   DB_RESTORE_PROCESS_FAILED: '[DB] Failed to start restore process',
   DB_CLIENT_FAILED: '[DB] Failed to start database client',
 
+  // ─── CHANGELOG ───────────────────────────────────────────────────────────
+  CHANGELOG_CREATED: (title: string) => `[CHANGELOG] Created changelog "${title}"`,
+  CHANGELOG_UPDATED: (title: string) => `[CHANGELOG] Updated changelog "${title}"`,
+  CHANGELOG_DELETED: (title: string) => `[CHANGELOG] Deleted changelog "${title}"`,
+
   // ─── SETTINGS ─────────────────────────────────────────────────────────────
   SETTINGS_UPDATED: (key: string) => `[SETTINGS] Updated setting "${key}"`,
   SETTINGS_MAINTENANCE_ON: '[SETTINGS] Enabled maintenance mode',

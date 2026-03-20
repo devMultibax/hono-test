@@ -23,6 +23,7 @@ import systemLogRoutes from './routes/system-log.routes'
 import backupRoutes from './routes/backup.routes'
 import userLogRoutes from './routes/user-log.routes'
 import systemSettingsRoutes from './routes/system-settings.routes'
+import changelogRoutes from './routes/changelog.routes'
 
 const app = new Hono()
 
@@ -65,6 +66,7 @@ app.route('/system-log', systemLogRoutes)
 app.route('/backup', backupRoutes)
 app.route('/user-logs', userLogRoutes)
 app.route('/system-settings', systemSettingsRoutes)
+app.route('/changelogs', changelogRoutes)
 
 // 404 handler
 app.notFound((c) => {

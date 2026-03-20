@@ -14,6 +14,7 @@ import {
 import { DatabasePage } from '@/features/database';
 import { BackupListPage } from '@/features/backup';
 import { SystemSettingsPage } from '@/features/system-settings';
+import { ChangelogListPage } from '@/features/changelogs';
 import { MaintenancePage } from '@/features/maintenance';
 import { ForceChangePasswordPage } from '@/features/profile';
 
@@ -120,6 +121,11 @@ export const router = createBrowserRouter([
                 path: 'system-settings',
                 element: <SystemSettingsPage />,
                 handle: { title: 'systemSettings:page.title', breadcrumb: 'navigation:menu.admin.systemSettings' },
+              },
+              {
+                path: 'changelogs',
+                element: <ChangelogListPage />,
+                handle: { title: 'changelogs:page.title', breadcrumb: 'navigation:menu.admin.changelogs' },
               },
             ],
           },

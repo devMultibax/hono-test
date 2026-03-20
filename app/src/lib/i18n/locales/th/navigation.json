@@ -10,7 +10,8 @@
       "systemLogs": "System Logs",
       "backups": "Backup",
       "database": "Database",
-      "systemSettings": "ตั้งค่าระบบ"
+      "systemSettings": "ตั้งค่าระบบ",
+      "changelogs": "Change Logs"
     }
   },
   "page": {
@@ -25,7 +26,8 @@
     "userLogs": "ประวัติการดำเนินการ",
     "systemLogs": "System Logs",
     "backups": "Backup",
-    "database": "Database"
+    "database": "Database",
+    "changelogs": "Change Logs"
   },
   "breadcrumb": {
     "home": "หน้าหลัก",

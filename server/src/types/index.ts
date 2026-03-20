@@ -216,6 +216,22 @@ export interface UserLogResponse {
   actionAt: Date
 }
 
+// Changelog Types
+export interface ChangelogResponse {
+  id: number
+  title: string
+  description: string | null
+  updateType: string
+  gitRef: string | null
+  updatedDate: Date
+  createdAt: Date
+  createdBy: string
+  createdByName: string
+  updatedAt: Date | null
+  updatedBy: string | null
+  updatedByName: string | null
+}
+
 // System Setting Types
 export interface SystemSettingResponse {
   id: number

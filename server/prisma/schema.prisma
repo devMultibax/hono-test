@@ -24,6 +24,14 @@ enum ActionType {
   CHANGE_PASSWORD
 }
 
+enum UpdateType {
+  FEATURE
+  BUGFIX
+  IMPROVEMENT
+  SECURITY
+  OTHER
+}
+
 model Department {
   id            Int       @id @default(autoincrement())
   name          String    @unique @db.VarChar(100)
@@ -123,6 +131,26 @@ model UserLog {
   @@index([actionType])
   @@index([actionAt])
   @@map("user_log")
+}
+
+model Changelog {
+  id            Int        @id @default(autoincrement())
+  title         String     @db.VarChar(200)
+  description   String?    @db.Text
+  updateType    UpdateType @default(OTHER)
+  gitRef        String?    @db.VarChar(100)
+  updatedDate   DateTime
+  createdAt     DateTime   @default(now())
+  createdBy     String     @db.VarChar(100)
+  createdByName String     @default("") @db.VarChar(200)
+  updatedAt     DateTime?
+  updatedBy     String?    @db.VarChar(100)
+  updatedByName String?    @db.VarChar(200)
+
+  @@index([updateType])
+  @@index([updatedDate])
+  @@index([createdAt])
+  @@map("update_log")
 }
 
 model SystemSetting {

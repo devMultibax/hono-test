@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Change Logs",
+    "createTitle": "เพิ่ม Change Logs",
+    "editTitle": "แก้ไข Change Logs",
+    "detailTitle": "รายละเอียด Change Logs"
+  },
+  "table": {
+    "column": {
+      "title": "หัวข้อ",
+      "updateType": "ประเภท",
+      "gitRef": "Git Ref.",
+      "updatedDate": "วันที่อัปเดต",
+      "createdBy": "ผู้บันทึก"
+    }
+  },
+  "form": {
+    "title": {
+      "label": "หัวข้อ",
+      "placeholder": "ระบุหัวข้อการอัปเดต",
+      "required": "กรุณาระบุหัวข้อ"
+    },
+    "description": {
+      "label": "รายละเอียด",
+      "placeholder": "ระบุรายละเอียดการอัปเดต"
+    },
+    "updateType": {
+      "label": "ประเภท",
+      "placeholder": "เลือกประเภท"
+    },
+    "updatedDate": {
+      "label": "วันที่อัปเดต",
+      "placeholder": "เลือกวันที่",
+      "required": "กรุณาเลือกวันที่อัปเดต"
+    },
+    "gitRef": {
+      "label": "Git Ref.",
+      "placeholder": "เช่น a626f4d, v1.2.0"
+    }
+  },
+  "field": {
+    "title": "หัวข้อ",
+    "description": "รายละเอียด",
+    "updateType": "ประเภท",
+    "gitRef": "Git Ref.",
+    "updatedDate": "วันที่อัปเดต"
+  },
+  "updateType": {
+    "FEATURE": "Feature",
+    "BUGFIX": "Bug Fix",
+    "IMPROVEMENT": "Improvement",
+    "SECURITY": "Security",
+    "OTHER": "Other"
+  },
+  "action": {
+    "addChangelog": "เพิ่มบันทึก",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "viewDetails": "ดูรายละเอียด"
+  },
+  "filter": {
+    "searchLabel": "ค้นหา",
+    "searchPlaceholder": "ค้นหาหัวข้อ...",
+    "allTypes": "ทุกประเภท",
+    "startDate": "ตั้งแต่วันที่",
+    "endDate": "ถึงวันที่"
+  },
+  "message": {
+    "empty": "ไม่พบบันทึกการอัปเดต",
+    "createSuccess": "เพิ่มบันทึกการอัปเดตสำเร็จ",
+    "updateSuccess": "แก้ไขบันทึกการอัปเดตสำเร็จ",
+    "deleteSuccess": "ลบบันทึกการอัปเดตสำเร็จ",
+    "notFound": "ไม่พบบันทึกการอัปเดต"
+  },
+  "confirm": {
+    "irreversibleNote": "การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "delete": {
+      "title": "ยืนยันการลบ",
+      "message": "คุณต้องการลบบันทึกการอัปเดต \"{{title}}\" หรือไม่?"
+    },
+    "create": {
+      "title": "ยืนยันการสร้างบันทึก",
+      "message": "คุณต้องการสร้างบันทึกการอัปเดต \"{{title}}\" หรือไม่?"
+    },
+    "update": {
+      "title": "ยืนยันการแก้ไข",
+      "message": "คุณต้องการแก้ไขบันทึกการอัปเดต \"{{title}}\" หรือไม่?"
+    }
+  }
+}
