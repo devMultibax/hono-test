@@ -2,8 +2,6 @@ import { prisma } from '../lib/prisma'
 import { formatBytes } from '../utils/format.utils'
 import type { DatabaseStatistics, TableStat, AnalyzeResult } from '../schemas/database.schema'
 
-const MANAGED_TABLES = ['user', 'department', 'section', 'user_log'] as const
-
 export class DatabaseService {
   static async getStatistics(): Promise<DatabaseStatistics> {
     const [databaseName, tableStats] = await Promise.all([
@@ -25,8 +23,9 @@ export class DatabaseService {
 
   static async analyze(): Promise<AnalyzeResult> {
     const analyzedTables: string[] = []
+    const tables = await this.getAllTableNames()
 
-    for (const table of MANAGED_TABLES) {
+    for (const table of tables) {
       await prisma.$executeRawUnsafe(`ANALYZE "${table}"`)
       analyzedTables.push(table)
     }
@@ -38,6 +37,18 @@ export class DatabaseService {
     }
   }
 
+  private static async getAllTableNames(): Promise<string[]> {
+    const result = await prisma.$queryRaw<Array<{ table_name: string }>>`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public' 
+        AND table_type = 'BASE TABLE'
+    `
+    return result
+      .map(row => row.table_name)
+      .filter(name => !name.startsWith('_prisma_migrations'))
+  }
+
   private static async getDatabaseName(): Promise<string> {
     const result = await prisma.$queryRaw<Array<{ current_database: string }>>`
       SELECT current_database()
@@ -46,7 +57,8 @@ export class DatabaseService {
   }
 
   private static async getTableStatistics(): Promise<TableStat[]> {
-    const statsPromises = MANAGED_TABLES.map(async (tableName) => {
+    const tables = await this.getAllTableNames()
+    const statsPromises = tables.map(async (tableName) => {
       const [rowCount, sizes] = await Promise.all([
         this.getTableRowCount(tableName),
         this.getTableSize(tableName)
