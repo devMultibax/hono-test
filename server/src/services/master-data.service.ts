@@ -56,8 +56,6 @@ export class MasterDataService {
                 lastName: true,
                 email: true,
                 role: true,
-                departmentId: true,
-                sectionId: true,
                 status: true,
             },
             orderBy: { username: 'asc' },

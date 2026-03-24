@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TextInput, Button, Grid, Paper, Stack, Group, Title, Divider } from '@mantine/core';
+import { TextInput, Button, Grid, Paper, Stack, Group, Title, Divider, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useTranslation } from '@/lib/i18n';
 import { useUser, useAuthStore } from '@/stores/auth.store';
@@ -65,7 +65,7 @@ export function ProfileForm() {
                 tel: values.tel || undefined,
             });
 
-            updateUser(res.data.user);
+            updateUser(res.data.data.user);
 
             Report.success(t('profile:message.profileUpdated'));
         } catch (error) {
@@ -89,13 +89,46 @@ export function ProfileForm() {
                     <InfoField label={t('profile:field.role')}>
                         <RoleBadge role={user?.role ?? 'USER'} />
                     </InfoField>
-                    <InfoField label={t('profile:field.department')}>
-                        {user?.department?.name ?? '-'}
-                    </InfoField>
-                    <InfoField label={t('profile:field.section')}>
-                        {user?.section?.name ?? '-'}
-                    </InfoField>
                 </Grid>
+            </Paper>
+
+            {/* Department Info — Read Only */}
+            <Paper p="lg" radius="md" withBorder>
+                <Title order={5} c="dimmed" mb="md">
+                    {t('profile:section.departmentInfo')}
+                </Title>
+                <Stack gap={4}>
+                    {user?.departments?.length ? (
+                        <Stack gap={4}>
+                            <Group gap="xs" px="sm">
+                                <Text size="xs" c="dimmed" fw={500} style={{ flex: 1 }}>{t('profile:field.department')}</Text>
+                                <Text size="xs" c="dimmed" fw={500} style={{ flex: 1 }}>{t('profile:field.section')}</Text>
+                            </Group>
+                            {user.departments.map((ud) => (
+                                <Group
+                                    key={ud.departmentId}
+                                    gap="xs"
+                                    px="sm"
+                                    py={6}
+                                    style={{
+                                        borderRadius: 6,
+                                        background: ud.isPrimary ? 'var(--mantine-color-blue-0)' : 'var(--mantine-color-gray-0)',
+                                        borderLeft: `3px solid ${ud.isPrimary ? 'var(--mantine-color-blue-5)' : 'var(--mantine-color-gray-3)'}`,
+                                    }}
+                                >
+                                    <Text size="sm" fw={ud.isPrimary ? 600 : 400} style={{ flex: 1 }}>
+                                        {ud.department?.name ?? '-'}
+                                    </Text>
+                                    <Text size="sm" c="dimmed" style={{ flex: 1 }}>
+                                        {ud.section?.name ?? '-'}
+                                    </Text>
+                                </Group>
+                            ))}
+                        </Stack>
+                    ) : (
+                        <Text size="sm" c="dimmed">-</Text>
+                    )}
+                </Stack>
             </Paper>
 
             {/* Personal Info — Editable */}

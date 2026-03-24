@@ -5,21 +5,77 @@ import { env } from '../config/env'
 import { UnauthorizedError, NotFoundError, ConflictError } from '../lib/errors'
 import { CODES } from '../constants/error-codes'
 import { MSG } from '../constants/messages'
-import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations, type PrismaUserWithRelations } from '../types'
+import { ActionType, Role, Status, type AuthPayload, type LoginResponse, type UserWithRelations, type UserDepartmentEntry } from '../types'
 import { daysToMs } from '../utils/time.utils'
 import { logUserAction } from '../utils/user-log.utils'
 
 const TOKEN_EXPIRY = '24h'
 
+const DEPARTMENTS_INCLUDE = {
+  departments: {
+    include: {
+      department: { select: { id: true, name: true } },
+      section: { select: { id: true, name: true } }
+    },
+    orderBy: [
+      { isPrimary: 'desc' as const },
+      { department: { name: 'asc' as const } }
+    ]
+  }
+}
+
+function formatDepartments(
+  depts?: Array<{
+    departmentId: number
+    sectionId: number | null
+    isPrimary: boolean
+    department: { id: number; name: string }
+    section: { id: number; name: string } | null
+  }>
+): UserDepartmentEntry[] {
+  return (depts ?? []).map((ud) => ({
+    departmentId: ud.departmentId,
+    sectionId: ud.sectionId,
+    isPrimary: ud.isPrimary,
+    department: { id: ud.department.id, name: ud.department.name },
+    section: ud.section ? { id: ud.section.id, name: ud.section.name } : null
+  }))
+}
+
+type UserWithDepartments = {
+  id: number
+  username: string
+  firstName: string
+  lastName: string
+  email: string | null
+  tel: string | null
+  role: string
+  status: string
+  createdAt: Date
+  createdBy: string
+  createdByName: string
+  updatedAt: Date | null
+  updatedBy: string | null
+  updatedByName: string | null
+  lastLoginAt: Date | null
+  isDefaultPassword: boolean
+  tokenVersion?: number
+  departments: Array<{
+    departmentId: number
+    sectionId: number | null
+    isPrimary: boolean
+    department: { id: number; name: string }
+    section: { id: number; name: string } | null
+  }>
+}
+
 export class AuthService {
-  private static formatUserResponse(user: PrismaUserWithRelations): UserWithRelations {
+  private static formatUserResponse(user: UserWithDepartments): UserWithRelations {
     return {
       id: user.id,
       username: user.username,
       firstName: user.firstName,
       lastName: user.lastName,
-      departmentId: user.departmentId,
-      sectionId: user.sectionId,
       email: user.email,
       tel: user.tel,
       role: user.role as Role,
@@ -32,18 +88,14 @@ export class AuthService {
       updatedByName: user.updatedByName,
       lastLoginAt: user.lastLoginAt,
       isDefaultPassword: user.isDefaultPassword,
-      department: user.department ? { id: user.department.id, name: user.department.name } : undefined,
-      section: user.section ? { id: user.section.id, name: user.section.name } : null
+      departments: formatDepartments(user.departments)
     }
   }
 
   static async login(username: string, password: string): Promise<LoginResponse> {
     const user = await prisma.user.findUnique({
       where: { username },
-      include: {
-        department: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } }
-      }
+      include: DEPARTMENTS_INCLUDE
     })
 
     if (!user) {
@@ -91,8 +143,7 @@ export class AuthService {
       user: this.formatUserResponse({
         ...user,
         lastLoginAt: new Date(),
-        department: user.department,
-        section: user.section
+        tokenVersion: updatedUser.tokenVersion
       }),
       previousSessionTerminated
     }
@@ -142,10 +193,7 @@ export class AuthService {
   static async getCurrentUser(userId: number): Promise<UserWithRelations> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        department: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } }
-      }
+      include: DEPARTMENTS_INCLUDE
     })
 
     if (!user) {
@@ -188,10 +236,7 @@ export class AuthService {
         updatedBy: user.username,
         updatedByName: `${user.firstName} ${user.lastName}`
       },
-      include: {
-        department: { select: { id: true, name: true } },
-        section: { select: { id: true, name: true } }
-      }
+      include: DEPARTMENTS_INCLUDE
     })
 
     await logUserAction(updatedUser, ActionType.UPDATE)

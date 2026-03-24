@@ -9,6 +9,7 @@
     },
     "section": {
         "accountInfo": "ข้อมูลบัญชี",
+        "departmentInfo": "ข้อมูลสังกัด",
         "personalInfo": "ข้อมูลส่วนตัว"
     },
     "field": {

@@ -204,8 +204,20 @@ export const userExcelColumns: ExportColumn<UserWithRelations>[] = [
   { key: 'username', label: MSG.export.user.username, width: 15 },
   { key: 'firstName', label: MSG.export.user.firstName, width: 20 },
   { key: 'lastName', label: MSG.export.user.lastName, width: 20 },
-  { key: 'department.name', label: MSG.export.user.department, width: 25, value: (_, item) => item.department?.name || '' },
-  { key: 'section.name', label: MSG.export.user.section, width: 25, value: (_, item) => item.section?.name || '' },
+  {
+    key: 'primaryDepartment', label: MSG.export.user.department, width: 25,
+    value: (_, item) => {
+      const primary = item.departments?.find((d) => d.isPrimary)
+      return primary?.department?.name || ''
+    }
+  },
+  {
+    key: 'primarySection', label: MSG.export.user.section, width: 25,
+    value: (_, item) => {
+      const primary = item.departments?.find((d) => d.isPrimary)
+      return primary?.section?.name || ''
+    }
+  },
   { key: 'email', label: MSG.export.user.email, width: 30, value: formatOptionalString },
   { key: 'tel', label: MSG.export.user.tel, width: 15, value: formatOptionalString },
   { key: 'role', label: MSG.export.user.role, width: 12, value: mapValue(roleMap) },

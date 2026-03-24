@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
-import { TextInput, Select, Button, Grid, Stack, Group } from '@mantine/core';
+import { useEffect, useMemo } from 'react';
+import { TextInput, Select, Button, Grid, Stack, Group, ActionIcon, Text, Tooltip } from '@mantine/core';
+import { IconTrash, IconPlus, IconStar, IconStarFilled } from '@tabler/icons-react';
 import { FormOverlay } from '@/components/common/FormOverlay';
 import { useForm } from '@mantine/form';
 import { DepartmentSelect } from '@/components/forms/DepartmentSelect';
 import { SectionSelect } from '@/components/forms/SectionSelect';
 import { useTranslation } from '@/lib/i18n';
 import { getRoleOptions, getStatusOptions } from '@/constants/options';
-import type { User, CreateUserRequest, UserFormValues } from '../types';
+import type { User, CreateUserRequest } from '../types';
+import type { UserFormValues, DepartmentFormEntry } from '../types';
 
 interface Props {
   initialData?: User;
@@ -14,6 +16,12 @@ interface Props {
   onCancel: () => void;
   isLoading?: boolean;
 }
+
+const DEFAULT_DEPARTMENT_ENTRY: DepartmentFormEntry = {
+  departmentId: null,
+  sectionId: null,
+  isPrimary: true,
+};
 
 export function UserForm({ initialData, onSubmit, onCancel, isLoading }: Props) {
   const isEdit = !!initialData;
@@ -27,8 +35,7 @@ export function UserForm({ initialData, onSubmit, onCancel, isLoading }: Props) 
       username: '',
       firstName: '',
       lastName: '',
-      departmentId: null,
-      sectionId: null,
+      departments: [{ ...DEFAULT_DEPARTMENT_ENTRY }],
       email: '',
       tel: '',
       role: 'USER',
@@ -38,7 +45,9 @@ export function UserForm({ initialData, onSubmit, onCancel, isLoading }: Props) 
       username: (v) => (!v ? t('validation:required.employeeId') : !/^\d{6}$/.test(v) ? t('validation:format.employeeIdDigits') : null),
       firstName: (v) => (!v ? t('validation:required.firstName') : null),
       lastName: (v) => (!v ? t('validation:required.lastName') : null),
-      departmentId: (v) => (!v ? t('validation:required.department') : null),
+      departments: {
+        departmentId: (v) => (!v ? t('validation:required.departmentInRow') : null),
+      },
       email: (v) => (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? t('validation:format.emailInvalid') : null),
       tel: (v) => (v && !/^\d{10}$/.test(v) ? t('validation:format.telInvalid') : null),
     },
@@ -47,12 +56,19 @@ export function UserForm({ initialData, onSubmit, onCancel, isLoading }: Props) 
 
   useEffect(() => {
     if (initialData) {
+      const departments: DepartmentFormEntry[] = initialData.departments?.length
+        ? initialData.departments.map((ud) => ({
+            departmentId: ud.departmentId,
+            sectionId: ud.sectionId,
+            isPrimary: ud.isPrimary,
+          }))
+        : [{ ...DEFAULT_DEPARTMENT_ENTRY }];
+
       form.setValues({
         username: initialData.username,
         firstName: initialData.firstName,
         lastName: initialData.lastName,
-        departmentId: initialData.departmentId,
-        sectionId: initialData.sectionId,
+        departments,
         email: initialData.email ?? '',
         tel: initialData.tel ?? '',
         role: initialData.role,
@@ -62,13 +78,52 @@ export function UserForm({ initialData, onSubmit, onCancel, isLoading }: Props) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData]);
 
+  // Department IDs already selected (for filtering duplicates)
+  const selectedDeptIds = useMemo(
+    () => new Set(form.values.departments.map((d) => d.departmentId).filter(Boolean) as number[]),
+    [form.values.departments]
+  );
+
+  const handleAddDepartment = () => {
+    form.insertListItem('departments', {
+      departmentId: null,
+      sectionId: null,
+      isPrimary: false,
+    });
+  };
+
+  const handleRemoveDepartment = (index: number) => {
+    const wasPrimary = form.values.departments[index].isPrimary;
+    form.removeListItem('departments', index);
+    if (wasPrimary && form.values.departments.length > 1) {
+      const newIndex = index === 0 ? 0 : index - 1;
+      form.setFieldValue(`departments.${newIndex}.isPrimary`, true);
+    }
+  };
+
+  const handlePrimaryChange = (index: number) => {
+    form.values.departments.forEach((_, i) => {
+      form.setFieldValue(`departments.${i}.isPrimary`, i === index);
+    });
+  };
+
+  const handleDepartmentChange = (index: number, value: number | null) => {
+    form.setFieldValue(`departments.${index}.departmentId`, value);
+    form.setFieldValue(`departments.${index}.sectionId`, null);
+  };
+
   const handleSubmit = form.onSubmit((values) => {
     onSubmit({
       username: values.username,
       firstName: values.firstName,
       lastName: values.lastName,
-      departmentId: values.departmentId!,
-      sectionId: values.sectionId ?? undefined,
+      departments: values.departments
+        .filter((d) => d.departmentId !== null)
+        .map((d) => ({
+          departmentId: d.departmentId!,
+          sectionId: d.sectionId ?? undefined,
+          isPrimary: d.isPrimary,
+        })),
       email: values.email || undefined,
       tel: values.tel || undefined,
       role: values.role,
@@ -104,28 +159,60 @@ export function UserForm({ initialData, onSubmit, onCancel, isLoading }: Props) 
           </Grid.Col>
         </Grid>
 
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <DepartmentSelect
-              label={t('common:label.department')}
-              required
-              value={form.values.departmentId}
-              onChange={(value) => {
-                form.setFieldValue('departmentId', value);
-                form.setFieldValue('sectionId', null);
-              }}
-              error={form.errors.departmentId as string}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <SectionSelect
-              label={t('common:label.section')}
-              departmentId={form.values.departmentId}
-              value={form.values.sectionId}
-              onChange={(value) => form.setFieldValue('sectionId', value)}
-            />
-          </Grid.Col>
-        </Grid>
+        {/* Department Repeater */}
+        <Stack gap="xs">
+          <Text fw={500} size="sm">{t('users:form.departments.label')} <span style={{ color: 'var(--mantine-color-red-6)' }}>*</span></Text>
+          {form.values.departments.map((entry, index) => (
+            <Group key={index} gap="xs" align="flex-end" wrap="nowrap" style={entry.isPrimary ? { borderLeft: '3px solid var(--mantine-color-blue-5)', paddingLeft: 8 } : { paddingLeft: 11 }}>
+              <DepartmentSelect
+                label={index === 0 ? t('common:label.department') : undefined}
+                required
+                value={entry.departmentId}
+                onChange={(value) => handleDepartmentChange(index, value)}
+                error={form.errors[`departments.${index}.departmentId`] as string}
+                excludeIds={[...selectedDeptIds].filter((id) => id !== entry.departmentId)}
+                style={{ flex: 1 }}
+              />
+              <SectionSelect
+                label={index === 0 ? t('common:label.section') : undefined}
+                departmentId={entry.departmentId}
+                value={entry.sectionId}
+                onChange={(value) => form.setFieldValue(`departments.${index}.sectionId`, value)}
+                style={{ flex: 1 }}
+              />
+              <Tooltip label={entry.isPrimary ? t('users:form.departments.primary') : t('users:form.departments.setPrimary')}>
+                <ActionIcon
+                  variant={entry.isPrimary ? 'filled' : 'subtle'}
+                  color="blue"
+                  size="lg"
+                  onClick={() => !entry.isPrimary && handlePrimaryChange(index)}
+                  style={entry.isPrimary ? { cursor: 'default' } : undefined}
+                >
+                  {entry.isPrimary ? <IconStarFilled size={16} /> : <IconStar size={16} />}
+                </ActionIcon>
+              </Tooltip>
+              {form.values.departments.length > 1 ? (
+                <Tooltip label={t('users:form.departments.remove')}>
+                  <ActionIcon variant="subtle" color="red" size="lg" onClick={() => handleRemoveDepartment(index)}>
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              ) : (
+                <ActionIcon variant="transparent" size="lg" disabled style={{ visibility: 'hidden' }}>
+                  <IconTrash size={16} />
+                </ActionIcon>
+              )}
+            </Group>
+          ))}
+          <Button
+            variant="light"
+            size="xs"
+            leftSection={<IconPlus size={14} />}
+            onClick={handleAddDepartment}
+          >
+            {t('users:form.departments.addButton')}
+          </Button>
+        </Stack>
 
         <Grid>
           <Grid.Col span={{ base: 12, md: 6 }}>

@@ -3,12 +3,22 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { mockPrisma } from '../../mocks/prisma.mock'
 import { AuthService } from '../../../src/services/auth.service'
-import { ConflictError, UnauthorizedError, NotFoundError } from '../../../src/lib/errors'
+import { UnauthorizedError, NotFoundError } from '../../../src/lib/errors'
 import { Role } from '../../../src/types'
-import { mockUser, mockDepartment, mockSection } from '../../mocks/data.mock'
+import { mockUser } from '../../mocks/data.mock'
 
 vi.mock('bcryptjs')
 vi.mock('jsonwebtoken')
+
+const mockDepartmentsRelation = [
+  {
+    departmentId: 1,
+    sectionId: 1,
+    isPrimary: true,
+    department: { id: 1, name: 'IT Department' },
+    section: { id: 1, name: 'Development' }
+  }
+]
 
 describe('AuthService', () => {
   beforeEach(() => {
@@ -27,99 +37,11 @@ describe('AuthService', () => {
     vi.mocked(jwt.verify).mockReturnValue({
       id: 1,
       username: 'testuser',
+      firstName: 'Test',
+      lastName: 'User',
       role: Role.USER,
       tokenVersion: 0
     } as never)
-  })
-
-  describe('register', () => {
-    it('should register a new user', async () => {
-      const newUser = {
-        id: 1,
-        username: 'newuser',
-        firstName: 'New',
-        lastName: 'User',
-        departmentId: 1,
-        sectionId: null,
-        email: 'new@example.com',
-        tel: null,
-        role: 'USER',
-        status: 'active',
-        createdAt: new Date(),
-        lastLoginAt: null
-      }
-
-      mockPrisma.user.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({
-          ...mockUser,
-          ...newUser,
-          department: mockDepartment,
-          section: null
-        } as any)
-      mockPrisma.department.findUnique.mockResolvedValue(mockDepartment)
-      mockPrisma.user.create.mockResolvedValue(newUser as any)
-      mockPrisma.userLog.create.mockResolvedValue({} as any)
-
-      const result = await AuthService.register({
-        username: 'newuser',
-        password: 'password123',
-        firstName: 'New',
-        lastName: 'User',
-        departmentId: 1,
-        email: 'new@example.com'
-      })
-
-      expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10)
-      expect(mockPrisma.user.create).toHaveBeenCalled()
-      expect(result.user.username).toBe('newuser')
-    })
-
-    it('should throw ConflictError when username exists', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser)
-
-      await expect(
-        AuthService.register({
-          username: 'testuser',
-          password: 'password123',
-          firstName: 'Test',
-          lastName: 'User',
-          departmentId: 1
-        })
-      ).rejects.toThrow(ConflictError)
-    })
-
-    it('should throw NotFoundError when department not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null)
-      mockPrisma.department.findUnique.mockResolvedValue(null)
-
-      await expect(
-        AuthService.register({
-          username: 'newuser',
-          password: 'password123',
-          firstName: 'New',
-          lastName: 'User',
-          departmentId: 999
-        })
-      ).rejects.toThrow(NotFoundError)
-    })
-
-    it('should throw NotFoundError when section not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null)
-      mockPrisma.department.findUnique.mockResolvedValue(mockDepartment)
-      mockPrisma.section.findUnique.mockResolvedValue(null)
-
-      await expect(
-        AuthService.register({
-          username: 'newuser',
-          password: 'password123',
-          firstName: 'New',
-          lastName: 'User',
-          departmentId: 1,
-          sectionId: 999
-        })
-      ).rejects.toThrow(NotFoundError)
-    })
   })
 
   describe('login', () => {
@@ -127,12 +49,14 @@ describe('AuthService', () => {
       const userWithRelations = {
         ...mockUser,
         tokenVersion: 0,
-        department: mockDepartment,
-        section: mockSection
+        isDefaultPassword: false,
+        createdByName: 'Admin User',
+        updatedByName: null,
+        departments: mockDepartmentsRelation
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(userWithRelations)
-      mockPrisma.user.update.mockResolvedValue(userWithRelations)
+      mockPrisma.user.update.mockResolvedValue({ ...userWithRelations, tokenVersion: 1 })
       mockPrisma.userLog.create.mockResolvedValue({} as any)
 
       const result = await AuthService.login('testuser', 'password123')
@@ -162,8 +86,11 @@ describe('AuthService', () => {
     it('should throw UnauthorizedError when password is wrong', async () => {
       const userWithRelations = {
         ...mockUser,
-        department: mockDepartment,
-        section: mockSection
+        tokenVersion: 0,
+        isDefaultPassword: false,
+        createdByName: 'Admin User',
+        updatedByName: null,
+        departments: mockDepartmentsRelation
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(userWithRelations)
@@ -178,8 +105,11 @@ describe('AuthService', () => {
       const inactiveUser = {
         ...mockUser,
         status: 'inactive',
-        department: mockDepartment,
-        section: mockSection
+        tokenVersion: 0,
+        isDefaultPassword: false,
+        createdByName: 'Admin User',
+        updatedByName: null,
+        departments: mockDepartmentsRelation
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(inactiveUser)
@@ -193,7 +123,8 @@ describe('AuthService', () => {
   describe('verifyToken', () => {
     it('should verify valid token', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
-        tokenVersion: 0
+        tokenVersion: 0,
+        status: 'active'
       } as any)
 
       const result = await AuthService.verifyToken('valid.jwt.token')
@@ -214,7 +145,8 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedError when token version mismatch', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
-        tokenVersion: 1
+        tokenVersion: 1,
+        status: 'active'
       } as any)
 
       await expect(
@@ -226,12 +158,6 @@ describe('AuthService', () => {
   describe('logout', () => {
     it('should increment token version on logout', async () => {
       mockPrisma.user.update.mockResolvedValue(mockUser)
-      mockPrisma.user.findUnique.mockResolvedValue({
-        ...mockUser,
-        department: mockDepartment,
-        section: mockSection
-      } as any)
-      mockPrisma.userLog.create.mockResolvedValue({} as any)
 
       await AuthService.logout(1)
 
@@ -249,14 +175,19 @@ describe('AuthService', () => {
         username: 'testuser',
         firstName: 'Test',
         lastName: 'User',
-        departmentId: 1,
-        sectionId: 1,
         email: 'test@example.com',
         tel: '0812345678',
         role: 'USER',
         status: 'active',
         createdAt: new Date(),
-        lastLoginAt: null
+        createdBy: 'admin',
+        createdByName: 'Admin User',
+        updatedAt: null,
+        updatedBy: null,
+        updatedByName: null,
+        lastLoginAt: null,
+        isDefaultPassword: false,
+        departments: mockDepartmentsRelation
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(user as any)
@@ -278,27 +209,30 @@ describe('AuthService', () => {
       const user = {
         id: 1,
         username: 'testuser',
-        firstName: 'Updated',
+        firstName: 'Test',
         lastName: 'User',
-        departmentId: 1,
-        sectionId: 1,
-        email: 'updated@example.com',
+        email: 'test@example.com',
         tel: '0812345678',
         role: 'USER',
         status: 'active',
         createdAt: new Date(),
-        lastLoginAt: null
+        createdBy: 'admin',
+        createdByName: 'Admin User',
+        updatedAt: null,
+        updatedBy: null,
+        updatedByName: null,
+        lastLoginAt: null,
+        isDefaultPassword: false,
+        departments: mockDepartmentsRelation
       }
 
-      mockPrisma.user.findUnique
-        .mockResolvedValueOnce(mockUser)
-        .mockResolvedValueOnce({
-          ...mockUser,
-          ...user,
-          department: mockDepartment,
-          section: mockSection
-        } as any)
-      mockPrisma.user.update.mockResolvedValue(user as any)
+      mockPrisma.user.findUnique.mockResolvedValue(user as any)
+      mockPrisma.user.findFirst.mockResolvedValue(null)
+      mockPrisma.user.update.mockResolvedValue({
+        ...user,
+        firstName: 'Updated',
+        email: 'updated@example.com'
+      } as any)
       mockPrisma.userLog.create.mockResolvedValue({} as any)
 
       const result = await AuthService.updateProfile(1, {

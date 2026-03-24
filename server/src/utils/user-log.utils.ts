@@ -6,8 +6,11 @@ export interface UserLogData {
     username: string
     firstName: string
     lastName: string
-    department: { name: string }
-    section: { name: string } | null
+    departments?: Array<{
+        isPrimary: boolean
+        department: { name: string }
+        section: { name: string } | null
+    }>
     email: string | null
     tel: string | null
     role: string
@@ -26,12 +29,18 @@ export async function logUserAction(
     actionType: ActionType,
     tx?: Pick<typeof prisma, 'userLog'>
 ): Promise<void> {
+    const primaryDept = user.departments?.find((ud) => ud.isPrimary)
+    const otherDepts = user.departments?.filter((ud) => !ud.isPrimary) ?? []
+
     const data = {
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
-        department: user.department.name,
-        section: user.section?.name || '',
+        department: primaryDept?.department.name ?? '',
+        section: primaryDept?.section?.name ?? '',
+        additionalDepartments: otherDepts.length > 0
+            ? otherDepts.map((ud) => ud.department.name).join(', ')
+            : null,
         email: user.email,
         tel: user.tel,
         role: user.role as Role,

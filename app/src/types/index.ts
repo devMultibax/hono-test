@@ -32,6 +32,7 @@ export interface BaseQueryParams {
 
 export interface UserQueryParams extends BaseQueryParams {
   departmentId?: number;
+  departmentIds?: string;
   sectionId?: number;
   role?: Role;
   status?: Status;
@@ -53,14 +54,27 @@ export interface UserLogQueryParams extends BaseQueryParams {
   endDate?: string;
 }
 
+// ============ User Department Entry ============
+export interface UserDepartmentEntry {
+  departmentId: number;
+  sectionId: number | null;
+  isPrimary: boolean;
+  department?: Department;
+  section?: Section | null;
+}
+
+export interface DepartmentInput {
+  departmentId: number;
+  sectionId?: number;
+  isPrimary: boolean;
+}
+
 // ============ User ============
 export interface User {
   id: number;
   username: string;
   firstName: string;
   lastName: string;
-  departmentId: number;
-  sectionId: number | null;
   email: string | null;
   tel: string | null;
   role: Role;
@@ -73,16 +87,14 @@ export interface User {
   updatedByName: string | null;
   lastLoginAt: string | null;
   isDefaultPassword: boolean;
-  department?: Department;
-  section?: Section | null;
+  departments: UserDepartmentEntry[];
 }
 
 export interface CreateUserRequest {
   username: string;
   firstName: string;
   lastName: string;
-  departmentId: number;
-  sectionId?: number;
+  departments: DepartmentInput[];
   email?: string;
   tel?: string;
   role?: Role;
@@ -102,8 +114,7 @@ export interface ResetPasswordResponse {
 export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
-  departmentId?: number;
-  sectionId?: number | null;
+  departments?: DepartmentInput[];
   email?: string | null;
   tel?: string | null;
   role?: Role;
@@ -141,7 +152,7 @@ export interface Department {
   updatedByName: string | null;
   sections?: Section[];
   _count?: {
-    users: number;
+    userDepartments: number;
     sections: number;
   };
 }
@@ -170,7 +181,7 @@ export interface Section {
   updatedByName: string | null;
   department?: Department;
   _count?: {
-    users: number;
+    userDepartments: number;
   };
 }
 
@@ -194,6 +205,7 @@ export interface UserLog {
   lastName: string;
   department: string;
   section: string;
+  additionalDepartments: string | null;
   email: string | null;
   tel: string | null;
   role: Role;

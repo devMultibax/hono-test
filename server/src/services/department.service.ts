@@ -177,7 +177,7 @@ export class DepartmentService {
       where: { id },
       include: {
         _count: {
-          select: { sections: true, users: true }
+          select: { sections: true, userDepartments: true }
         }
       }
     })
@@ -186,8 +186,8 @@ export class DepartmentService {
       throw new NotFoundError(CODES.DEPARTMENT_NOT_FOUND, MSG.errors.department.notFound)
     }
 
-    if (department._count.users > 0) {
-      throw new ConflictError(CODES.DEPARTMENT_HAS_USERS, MSG.errors.department.hasUsers, { count: department._count.users })
+    if (department._count.userDepartments > 0) {
+      throw new ConflictError(CODES.DEPARTMENT_HAS_USERS, MSG.errors.department.hasUsers, { count: department._count.userDepartments })
     }
 
     if (department._count.sections > 0) {

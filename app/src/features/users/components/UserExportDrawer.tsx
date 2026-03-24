@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { ExportDrawer } from '@/components/common/ExportDrawer';
 import { UserFilterFields } from './UserFilters';
 import { useTranslation } from '@/lib/i18n';
@@ -15,6 +16,11 @@ export function UserExportDrawer({ opened, onClose, initialParams, onExport }: P
   const { t } = useTranslation(['users']);
   const currentUser = useUser();
   const currentUserRole = useUserRole();
+
+  const userDepartmentIds = useMemo(
+    () => currentUser?.departments?.map((d) => d.departmentId) ?? [],
+    [currentUser?.departments]
+  );
 
   const exportInitialParams: UserExportParams = {
     departmentId: initialParams.departmentId,
@@ -34,7 +40,7 @@ export function UserExportDrawer({ opened, onClose, initialParams, onExport }: P
       confirmMessage={t('users:confirm.export.message')}
     >
       {(params, update) => (
-        <UserFilterFields values={params} onUpdate={update} currentUserRole={currentUserRole} userDepartmentId={currentUser?.departmentId} />
+        <UserFilterFields values={params} onUpdate={update} currentUserRole={currentUserRole} userDepartmentIds={userDepartmentIds} />
       )}
     </ExportDrawer>
   );

@@ -35,8 +35,7 @@ users.post('/', requireAdmin, zValidator('json', registerSchema), async (c) => {
     validated.username,
     validated.firstName,
     validated.lastName,
-    validated.departmentId,
-    validated.sectionId ?? null,
+    validated.departments,
     validated.email ?? null,
     validated.tel ?? null,
     validated.role ?? Role.USER,
@@ -49,11 +48,11 @@ users.post('/', requireAdmin, zValidator('json', registerSchema), async (c) => {
 
 // Get all with Pagination and Filters
 users.get('/', requireUser, zValidator('query', listUsersQuerySchema), async (c) => {
-  const { page, limit, sort, order, search, departmentId, sectionId, role, status } = c.req.valid('query')
+  const { page, limit, sort, order, search, departmentId, departmentIds, sectionId, role, status } = c.req.valid('query')
 
   const userList = await UserService.getAll(
     { page, limit, sort, order },
-    { search, departmentId, sectionId, role: role as Role | undefined, status }
+    { search, departmentId, departmentIds, sectionId, role: role as Role | undefined, status }
   )
   return successResponse(c, userList)
 })
@@ -114,8 +113,8 @@ users.patch('/:id/password/reset', requireAdmin, strictRateLimiter, async (c) =>
 
 // Export to Excel
 users.get('/export/excel', requireUser, zValidator('query', listUsersQuerySchema), async (c) => {
-  const { search, departmentId, sectionId, role, status } = c.req.valid('query')
-  const filters = { search, departmentId, sectionId, role: role as Role | undefined, status }
+  const { search, departmentId, departmentIds, sectionId, role, status } = c.req.valid('query')
+  const filters = { search, departmentId, departmentIds, sectionId, role: role as Role | undefined, status }
 
   const userList = await UserService.getAllSimple(filters)
   const result = await ExportService.exportToExcel(userList as UserWithRelations[], { columns: userExcelColumns })

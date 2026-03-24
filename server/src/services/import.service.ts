@@ -138,26 +138,29 @@ export class ImportService {
     const username = String(row.Username).trim()
     const firstName = String(row['First_Name']).trim()
     const lastName = String(row['Last_Name']).trim()
-    const departmentId = Number(row['Department_ID'])
-    const sectionId = row['Section_ID'] ? Number(row['Section_ID']) : null
     const email = row.Email ? String(row.Email).trim() : null
     const tel = row.Tel ? String(row.Tel).trim() : null
     const role = row.Role && String(row.Role).trim().toUpperCase() === 'ADMIN' ? Role.ADMIN : Role.USER
+
+    const departmentId = Number(row['Department_ID'])
+    const sectionId = row['Section_ID'] ? Number(row['Section_ID']) : null
 
     if (username.length !== 6) return pushError(CODES.IMPORT_USER_USERNAME_LENGTH)
     if (!/^[a-zA-Z0-9]+$/.test(username)) return pushError(CODES.IMPORT_USER_USERNAME_FORMAT)
     if (lookups.existingUsernames.has(username)) return pushError(CODES.IMPORT_USER_USERNAME_EXISTS, { username })
     if (lookups.batchUsernames.has(username)) return pushError(CODES.IMPORT_USER_USERNAME_DUPLICATE, { username })
 
-    if (isNaN(departmentId) || departmentId <= 0) return pushError(CODES.IMPORT_USER_DEPT_ID_INVALID)
+    if (!departmentId || departmentId <= 0) return pushError(CODES.IMPORT_USER_DEPT_ID_INVALID)
     if (!lookups.activeDepartmentIds.has(departmentId)) return pushError(CODES.IMPORT_USER_DEPT_NOT_FOUND, { departmentId })
 
     if (sectionId !== null) {
-      if (isNaN(sectionId) || sectionId <= 0) return pushError(CODES.IMPORT_USER_SECTION_ID_INVALID)
+      if (sectionId <= 0) return pushError(CODES.IMPORT_USER_SECTION_ID_INVALID)
       const sectionDeptId = lookups.sectionMap.get(sectionId)
       if (sectionDeptId === undefined) return pushError(CODES.IMPORT_USER_SECTION_NOT_FOUND, { sectionId })
       if (sectionDeptId !== departmentId) return pushError(CODES.IMPORT_USER_SECTION_DEPT_MISMATCH, { sectionId, departmentId })
     }
+
+    const departments = [{ departmentId, sectionId, isPrimary: true }]
 
     if (email) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return pushError(CODES.IMPORT_USER_EMAIL_INVALID, { email })
@@ -168,7 +171,7 @@ export class ImportService {
     if (tel && (tel.length !== 10 || !/^[0-9]+$/.test(tel))) return pushError(CODES.IMPORT_USER_TEL_INVALID, { tel })
 
     try {
-      const { password } = await UserService.create(username, firstName, lastName, departmentId, sectionId, email, tel, role, createdBy)
+      const { password } = await UserService.create(username, firstName, lastName, departments, email, tel, role, createdBy)
       credentials.push({ username, password })
       lookups.existingUsernames.add(username)
       lookups.batchUsernames.add(username)

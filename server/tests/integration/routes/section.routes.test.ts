@@ -2,13 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Hono } from 'hono'
 import { SectionService } from '../../../src/services/section.service'
 import { NotFoundError, ConflictError } from '../../../src/lib/errors'
-import { Role, Status } from '../../../src/types'
+import { Role } from '../../../src/types'
 import {
   mockSectionResponse,
   mockSectionWithRelations,
   mockAdminAuthPayload,
-  mockAuthPayload,
-  createMockSections
+  mockAuthPayload
 } from '../../mocks/data.mock'
 import { errorHandler } from '../../../src/middleware/error-handler'
 
@@ -58,33 +57,9 @@ describe('Section Routes', () => {
   })
 
   describe('GET /sections', () => {
-    it('should return all sections', async () => {
-      const mockSections = createMockSections(3).map(s => ({
-        id: s.id,
-        departmentId: s.departmentId,
-        name: s.name,
-        status: s.status as Status,
-        createdAt: s.createdAt,
-        createdBy: 'admin',
-        createdByName: 'Admin User',
-        updatedAt: s.updatedAt,
-        updatedBy: null,
-        updatedByName: null
-      }))
-      vi.mocked(SectionService.getAll).mockResolvedValue(mockSections)
-
-      const res = await app.request('/sections', {
-        headers: { Cookie: 'auth_token=user' }
-      })
-
-      expect(res.status).toBe(200)
-      const data = await res.json()
-      expect(data.data).toHaveLength(3)
-    })
-
     it('should return sections with pagination', async () => {
       vi.mocked(SectionService.getAll).mockResolvedValue({
-        data: [mockSectionResponse],
+        data: [mockSectionWithRelations],
         pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
       })
 
@@ -99,7 +74,10 @@ describe('Section Routes', () => {
     })
 
     it('should filter sections by departmentId', async () => {
-      vi.mocked(SectionService.getAll).mockResolvedValue([mockSectionResponse])
+      vi.mocked(SectionService.getAll).mockResolvedValue({
+        data: [mockSectionWithRelations],
+        pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
+      })
 
       const res = await app.request('/sections?departmentId=1', {
         headers: { Cookie: 'auth_token=user' }
@@ -107,7 +85,6 @@ describe('Section Routes', () => {
 
       expect(res.status).toBe(200)
       expect(SectionService.getAll).toHaveBeenCalledWith(
-        expect.any(Boolean),
         expect.any(Object),
         expect.objectContaining({ departmentId: 1 })
       )

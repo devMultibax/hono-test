@@ -60,9 +60,17 @@ export function UserListPage() {
   });
 
   // ─── 6. Data Fetching ───
-  const { data, isLoading, isFetching, refetch, isRefetching } = useUsers(
-    isAdmin ? params : { ...params, departmentId: currentUser?.departmentId },
+  const userDepartmentIds = useMemo(
+    () => currentUser?.departments?.map((d) => d.departmentId) ?? [],
+    [currentUser?.departments]
   );
+  const queryParams = useMemo(() => {
+    if (isAdmin) return params;
+    // Non-admin: if a specific department is selected via filter, use it; otherwise scope to all user's departments
+    if (params.departmentId) return params;
+    return { ...params, departmentIds: userDepartmentIds.join(',') || undefined };
+  }, [isAdmin, params, userDepartmentIds]);
+  const { data, isLoading, isFetching, refetch, isRefetching } = useUsers(queryParams);
   const { handleRefresh, isRefreshLoading } = useRefresh({ refetch, isRefetching });
   useNavigationProgress(isFetching);
 
@@ -128,7 +136,7 @@ export function UserListPage() {
         params={params}
         onChange={handleFilterChange}
         currentUserRole={userRole}
-        userDepartmentId={currentUser?.departmentId}
+        userDepartmentIds={userDepartmentIds}
       />
 
       <UserExportDrawer

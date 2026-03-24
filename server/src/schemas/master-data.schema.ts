@@ -23,8 +23,6 @@ export const userListSchema = z.object({
     lastName: z.string(),
     email: z.string().nullable(),
     role: z.enum(['ADMIN', 'USER']),
-    departmentId: z.number(),
-    sectionId: z.number().nullable(),
     status: z.enum(['active', 'inactive']),
 });
 

@@ -177,10 +177,39 @@ function DetailContent({ opened, userId, onClose, onEdit }: { opened: boolean; u
             <InfoField label={t('users:field.tel')}>{user.tel || '-'}</InfoField>
           </Grid>
 
-          <Grid>
-            <InfoField label={t('users:field.department')}>{user.department?.name || '-'}</InfoField>
-            <InfoField label={t('users:field.section')}>{user.section?.name || '-'}</InfoField>
-          </Grid>
+          <Stack gap={4}>
+            <Text fw={500} size="sm">{t('users:field.departments')}</Text>
+            {user.departments?.length ? (
+              <Stack gap={4}>
+                <Group gap="xs" px="sm">
+                  <Text size="xs" c="dimmed" fw={500} style={{ flex: 1 }}>{t('users:field.department')}</Text>
+                  <Text size="xs" c="dimmed" fw={500} style={{ flex: 1 }}>{t('users:field.section')}</Text>
+                </Group>
+                {user.departments.map((ud) => (
+                  <Group
+                    key={ud.departmentId}
+                    gap="xs"
+                    px="sm"
+                    py={6}
+                    style={{
+                      borderRadius: 6,
+                      background: ud.isPrimary ? 'var(--mantine-color-blue-0)' : 'var(--mantine-color-gray-0)',
+                      borderLeft: `3px solid ${ud.isPrimary ? 'var(--mantine-color-blue-5)' : 'var(--mantine-color-gray-3)'}`,
+                    }}
+                  >
+                    <Text size="sm" fw={ud.isPrimary ? 600 : 400} style={{ flex: 1 }}>
+                      {ud.department?.name ?? '-'}
+                    </Text>
+                    <Text size="sm" c="dimmed" style={{ flex: 1 }}>
+                      {ud.section?.name ?? '-'}
+                    </Text>
+                  </Group>
+                ))}
+              </Stack>
+            ) : (
+              <Text size="sm" c="dimmed">-</Text>
+            )}
+          </Stack>
 
           <Grid>
             <InfoField label={t('common:field.createdAt')}>{formatDateTime(user.createdAt)}</InfoField>

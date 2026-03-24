@@ -43,8 +43,8 @@ model Department {
   updatedBy     String?   @db.VarChar(100)
   updatedByName String?   @db.VarChar(200)
 
-  sections Section[]
-  users    User[]
+  sections        Section[]
+  userDepartments UserDepartment[]
 
   @@index([status])
   @@index([createdAt])
@@ -63,8 +63,8 @@ model Section {
   updatedBy     String?   @db.VarChar(100)
   updatedByName String?   @db.VarChar(200)
 
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  users      User[]
+  department      Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  userDepartments UserDepartment[]
 
   @@unique([departmentId, name])
   @@index([departmentId])
@@ -79,8 +79,6 @@ model User {
   password          String    @db.VarChar(255)
   firstName         String    @db.VarChar(100)
   lastName          String    @db.VarChar(100)
-  departmentId      Int
-  sectionId         Int?
   email             String?   @db.VarChar(255)
   tel               String?   @db.Char(10)
   role              Role      @default(USER)
@@ -95,16 +93,31 @@ model User {
   isDefaultPassword Boolean   @default(false)
   tokenVersion      Int       @default(0)
 
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  section    Section?   @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  departments UserDepartment[]
 
   @@index([username])
   @@index([email])
-  @@index([departmentId])
-  @@index([sectionId])
   @@index([status])
   @@index([createdAt])
   @@map("user")
+}
+
+model UserDepartment {
+  id           Int     @id @default(autoincrement())
+  userId       Int
+  departmentId Int
+  sectionId    Int?
+  isPrimary    Boolean @default(false)
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department  @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  section    Section?    @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, departmentId])
+  @@index([userId])
+  @@index([departmentId])
+  @@index([sectionId])
+  @@map("user_department")
 }
 
 model UserLog {
@@ -112,8 +125,9 @@ model UserLog {
   username      String     @db.Char(6)
   firstName     String     @db.VarChar(100)
   lastName      String     @db.VarChar(100)
-  department    String     @db.VarChar(100)
-  section       String     @db.VarChar(100)
+  department              String     @db.VarChar(100)
+  section                 String     @db.VarChar(100)
+  additionalDepartments   String?    @db.VarChar(500)
   email         String?    @db.VarChar(255)
   tel           String?    @db.Char(10)
   role          Role       @default(USER)

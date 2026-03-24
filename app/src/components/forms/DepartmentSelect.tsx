@@ -6,9 +6,12 @@ import type { Department } from '@/types';
 interface Props extends Omit<SelectProps, 'data' | 'value' | 'onChange'> {
   value: number | null;
   onChange: (value: number | null) => void;
+  excludeIds?: number[];
+  /** Only show departments with these IDs (if set) */
+  includeIds?: number[];
 }
 
-export function DepartmentSelect({ value, onChange, disabled, ...props }: Props) {
+export function DepartmentSelect({ value, onChange, disabled, excludeIds, includeIds, ...props }: Props) {
   const { data: departments = [], isLoading } = useQuery({
     queryKey: ['master-data', 'departments'],
     queryFn: async () => {
@@ -17,7 +20,10 @@ export function DepartmentSelect({ value, onChange, disabled, ...props }: Props)
     },
   });
 
-  const options = departments.map((d) => ({ value: String(d.id), label: d.name }));
+  const options = departments
+    .filter((d) => !excludeIds?.length || !excludeIds.includes(d.id))
+    .filter((d) => !includeIds?.length || includeIds.includes(d.id))
+    .map((d) => ({ value: String(d.id), label: d.name }));
 
   return (
     <Select

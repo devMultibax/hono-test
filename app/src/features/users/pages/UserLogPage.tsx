@@ -1,6 +1,6 @@
 import { useState, useMemo, useLayoutEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Text, Button } from '@mantine/core';
+import { Text, Button, Badge, Tooltip } from '@mantine/core';
 import { createColumnHelper } from '@tanstack/react-table';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { RoleBadge } from '@/components/common/RoleBadge';
@@ -78,7 +78,25 @@ export function UserLogPage() {
       columnHelper.accessor('department', {
         header: t('users:logs.column.department'),
         enableSorting: false,
-        cell: ({ getValue }) => getValue() || '-',
+        cell: ({ row }) => {
+          const { department, additionalDepartments } = row.original;
+          if (!department) return '-';
+          const extras = additionalDepartments
+            ? additionalDepartments.split(',').map((d) => d.trim()).filter(Boolean)
+            : [];
+          return (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {department}
+              {extras.length > 0 && (
+                <Tooltip label={extras.join(', ')} withArrow>
+                  <Badge size="xs" variant="light" style={{ cursor: 'default' }}>
+                    +{extras.length}
+                  </Badge>
+                </Tooltip>
+              )}
+            </span>
+          );
+        },
       }),
       columnHelper.accessor('section', {
         header: t('users:logs.column.section'),

@@ -10,13 +10,19 @@ export type UserDrawerState =
   | { mode: 'detail'; userId: number }
   | { mode: 'edit'; userId: number };
 
+// Department form entry — each row in the repeater
+export interface DepartmentFormEntry {
+  departmentId: number | null;
+  sectionId: number | null;
+  isPrimary: boolean;
+}
+
 // Form values — กำหนดชัดเจนที่เดียว
 export interface UserFormValues {
   username: string;
   firstName: string;
   lastName: string;
-  departmentId: number | null;
-  sectionId: number | null;
+  departments: DepartmentFormEntry[];
   email: string;
   tel: string;
   role: Role;

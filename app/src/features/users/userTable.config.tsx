@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { createColumnHelper } from '@tanstack/react-table';
+import { Badge, Tooltip } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { StatusSwitch } from '@/components/common/StatusSwitch';
@@ -50,16 +51,44 @@ export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusC
         header: t('users:table.column.fullName'),
         enableHiding: false,
       }),
-      columnHelper.accessor((row) => row.department?.name, {
-        id: 'department',
-        header: t('users:table.column.department'),
-        cell: ({ getValue }) => getValue() ?? '-',
-      }),
-      columnHelper.accessor((row) => row.section?.name, {
-        id: 'section',
-        header: t('users:table.column.section'),
-        cell: ({ getValue }) => getValue() ?? '-',
-      }),
+      columnHelper.accessor(
+        (row) => row.departments?.find((d) => d.isPrimary)?.department?.name,
+        {
+          id: 'department',
+          header: t('users:table.column.department'),
+          cell: ({ row: { original } }) => {
+            const primary = original.departments?.find((d) => d.isPrimary);
+            const additionalCount = (original.departments?.length ?? 0) - 1;
+            if (!primary?.department?.name) return '-';
+            return (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                {primary.department.name}
+                {additionalCount > 0 && (
+                  <Tooltip
+                    label={original.departments
+                      ?.filter((d) => !d.isPrimary)
+                      .map((d) => d.department?.name)
+                      .join(', ')}
+                    withArrow
+                  >
+                    <Badge size="xs" variant="light" style={{ cursor: 'default' }}>
+                      +{additionalCount}
+                    </Badge>
+                  </Tooltip>
+                )}
+              </span>
+            );
+          },
+        },
+      ),
+      columnHelper.accessor(
+        (row) => row.departments?.find((d) => d.isPrimary)?.section?.name,
+        {
+          id: 'section',
+          header: t('users:table.column.section'),
+          cell: ({ getValue }) => getValue() ?? '-',
+        },
+      ),
       columnHelper.accessor('role', {
         header: t('users:table.column.role'),
         cell: ({ row }) => <RoleBadge role={row.original.role} />,

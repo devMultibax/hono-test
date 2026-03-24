@@ -83,6 +83,15 @@ export interface SectionWithRelations extends SectionResponse {
   department?: EmbeddedRelation
 }
 
+// User Department Entry (junction table)
+export interface UserDepartmentEntry {
+  departmentId: number
+  sectionId: number | null
+  isPrimary: boolean
+  department?: EmbeddedRelation
+  section?: EmbeddedRelation | null
+}
+
 // User Types
 export interface User {
   id: number
@@ -90,8 +99,6 @@ export interface User {
   password: string
   firstName: string
   lastName: string
-  departmentId: number
-  sectionId: number | null
   email: string | null
   tel: string | null
   role: Role
@@ -108,8 +115,6 @@ export interface UserResponse {
   username: string
   firstName: string
   lastName: string
-  departmentId: number
-  sectionId: number | null
   email: string | null
   tel: string | null
   role: Role
@@ -130,8 +135,7 @@ export interface EmbeddedRelation {
 }
 
 export interface UserWithRelations extends UserResponse {
-  department?: EmbeddedRelation
-  section?: EmbeddedRelation | null
+  departments: UserDepartmentEntry[]
 }
 
 export interface PrismaUserWithRelations {
@@ -139,8 +143,6 @@ export interface PrismaUserWithRelations {
   username: string
   firstName: string
   lastName: string
-  departmentId: number
-  sectionId: number | null
   email: string | null
   tel: string | null
   role: string
@@ -153,8 +155,13 @@ export interface PrismaUserWithRelations {
   updatedByName: string | null
   lastLoginAt: Date | null
   isDefaultPassword: boolean
-  department?: { id: number; name: string }
-  section?: { id: number; name: string } | null
+  departments?: Array<{
+    departmentId: number
+    sectionId: number | null
+    isPrimary: boolean
+    department: { id: number; name: string }
+    section: { id: number; name: string } | null
+  }>
 }
 
 // Auth Types
@@ -181,6 +188,7 @@ export interface UserLog {
   lastName: string
   department: string
   section: string
+  additionalDepartments: string | null
   email: string | null
   tel: string | null
   role: Role
@@ -202,6 +210,7 @@ export interface UserLogResponse {
   lastName: string
   department: string
   section: string
+  additionalDepartments: string | null
   email: string | null
   tel: string | null
   role: Role

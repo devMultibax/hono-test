@@ -2,13 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Hono } from 'hono'
 import { UserService } from '../../../src/services/user.service'
 import { NotFoundError } from '../../../src/lib/errors'
-import { Role, Status } from '../../../src/types'
+import { Role } from '../../../src/types'
 import {
   mockUserResponse,
   mockUserWithRelations,
   mockAdminAuthPayload,
-  mockAuthPayload,
-  createMockUsers
+  mockAuthPayload
 } from '../../mocks/data.mock'
 import { errorHandler } from '../../../src/middleware/error-handler'
 
@@ -64,40 +63,9 @@ describe('User Routes', () => {
   })
 
   describe('GET /users', () => {
-    it('should return all users', async () => {
-      const mockUsers = createMockUsers(3).map(u => ({
-        id: u.id,
-        username: u.username,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        departmentId: u.departmentId,
-        sectionId: u.sectionId,
-        email: u.email,
-        tel: u.tel,
-        role: u.role as Role,
-        status: u.status as Status,
-        createdAt: u.createdAt,
-        createdBy: 'admin',
-        createdByName: 'Admin User',
-        updatedAt: null,
-        updatedBy: null,
-        updatedByName: null,
-        lastLoginAt: u.lastLoginAt
-      }))
-      vi.mocked(UserService.getAll).mockResolvedValue(mockUsers)
-
-      const res = await app.request('/users', {
-        headers: { Cookie: 'auth_token=user' }
-      })
-
-      expect(res.status).toBe(200)
-      const data = await res.json()
-      expect(data.data).toHaveLength(3)
-    })
-
-    it('should return users with pagination', async () => {
+    it('should return all users with pagination', async () => {
       vi.mocked(UserService.getAll).mockResolvedValue({
-        data: [mockUserResponse],
+        data: [mockUserWithRelations],
         pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
       })
 
@@ -112,7 +80,10 @@ describe('User Routes', () => {
     })
 
     it('should filter users by departmentId', async () => {
-      vi.mocked(UserService.getAll).mockResolvedValue([mockUserResponse])
+      vi.mocked(UserService.getAll).mockResolvedValue({
+        data: [mockUserWithRelations],
+        pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
+      })
 
       const res = await app.request('/users?departmentId=1', {
         headers: { Cookie: 'auth_token=user' }
@@ -120,14 +91,16 @@ describe('User Routes', () => {
 
       expect(res.status).toBe(200)
       expect(UserService.getAll).toHaveBeenCalledWith(
-        expect.any(Boolean),
         expect.any(Object),
         expect.objectContaining({ departmentId: 1 })
       )
     })
 
     it('should filter users by role', async () => {
-      vi.mocked(UserService.getAll).mockResolvedValue([mockUserResponse])
+      vi.mocked(UserService.getAll).mockResolvedValue({
+        data: [mockUserWithRelations],
+        pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
+      })
 
       const res = await app.request('/users?role=ADMIN', {
         headers: { Cookie: 'auth_token=user' }
@@ -135,7 +108,6 @@ describe('User Routes', () => {
 
       expect(res.status).toBe(200)
       expect(UserService.getAll).toHaveBeenCalledWith(
-        expect.any(Boolean),
         expect.any(Object),
         expect.objectContaining({ role: 'ADMIN' })
       )
@@ -149,7 +121,7 @@ describe('User Routes', () => {
 
   describe('GET /users/:id', () => {
     it('should return user by id', async () => {
-      vi.mocked(UserService.getById).mockResolvedValue(mockUserResponse)
+      vi.mocked(UserService.getById).mockResolvedValue(mockUserWithRelations)
 
       const res = await app.request('/users/1', {
         headers: { Cookie: 'auth_token=user' }
@@ -204,10 +176,9 @@ describe('User Routes', () => {
         },
         body: JSON.stringify({
           username: 'user01',
-          password: 'password123',
           firstName: 'New',
           lastName: 'User',
-          departmentId: 1
+          departments: [{ departmentId: 1, isPrimary: true }]
         })
       })
 
@@ -224,10 +195,9 @@ describe('User Routes', () => {
         },
         body: JSON.stringify({
           username: 'user01',
-          password: 'password123',
           firstName: 'New',
           lastName: 'User',
-          departmentId: 1
+          departments: [{ departmentId: 1, isPrimary: true }]
         })
       })
 

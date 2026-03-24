@@ -46,6 +46,14 @@
     "tel": {
       "label": "เบอร์โทร",
       "placeholder": "0812345678"
+    },
+    "departments": {
+      "label": "สังกัด",
+      "addButton": "เพิ่มฝ่าย",
+      "primary": "ฝ่ายหลัก",
+      "secondary": "สังกัดรอง",
+      "setPrimary": "ตั้งเป็นฝ่ายหลัก",
+      "remove": "ลบฝ่าย"
     }
   },
   "resetPassword": {
@@ -155,6 +163,7 @@
     "tel": "เบอร์โทร",
     "department": "ฝ่าย",
     "section": "หน่วยงาน",
+    "departments": "สังกัด",
     "lastLoginAt": "เข้าสู่ระบบล่าสุด"
   },
   "section": {

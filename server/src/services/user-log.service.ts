@@ -26,6 +26,7 @@ export class UserLogService {
     lastName: string
     department: string
     section: string
+    additionalDepartments: string | null
     email: string | null
     tel: string | null
     role: string
@@ -46,6 +47,7 @@ export class UserLogService {
       lastName: log.lastName,
       department: log.department,
       section: log.section,
+      additionalDepartments: log.additionalDepartments,
       email: log.email,
       tel: log.tel,
       role: log.role as Role,

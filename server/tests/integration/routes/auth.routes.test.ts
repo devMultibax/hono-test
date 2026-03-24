@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Hono } from 'hono'
 import { AuthService } from '../../../src/services/auth.service'
 import { UnauthorizedError, NotFoundError } from '../../../src/lib/errors'
-import { mockUserResponse, mockAuthPayload } from '../../mocks/data.mock'
+import { mockUserResponse, mockUserWithRelations, mockAuthPayload } from '../../mocks/data.mock'
 import { errorHandler } from '../../../src/middleware/error-handler'
 
 vi.mock('../../../src/services/auth.service')
@@ -55,7 +55,8 @@ describe('Auth Routes', () => {
     it('should login successfully', async () => {
       vi.mocked(AuthService.login).mockResolvedValue({
         token: 'mock.jwt.token',
-        user: mockUserResponse
+        user: mockUserWithRelations,
+        previousSessionTerminated: false
       })
 
       const res = await app.request('/auth/login', {
@@ -133,7 +134,7 @@ describe('Auth Routes', () => {
 
   describe('GET /auth/me', () => {
     it('should return current user', async () => {
-      vi.mocked(AuthService.getCurrentUser).mockResolvedValue(mockUserResponse)
+      vi.mocked(AuthService.getCurrentUser).mockResolvedValue(mockUserWithRelations)
 
       const res = await app.request('/auth/me', {
         headers: { Cookie: 'auth_token=valid' }
@@ -166,7 +167,7 @@ describe('Auth Routes', () => {
 
   describe('PUT /auth/me', () => {
     it('should update profile', async () => {
-      const updatedUser = { ...mockUserResponse, firstName: 'Updated' }
+      const updatedUser = { ...mockUserWithRelations, firstName: 'Updated' }
       vi.mocked(AuthService.updateProfile).mockResolvedValue(updatedUser)
 
       const res = await app.request('/auth/me', {

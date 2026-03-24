@@ -66,8 +66,6 @@ export const mockUser: User = {
   password: '$2a$10$hashedpassword',
   firstName: 'Test',
   lastName: 'User',
-  departmentId: 1,
-  sectionId: 1,
   email: 'test@example.com',
   tel: '0812345678',
   role: Role.USER,
@@ -84,8 +82,6 @@ export const mockUserResponse: UserResponse = {
   username: 'testuser',
   firstName: 'Test',
   lastName: 'User',
-  departmentId: 1,
-  sectionId: 1,
   email: 'test@example.com',
   tel: '0812345678',
   role: Role.USER,
@@ -96,13 +92,21 @@ export const mockUserResponse: UserResponse = {
   updatedAt: null,
   updatedBy: null,
   updatedByName: null,
-  lastLoginAt: null
+  lastLoginAt: null,
+  isDefaultPassword: false
 }
 
 export const mockUserWithRelations: UserWithRelations = {
   ...mockUserResponse,
-  department: mockDepartmentResponse,
-  section: mockSectionResponse
+  departments: [
+    {
+      departmentId: 1,
+      sectionId: 1,
+      isPrimary: true,
+      department: { id: 1, name: 'IT Department' },
+      section: { id: 1, name: 'Development' }
+    }
+  ]
 }
 
 export const mockAdminUser: User = {
@@ -118,6 +122,8 @@ export const mockAdminUser: User = {
 export const mockAuthPayload: AuthPayload = {
   id: 1,
   username: 'testuser',
+  firstName: 'Test',
+  lastName: 'User',
   role: Role.USER,
   tokenVersion: 0
 }
@@ -125,6 +131,8 @@ export const mockAuthPayload: AuthPayload = {
 export const mockAdminAuthPayload: AuthPayload = {
   id: 2,
   username: 'admin',
+  firstName: 'Admin',
+  lastName: 'User',
   role: Role.ADMIN,
   tokenVersion: 0
 }
@@ -136,6 +144,7 @@ export const mockUserLog: UserLog = {
   lastName: 'User',
   department: 'IT Department',
   section: 'Development',
+  additionalDepartments: null,
   email: 'test@example.com',
   tel: '0812345678',
   role: Role.USER,
@@ -152,14 +161,12 @@ export const mockUserLog: UserLog = {
 
 export const mockDepartmentWithRelations: DepartmentWithRelations = {
   ...mockDepartmentResponse,
-  sections: [mockSectionResponse],
-  users: [mockUserResponse]
+  sections: [mockSectionResponse]
 }
 
 export const mockSectionWithRelations: SectionWithRelations = {
   ...mockSectionResponse,
-  department: mockDepartmentResponse,
-  users: [mockUserResponse]
+  department: mockDepartmentResponse
 }
 
 export function createMockUsers(count: number): User[] {

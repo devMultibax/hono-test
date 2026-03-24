@@ -64,7 +64,7 @@ export function Header({ mobileOpened, onMobileToggle, desktopOpened, onDesktopT
           <UnstyledButton className="hover:bg-gray-100 rounded-lg px-2 py-1">
             <Group gap="xs">
               <Avatar color="primary" variant="light" radius="md" size="md">
-                {user?.department?.name}
+                {user?.departments?.find((d) => d.isPrimary)?.department?.name}
               </Avatar>
               <div>
                 <Text size="sm" fw={500}>

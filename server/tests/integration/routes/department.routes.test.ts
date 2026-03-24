@@ -2,13 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Hono } from 'hono'
 import { DepartmentService } from '../../../src/services/department.service'
 import { NotFoundError, ConflictError } from '../../../src/lib/errors'
-import { Role, Status } from '../../../src/types'
+import { Role } from '../../../src/types'
 import {
   mockDepartmentResponse,
   mockDepartmentWithRelations,
   mockAdminAuthPayload,
-  mockAuthPayload,
-  createMockDepartments
+  mockAuthPayload
 } from '../../mocks/data.mock'
 import { errorHandler } from '../../../src/middleware/error-handler'
 
@@ -58,32 +57,9 @@ describe('Department Routes', () => {
   })
 
   describe('GET /departments', () => {
-    it('should return all departments', async () => {
-      const mockDepts = createMockDepartments(3).map(d => ({
-        id: d.id,
-        name: d.name,
-        status: d.status as Status,
-        createdAt: d.createdAt,
-        createdBy: 'admin',
-        createdByName: 'Admin User',
-        updatedAt: d.updatedAt,
-        updatedBy: null,
-        updatedByName: null
-      }))
-      vi.mocked(DepartmentService.getAll).mockResolvedValue(mockDepts)
-
-      const res = await app.request('/departments', {
-        headers: { Cookie: 'auth_token=user' }
-      })
-
-      expect(res.status).toBe(200)
-      const data = await res.json()
-      expect(data.data).toHaveLength(3)
-    })
-
-    it('should return departments with pagination', async () => {
+    it('should return all departments with pagination', async () => {
       vi.mocked(DepartmentService.getAll).mockResolvedValue({
-        data: [mockDepartmentResponse],
+        data: [mockDepartmentWithRelations],
         pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
       })
 
@@ -95,21 +71,6 @@ describe('Department Routes', () => {
       const data = await res.json()
       expect(data).toHaveProperty('data')
       expect(data).toHaveProperty('pagination')
-    })
-
-    it('should return departments with relations when include=true', async () => {
-      vi.mocked(DepartmentService.getAll).mockResolvedValue([mockDepartmentWithRelations])
-
-      const res = await app.request('/departments?include=true', {
-        headers: { Cookie: 'auth_token=user' }
-      })
-
-      expect(res.status).toBe(200)
-      expect(DepartmentService.getAll).toHaveBeenCalledWith(
-        true,
-        expect.any(Object),
-        expect.any(Object)
-      )
     })
 
     it('should return 401 without auth token', async () => {

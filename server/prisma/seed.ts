@@ -99,12 +99,14 @@ async function seedAdminUser(): Promise<void> {
       password: hashedPassword,
       firstName: 'ดิษกรณ์',
       lastName: 'นิสกุลทอง',
-      departmentId: itDepartment.id,
       email: 'it-pro@multibax.com',
       tel: '0987654321',
       role: 'ADMIN',
       status: 'active',
-      createdBy: SEED_ACTOR
+      createdBy: SEED_ACTOR,
+      departments: {
+        create: [{ departmentId: itDepartment.id, isPrimary: true }]
+      }
     }
   })
 

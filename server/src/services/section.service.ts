@@ -223,7 +223,7 @@ export class SectionService {
       where: { id },
       include: {
         _count: {
-          select: { users: true }
+          select: { userDepartments: true }
         }
       }
     })
@@ -232,8 +232,8 @@ export class SectionService {
       throw new NotFoundError(CODES.SECTION_NOT_FOUND, MSG.errors.section.notFound)
     }
 
-    if (section._count.users > 0) {
-      throw new ConflictError(CODES.SECTION_HAS_USERS, MSG.errors.section.hasUsers, { count: section._count.users })
+    if (section._count.userDepartments > 0) {
+      throw new ConflictError(CODES.SECTION_HAS_USERS, MSG.errors.section.hasUsers, { count: section._count.userDepartments })
     }
 
     await prisma.section.delete({

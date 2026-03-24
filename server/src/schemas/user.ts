@@ -3,6 +3,29 @@ import { Role } from '../types'
 import { paginationQuerySchema } from '../utils/pagination.utils'
 import { MSG } from '../constants/messages'
 
+const departmentEntrySchema = z.object({
+  departmentId: z.number({ message: MSG.validation.departmentId.required })
+    .int({ message: MSG.validation.departmentId.int })
+    .positive({ message: MSG.validation.departmentId.positive }),
+  sectionId: z.number({ message: MSG.validation.sectionId.typeError })
+    .int({ message: MSG.validation.sectionId.int })
+    .positive({ message: MSG.validation.sectionId.positive })
+    .optional()
+    .nullable(),
+  isPrimary: z.boolean(),
+})
+
+const departmentsArraySchema = z.array(departmentEntrySchema)
+  .min(1, { message: MSG.validation.departments.required })
+  .refine(
+    (arr) => arr.filter((d) => d.isPrimary).length === 1,
+    { message: MSG.validation.departments.primaryRequired }
+  )
+  .refine(
+    (arr) => new Set(arr.map((d) => d.departmentId)).size === arr.length,
+    { message: MSG.validation.departments.duplicate }
+  )
+
 export const registerSchema = z.object({
   username: z.string({ message: MSG.validation.username.required })
     .length(6, { message: MSG.validation.username.length })
@@ -13,14 +36,7 @@ export const registerSchema = z.object({
   lastName: z.string({ message: MSG.validation.lastName.required })
     .min(1, { message: MSG.validation.lastName.required })
     .max(100, { message: MSG.validation.lastName.maxLength }),
-  departmentId: z.number({ message: MSG.validation.departmentId.required })
-    .int({ message: MSG.validation.departmentId.int })
-    .positive({ message: MSG.validation.departmentId.positive }),
-  sectionId: z.number({ message: MSG.validation.sectionId.typeError })
-    .int({ message: MSG.validation.sectionId.int })
-    .positive({ message: MSG.validation.sectionId.positive })
-    .optional()
-    .nullable(),
+  departments: departmentsArraySchema,
   email: z.string()
     .email({ message: MSG.validation.email.format })
     .max(255, { message: MSG.validation.email.maxLength })
@@ -55,15 +71,7 @@ export const updateUserSchema = z.object({
     .min(1, { message: MSG.validation.lastName.required })
     .max(100, { message: MSG.validation.lastName.maxLength })
     .optional(),
-  departmentId: z.number()
-    .int({ message: MSG.validation.departmentId.int })
-    .positive({ message: MSG.validation.departmentId.positive })
-    .optional(),
-  sectionId: z.number()
-    .int({ message: MSG.validation.sectionId.int })
-    .positive({ message: MSG.validation.sectionId.positive })
-    .optional()
-    .nullable(),
+  departments: departmentsArraySchema.optional(),
   email: z.string()
     .email({ message: MSG.validation.email.format })
     .max(255, { message: MSG.validation.email.maxLength })
@@ -81,6 +89,7 @@ export const updateUserSchema = z.object({
 export const listUsersQuerySchema = paginationQuerySchema.extend({
   search: z.string().optional(),
   departmentId: z.coerce.number().int().positive().optional(),
+  departmentIds: z.string().transform((val) => val.split(',').map(Number).filter((n) => n > 0)).optional(),
   sectionId: z.coerce.number().int().positive().optional(),
   role: z.enum(['USER', 'ADMIN']).optional(),
   status: z.enum(['active', 'inactive']).optional(),
