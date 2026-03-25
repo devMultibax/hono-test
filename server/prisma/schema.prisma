@@ -164,7 +164,7 @@ model Changelog {
   @@index([updateType])
   @@index([updatedDate])
   @@index([createdAt])
-  @@map("update_log")
+  @@map("change_log")
 }
 
 model SystemSetting {

@@ -1,13 +1,19 @@
--- CreateEnum
-CREATE TYPE "UpdateType" AS ENUM ('FEATURE', 'BUGFIX', 'IMPROVEMENT', 'SECURITY', 'OTHER');
+/*
+  Warnings:
+
+  - You are about to drop the `changelog` table. If the table is not empty, all the data it contains will be lost.
+
+*/
+-- DropTable
+DROP TABLE "changelog";
 
 -- CreateTable
-CREATE TABLE "update_log" (
+CREATE TABLE "change_log" (
     "id" SERIAL NOT NULL,
-    "version" VARCHAR(20) NOT NULL,
     "title" VARCHAR(200) NOT NULL,
     "description" TEXT,
     "updateType" "UpdateType" NOT NULL DEFAULT 'OTHER',
+    "gitRef" VARCHAR(100),
     "updatedDate" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdBy" VARCHAR(100) NOT NULL,
@@ -16,14 +22,14 @@ CREATE TABLE "update_log" (
     "updatedBy" VARCHAR(100),
     "updatedByName" VARCHAR(200),
 
-    CONSTRAINT "update_log_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "change_log_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE INDEX "update_log_updateType_idx" ON "update_log"("updateType");
+CREATE INDEX "change_log_updateType_idx" ON "change_log"("updateType");
 
 -- CreateIndex
-CREATE INDEX "update_log_updatedDate_idx" ON "update_log"("updatedDate");
+CREATE INDEX "change_log_updatedDate_idx" ON "change_log"("updatedDate");
 
 -- CreateIndex
-CREATE INDEX "update_log_createdAt_idx" ON "update_log"("createdAt");
+CREATE INDEX "change_log_createdAt_idx" ON "change_log"("createdAt");
