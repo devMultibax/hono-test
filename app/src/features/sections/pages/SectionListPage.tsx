@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useLayoutEffect } from 'react';
+import { Fragment, useState, useMemo, useCallback, useLayoutEffect } from 'react';
 import { Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
 
@@ -14,11 +14,29 @@ import { useRefresh } from '@/hooks/useRefresh';
 import { useNavigationProgress } from '@/hooks/useNavigationProgress';
 import { useUserRole } from '@/stores/auth.store';
 import { usePageActions } from '@/contexts/PageHeaderContext';
-import { ROLE_ID } from '@/constants/roleConstants';
+import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
 import { sectionApi } from '@/api/services/section.api';
 import type { Section } from '@/types';
 import type { SectionQueryParams, SectionDrawerState } from '../types';
+
+// ─── Header Action Config ───
+type HeaderAction = 'refresh' | 'export' | 'import' | 'create';
+
+interface HeaderActionConfig {
+  action: HeaderAction;
+  allowedRoles: readonly RoleId[];
+}
+
+const HEADER_ACTIONS: HeaderActionConfig[] = [
+  { action: 'refresh', allowedRoles: [ROLE_ID.ADMIN] },
+  { action: 'export', allowedRoles: [ROLE_ID.ADMIN] },
+  { action: 'import', allowedRoles: [ROLE_ID.ADMIN] },
+  { action: 'create', allowedRoles: [ROLE_ID.ADMIN] },
+];
+
+// ─── Toolbar Action Config ───
+const TOOLBAR_ALLOWED_ROLES: readonly RoleId[] = [ROLE_ID.ADMIN];
 
 export function SectionListPage() {
   // ─── 1. Hooks & Context ───
@@ -32,7 +50,6 @@ export function SectionListPage() {
 
   // ─── 3. Feature Hooks ───
   const actions = useSectionActions();
-  const isAdmin = hasRole([ROLE_ID.ADMIN], userRole);
 
   // ─── 4. Stable Callbacks ───
   const openCreate = useCallback(() => setDrawer({ mode: 'create' }), []);
@@ -73,35 +90,56 @@ export function SectionListPage() {
 
   // ─── 8. Header Actions ───
 
-  const headerActions = useMemo(() => (
-    <>
-      <Button
-        variant="subtle"
-        size="xs"
-        onClick={handleRefresh}
-        loading={isRefreshLoading}
-      >
-        {t('common:action.refresh', 'Refresh')}
-      </Button>
-      <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
-        {t('common:button.downloadReport')}
-      </Button>
-      {isAdmin && (
-        <ImportButton endpoint="/sections/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => sectionApi.downloadTemplate()} expectedFileName="Section_Import_Template.xlsx" />
-      )}
-      <Button variant="filled" size="xs" onClick={openCreate}>
-        {t('sections:action.addSection')}
-      </Button>
-    </>
-  ), [isAdmin, actions.handleImportSuccess, openCreate, t, isRefreshLoading, handleRefresh]);
+  const { handleImportSuccess } = actions;
+
+  const headerActions = useMemo(() => {
+    const renderAction = (action: HeaderAction) => {
+      switch (action) {
+        case 'refresh':
+          return (
+            <Button variant="subtle" size="xs" onClick={handleRefresh} loading={isRefreshLoading}>
+              {t('common:action.refresh', 'Refresh')}
+            </Button>
+          );
+        case 'export':
+          return (
+            <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
+              {t('common:button.downloadReport')}
+            </Button>
+          );
+        case 'import':
+          return (
+            <ImportButton endpoint="/sections/import" onSuccess={handleImportSuccess} onDownloadTemplate={() => sectionApi.downloadTemplate()} expectedFileName="Section_Import_Template.xlsx" />
+          );
+        case 'create':
+          return (
+            <Button variant="filled" size="xs" onClick={openCreate}>
+              {t('sections:action.addSection')}
+            </Button>
+          );
+      }
+    };
+
+    return (
+      <>
+        {HEADER_ACTIONS
+          .filter((config) => hasRole(config.allowedRoles, userRole))
+          .map((config) => (
+            <Fragment key={config.action}>{renderAction(config.action)}</Fragment>
+          ))}
+      </>
+    );
+  }, [userRole, handleRefresh, isRefreshLoading, t, handleImportSuccess, openCreate]);
 
   useLayoutEffect(() => {
     setActions(headerActions);
     return () => setActions(null);
   }, [headerActions, setActions]);
 
+  const canBulkDelete = hasRole(TOOLBAR_ALLOWED_ROLES, userRole);
+
   const toolbarActions = useCallback((selectedRows: Section[]) =>
-    isAdmin && (
+    canBulkDelete && (
       <Button
         size="xs"
         variant="light"
@@ -111,7 +149,7 @@ export function SectionListPage() {
         {t('common:table.deleteSelected')}
       </Button>
     ),
-    [isAdmin, actions, t]);
+    [canBulkDelete, actions, t]);
 
   // ─── 9. Render ───
   return (
@@ -141,7 +179,7 @@ export function SectionListPage() {
         isLoading={isLoading}
         emptyMessage={t('sections:message.empty')}
         enableColumnVisibility
-        enableRowSelection={isAdmin}
+        enableRowSelection={canBulkDelete}
         sorting={sorting}
         columnVisibility={columnVisibility}
         onSortingChange={handleSortingChange}

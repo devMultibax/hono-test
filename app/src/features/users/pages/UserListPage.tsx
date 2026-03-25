@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useLayoutEffect } from 'react';
+import { Fragment, useState, useMemo, useCallback, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
@@ -15,11 +15,29 @@ import { useRefresh } from '@/hooks/useRefresh';
 import { useNavigationProgress } from '@/hooks/useNavigationProgress';
 import { useUser, useUserRole } from '@/stores/auth.store';
 import { usePageActions } from '@/contexts/PageHeaderContext';
-import { ROLE_ID } from '@/constants/roleConstants';
+import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
 import { hasRole } from '@/utils/roleUtils';
 import { userApi } from '@/api/services/user.api';
 import type { User } from '@/types';
 import type { UserQueryParams, UserDrawerState } from '../types';
+
+// ─── Header Action Config ───
+type HeaderAction = 'refresh' | 'export' | 'import' | 'create';
+
+interface HeaderActionConfig {
+  action: HeaderAction;
+  allowedRoles: readonly RoleId[];
+}
+
+const HEADER_ACTIONS: HeaderActionConfig[] = [
+  { action: 'refresh', allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER] },
+  { action: 'export', allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER] },
+  { action: 'import', allowedRoles: [ROLE_ID.ADMIN] },
+  { action: 'create', allowedRoles: [ROLE_ID.ADMIN] },
+];
+
+// ─── Toolbar Action Config ───
+const TOOLBAR_ALLOWED_ROLES: readonly RoleId[] = [ROLE_ID.ADMIN];
 
 export function UserListPage() {
   // ─── 1. Hooks & Context ───
@@ -88,35 +106,56 @@ export function UserListPage() {
 
   // ─── 8. Header Actions ───
 
-  const headerActions = useMemo(() => (
-    <>
-      <Button
-        variant="subtle"
-        size="xs"
-        onClick={handleRefresh}
-        loading={isRefreshLoading}
-      >
-        {t('common:action.refresh', 'Refresh')}
-      </Button>
-      <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
-        {t('common:button.downloadReport')}
-      </Button>
-      {isAdmin && (
-        <ImportButton endpoint="/users/import" onSuccess={actions.handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} expectedFileName="User_Import_Template.xlsx" showCredentials />
-      )}
-      <Button variant="filled" size="xs" onClick={openCreate}>
-        {t('users:action.addUser')}
-      </Button>
-    </>
-  ), [isAdmin, actions.handleImportSuccess, openCreate, t, isRefreshLoading, handleRefresh]);
+  const { handleImportSuccess } = actions;
+
+  const headerActions = useMemo(() => {
+    const renderAction = (action: HeaderAction) => {
+      switch (action) {
+        case 'refresh':
+          return (
+            <Button variant="subtle" size="xs" onClick={handleRefresh} loading={isRefreshLoading}>
+              {t('common:action.refresh', 'Refresh')}
+            </Button>
+          );
+        case 'export':
+          return (
+            <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
+              {t('common:button.downloadReport')}
+            </Button>
+          );
+        case 'import':
+          return (
+            <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} expectedFileName="User_Import_Template.xlsx" showCredentials />
+          );
+        case 'create':
+          return (
+            <Button variant="filled" size="xs" onClick={openCreate}>
+              {t('users:action.addUser')}
+            </Button>
+          );
+      }
+    };
+
+    return (
+      <>
+        {HEADER_ACTIONS
+          .filter((config) => hasRole(config.allowedRoles, userRole))
+          .map((config) => (
+            <Fragment key={config.action}>{renderAction(config.action)}</Fragment>
+          ))}
+      </>
+    );
+  }, [userRole, handleRefresh, isRefreshLoading, t, handleImportSuccess, openCreate]);
 
   useLayoutEffect(() => {
     setActions(headerActions);
     return () => setActions(null);
   }, [headerActions, setActions]);
 
+  const canBulkDelete = hasRole(TOOLBAR_ALLOWED_ROLES, userRole);
+
   const toolbarActions = useCallback((selectedRows: User[]) =>
-    isAdmin && (
+    canBulkDelete && (
       <Button
         size="xs"
         variant="light"
@@ -126,7 +165,7 @@ export function UserListPage() {
         {t('common:table.deleteSelected')}
       </Button>
     ),
-    [isAdmin, actions, t]);
+    [canBulkDelete, actions, t]);
 
   // ─── 9. Render ───
   return (
@@ -159,7 +198,7 @@ export function UserListPage() {
         isLoading={isLoading}
         emptyMessage={t('users:message.empty')}
         enableColumnVisibility
-        enableRowSelection={isAdmin}
+        enableRowSelection={canBulkDelete}
         sorting={sorting}
         columnVisibility={columnVisibility}
         onSortingChange={handleSortingChange}
