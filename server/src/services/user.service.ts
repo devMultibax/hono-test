@@ -279,6 +279,7 @@ export class UserService {
           email,
           tel,
           role,
+          isDefaultPassword: true,
           createdBy,
           createdByName,
           updatedAt: null,
