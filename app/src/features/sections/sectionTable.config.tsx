@@ -3,8 +3,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useTranslation } from '@/lib/i18n';
 import { StatusSwitch } from '@/components/common/StatusSwitch';
 import { SectionActionMenu } from './components/SectionActionMenu';
-import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
-import { hasRole } from '@/utils/roleUtils';
+import { useSectionPermissions } from './hooks/useSectionPermissions';
 import type { Section, SectionQueryParams, Status } from './types';
 
 // === Table Config ===
@@ -27,15 +26,13 @@ interface UseSectionColumnsOptions {
     onEdit: (section: Section) => void;
     onDelete: (section: Section) => void;
     onStatusChange: (section: Section, status: Status) => void;
-    currentUserRole: RoleId;
     statusPendingId?: number;
     deletePendingId?: number;
 }
 
-export function useSectionColumns({ onView, onEdit, onDelete, onStatusChange, currentUserRole, statusPendingId, deletePendingId }: UseSectionColumnsOptions) {
+export function useSectionColumns({ onView, onEdit, onDelete, onStatusChange, statusPendingId, deletePendingId }: UseSectionColumnsOptions) {
     const { t } = useTranslation(['sections']);
-
-    const canEdit = hasRole([ROLE_ID.ADMIN], currentUserRole);
+    const { canEdit } = useSectionPermissions();
 
     return useMemo(
         () => [
@@ -65,7 +62,6 @@ export function useSectionColumns({ onView, onEdit, onDelete, onStatusChange, cu
                 cell: ({ row }) => (
                     <SectionActionMenu
                         section={row.original}
-                        currentUserRole={currentUserRole}
                         onView={() => onView(row.original)}
                         onEdit={() => onEdit(row.original)}
                         onDelete={() => onDelete(row.original)}
@@ -74,6 +70,6 @@ export function useSectionColumns({ onView, onEdit, onDelete, onStatusChange, cu
                 ),
             }),
         ],
-        [onView, onEdit, onDelete, onStatusChange, currentUserRole, canEdit, statusPendingId, deletePendingId, t],
+        [onView, onEdit, onDelete, onStatusChange, canEdit, statusPendingId, deletePendingId, t],
     );
 }

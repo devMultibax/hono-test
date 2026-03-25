@@ -1,4 +1,4 @@
-import { Fragment, useState, useMemo, useCallback, useLayoutEffect } from 'react';
+import { useState, useMemo, useCallback, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
@@ -10,42 +10,23 @@ import { UserFilters } from '../components/UserFilters';
 import { UserDrawer } from '../components/UserDrawer';
 import { useUsers, useUserActions } from '../hooks/useUsers';
 import { useUserColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../userTable.config';
+import { useUserPermissions } from '../hooks/useUserPermissions';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useRefresh } from '@/hooks/useRefresh';
 import { useNavigationProgress } from '@/hooks/useNavigationProgress';
-import { useUser, useUserRole } from '@/stores/auth.store';
+import { useUser } from '@/stores/auth.store';
 import { usePageActions } from '@/contexts/PageHeaderContext';
-import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
-import { hasRole } from '@/utils/roleUtils';
 import { userApi } from '@/api/services/user.api';
 import type { User } from '@/types';
 import type { UserQueryParams, UserDrawerState } from '../types';
 
-// ─── Header Action Config ───
-type HeaderAction = 'refresh' | 'export' | 'import' | 'create';
-
-interface HeaderActionConfig {
-  action: HeaderAction;
-  allowedRoles: readonly RoleId[];
-}
-
-const HEADER_ACTIONS: HeaderActionConfig[] = [
-  { action: 'refresh', allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER] },
-  { action: 'export', allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER] },
-  { action: 'import', allowedRoles: [ROLE_ID.ADMIN] },
-  { action: 'create', allowedRoles: [ROLE_ID.ADMIN] },
-];
-
-// ─── Toolbar Action Config ───
-const TOOLBAR_ALLOWED_ROLES: readonly RoleId[] = [ROLE_ID.ADMIN];
-
 export function UserListPage() {
   // ─── 1. Hooks & Context ───
   const currentUser = useUser();
-  const userRole = useUserRole();
   const { t } = useTranslation(['users', 'common']);
   const { setActions } = usePageActions();
   const navigate = useNavigate();
+  const { isAdmin, canCreate, canImport, canExport, canBulkDelete } = useUserPermissions();
 
   // ─── 2. Local UI State ───
   const [exportOpened, setExportOpened] = useState(false);
@@ -53,7 +34,6 @@ export function UserListPage() {
 
   // ─── 3. Feature Hooks ───
   const actions = useUserActions();
-  const isAdmin = hasRole([ROLE_ID.ADMIN], userRole);
 
   // ─── 4. Stable Callbacks ───
   const openCreate = useCallback(() => setDrawer({ mode: 'create' }), []);
@@ -84,7 +64,6 @@ export function UserListPage() {
   );
   const queryParams = useMemo(() => {
     if (isAdmin) return params;
-    // Non-admin: if a specific department is selected via filter, use it; otherwise scope to all user's departments
     if (params.departmentId) return params;
     return { ...params, departmentIds: userDepartmentIds.join(',') || undefined };
   }, [isAdmin, params, userDepartmentIds]);
@@ -99,60 +78,47 @@ export function UserListPage() {
     onDelete: actions.handleDelete,
     onViewLogs: openLogs,
     onStatusChange: actions.handleStatusChange,
-    currentUserRole: userRole,
     statusPendingId: actions.statusPendingId,
     deletePendingId: actions.deletePendingId,
   });
 
   // ─── 8. Header Actions ───
-
   const { handleImportSuccess } = actions;
 
-  const headerActions = useMemo(() => {
-    const renderAction = (action: HeaderAction) => {
-      switch (action) {
-        case 'refresh':
-          return (
-            <Button variant="subtle" size="xs" onClick={handleRefresh} loading={isRefreshLoading}>
-              {t('common:action.refresh', 'Refresh')}
-            </Button>
-          );
-        case 'export':
-          return (
-            <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
-              {t('common:button.downloadReport')}
-            </Button>
-          );
-        case 'import':
-          return (
-            <ImportButton endpoint="/users/import" onSuccess={handleImportSuccess} onDownloadTemplate={() => userApi.downloadTemplate()} expectedFileName="User_Import_Template.xlsx" showCredentials />
-          );
-        case 'create':
-          return (
-            <Button variant="filled" size="xs" onClick={openCreate}>
-              {t('users:action.addUser')}
-            </Button>
-          );
-      }
-    };
+  const headerActions = useMemo(() => (
+    <>
+      <Button variant="subtle" size="xs" onClick={handleRefresh} loading={isRefreshLoading}>
+        {t('common:action.refresh', 'Refresh')}
+      </Button>
 
-    return (
-      <>
-        {HEADER_ACTIONS
-          .filter((config) => hasRole(config.allowedRoles, userRole))
-          .map((config) => (
-            <Fragment key={config.action}>{renderAction(config.action)}</Fragment>
-          ))}
-      </>
-    );
-  }, [userRole, handleRefresh, isRefreshLoading, t, handleImportSuccess, openCreate]);
+      {canExport && (
+        <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
+          {t('common:button.downloadReport')}
+        </Button>
+      )}
+
+      {canImport && (
+        <ImportButton
+          endpoint="/users/import"
+          onSuccess={handleImportSuccess}
+          onDownloadTemplate={() => userApi.downloadTemplate()}
+          expectedFileName="User_Import_Template.xlsx"
+          showCredentials
+        />
+      )}
+
+      {canCreate && (
+        <Button variant="filled" size="xs" onClick={openCreate}>
+          {t('users:action.addUser')}
+        </Button>
+      )}
+    </>
+  ), [canExport, canImport, canCreate, handleRefresh, isRefreshLoading, t, handleImportSuccess, openCreate]);
 
   useLayoutEffect(() => {
     setActions(headerActions);
     return () => setActions(null);
   }, [headerActions, setActions]);
-
-  const canBulkDelete = hasRole(TOOLBAR_ALLOWED_ROLES, userRole);
 
   const toolbarActions = useCallback((selectedRows: User[]) =>
     canBulkDelete && (
@@ -170,11 +136,9 @@ export function UserListPage() {
   // ─── 9. Render ───
   return (
     <div>
-
       <UserFilters
         params={params}
         onChange={handleFilterChange}
-        currentUserRole={userRole}
         userDepartmentIds={userDepartmentIds}
       />
 

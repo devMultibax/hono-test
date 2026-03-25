@@ -1,4 +1,4 @@
-import { Fragment, useState, useMemo, useCallback, useLayoutEffect } from 'react';
+import { useState, useMemo, useCallback, useLayoutEffect } from 'react';
 import { Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
 
@@ -8,41 +8,21 @@ import { DepartmentExportDrawer } from '../components/DepartmentExportDrawer';
 import { DepartmentFilters } from '../components/DepartmentFilters';
 import { DepartmentDrawer } from '../components/DepartmentDrawer';
 import { useDepartments, useDepartmentActions } from '../hooks/useDepartments';
+import { useDepartmentPermissions } from '../hooks/useDepartmentPermissions';
 import { useDepartmentColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../departmentTable.config';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useRefresh } from '@/hooks/useRefresh';
 import { useNavigationProgress } from '@/hooks/useNavigationProgress';
-import { useUserRole } from '@/stores/auth.store';
 import { usePageActions } from '@/contexts/PageHeaderContext';
-import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
-import { hasRole } from '@/utils/roleUtils';
 import { departmentApi } from '@/api/services/department.api';
 import type { Department } from '@/types';
 import type { DepartmentQueryParams, DepartmentDrawerState } from '../types';
 
-// ─── Header Action Config ───
-type HeaderAction = 'refresh' | 'export' | 'import' | 'create';
-
-interface HeaderActionConfig {
-  action: HeaderAction;
-  allowedRoles: readonly RoleId[];
-}
-
-const HEADER_ACTIONS: HeaderActionConfig[] = [
-  { action: 'refresh', allowedRoles: [ROLE_ID.ADMIN] },
-  { action: 'export', allowedRoles: [ROLE_ID.ADMIN] },
-  { action: 'import', allowedRoles: [ROLE_ID.ADMIN] },
-  { action: 'create', allowedRoles: [ROLE_ID.ADMIN] },
-];
-
-// ─── Toolbar Action Config ───
-const TOOLBAR_ALLOWED_ROLES: readonly RoleId[] = [ROLE_ID.ADMIN];
-
 export function DepartmentListPage() {
   // ─── 1. Hooks & Context ───
-  const userRole = useUserRole();
   const { t } = useTranslation(['departments', 'common']);
   const { setActions } = usePageActions();
+  const { canCreate, canImport, canExport, canBulkDelete } = useDepartmentPermissions();
 
   // ─── 2. Local UI State ───
   const [exportOpened, setExportOpened] = useState(false);
@@ -83,60 +63,46 @@ export function DepartmentListPage() {
     onEdit: (department) => openEdit(department.id),
     onDelete: actions.handleDelete,
     onStatusChange: actions.handleStatusChange,
-    currentUserRole: userRole,
     statusPendingId: actions.statusPendingId,
     deletePendingId: actions.deletePendingId,
   });
 
   // ─── 8. Header Actions ───
-
   const { handleImportSuccess } = actions;
 
-  const headerActions = useMemo(() => {
-    const renderAction = (action: HeaderAction) => {
-      switch (action) {
-        case 'refresh':
-          return (
-            <Button variant="subtle" size="xs" onClick={handleRefresh} loading={isRefreshLoading}>
-              {t('common:action.refresh', 'Refresh')}
-            </Button>
-          );
-        case 'export':
-          return (
-            <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
-              {t('common:button.downloadReport')}
-            </Button>
-          );
-        case 'import':
-          return (
-            <ImportButton endpoint="/departments/import" onSuccess={handleImportSuccess} onDownloadTemplate={() => departmentApi.downloadTemplate()} expectedFileName="Department_Import_Template.xlsx" />
-          );
-        case 'create':
-          return (
-            <Button variant="filled" size="xs" onClick={openCreate}>
-              {t('departments:action.addDepartment')}
-            </Button>
-          );
-      }
-    };
+  const headerActions = useMemo(() => (
+    <>
+      <Button variant="subtle" size="xs" onClick={handleRefresh} loading={isRefreshLoading}>
+        {t('common:action.refresh', 'Refresh')}
+      </Button>
 
-    return (
-      <>
-        {HEADER_ACTIONS
-          .filter((config) => hasRole(config.allowedRoles, userRole))
-          .map((config) => (
-            <Fragment key={config.action}>{renderAction(config.action)}</Fragment>
-          ))}
-      </>
-    );
-  }, [userRole, handleRefresh, isRefreshLoading, t, handleImportSuccess, openCreate]);
+      {canExport && (
+        <Button variant="subtle" size="xs" onClick={() => setExportOpened(true)}>
+          {t('common:button.downloadReport')}
+        </Button>
+      )}
+
+      {canImport && (
+        <ImportButton
+          endpoint="/departments/import"
+          onSuccess={handleImportSuccess}
+          onDownloadTemplate={() => departmentApi.downloadTemplate()}
+          expectedFileName="Department_Import_Template.xlsx"
+        />
+      )}
+
+      {canCreate && (
+        <Button variant="filled" size="xs" onClick={openCreate}>
+          {t('departments:action.addDepartment')}
+        </Button>
+      )}
+    </>
+  ), [canExport, canImport, canCreate, handleRefresh, isRefreshLoading, t, handleImportSuccess, openCreate]);
 
   useLayoutEffect(() => {
     setActions(headerActions);
     return () => setActions(null);
   }, [headerActions, setActions]);
-
-  const canBulkDelete = hasRole(TOOLBAR_ALLOWED_ROLES, userRole);
 
   const toolbarActions = useCallback((selectedRows: Department[]) =>
     canBulkDelete && (

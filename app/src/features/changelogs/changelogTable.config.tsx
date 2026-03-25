@@ -4,7 +4,6 @@ import { Badge } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
 import { ChangelogActionMenu } from './components/ChangelogActionMenu';
 import { formatDate } from '@/lib/date';
-import type { RoleId } from '@/constants/roleConstants';
 import { UPDATE_TYPE_COLORS } from './types';
 import type { Changelog, ChangelogQueryParams } from './types';
 
@@ -36,11 +35,10 @@ interface UseChangelogColumnsOptions {
   onView: (changelog: Changelog) => void;
   onEdit: (changelog: Changelog) => void;
   onDelete: (changelog: Changelog) => void;
-  currentUserRole: RoleId;
   deletePendingId?: number;
 }
 
-export function useChangelogColumns({ onView, onEdit, onDelete, currentUserRole, deletePendingId }: UseChangelogColumnsOptions) {
+export function useChangelogColumns({ onView, onEdit, onDelete, deletePendingId }: UseChangelogColumnsOptions) {
   const { t } = useTranslation(['changelogs']);
 
   return useMemo(
@@ -79,7 +77,6 @@ export function useChangelogColumns({ onView, onEdit, onDelete, currentUserRole,
         cell: ({ row }) => (
           <ChangelogActionMenu
             changelog={row.original}
-            currentUserRole={currentUserRole}
             onView={() => onView(row.original)}
             onEdit={() => onEdit(row.original)}
             onDelete={() => onDelete(row.original)}
@@ -88,6 +85,6 @@ export function useChangelogColumns({ onView, onEdit, onDelete, currentUserRole,
         ),
       }),
     ],
-    [onView, onEdit, onDelete, currentUserRole, deletePendingId, t],
+    [onView, onEdit, onDelete, deletePendingId, t],
   );
 }

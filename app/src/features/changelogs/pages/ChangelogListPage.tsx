@@ -6,19 +6,19 @@ import { DataTable } from '@/components/common/DataTable/DataTable';
 import { ChangelogFilters } from '../components/ChangelogFilters';
 import { ChangelogDrawer } from '../components/ChangelogDrawer';
 import { useChangelogs, useChangelogActions } from '../hooks/useChangelogs';
+import { useChangelogPermissions } from '../hooks/useChangelogPermissions';
 import { useChangelogColumns, DEFAULT_PARAMS, SORT_FIELD_MAP } from '../changelogTable.config';
 import { useDataTable } from '@/hooks/useDataTable';
 import { useRefresh } from '@/hooks/useRefresh';
 import { useNavigationProgress } from '@/hooks/useNavigationProgress';
-import { useUserRole } from '@/stores/auth.store';
 import { usePageActions } from '@/contexts/PageHeaderContext';
 import type { ChangelogQueryParams, ChangelogDrawerState } from '../types';
 
 export function ChangelogListPage() {
   // ─── 1. Hooks & Context ───
-  const userRole = useUserRole();
   const { t } = useTranslation(['changelogs', 'common']);
   const { setActions } = usePageActions();
+  const { canCreate } = useChangelogPermissions();
 
   // ─── 2. Local UI State ───
   const [drawer, setDrawer] = useState<ChangelogDrawerState>({ mode: 'closed' });
@@ -57,7 +57,6 @@ export function ChangelogListPage() {
     onView: (changelog) => openDetail(changelog.id),
     onEdit: (changelog) => openEdit(changelog.id),
     onDelete: actions.handleDelete,
-    currentUserRole: userRole,
     deletePendingId: actions.deletePendingId,
   });
 
@@ -72,11 +71,14 @@ export function ChangelogListPage() {
       >
         {t('common:action.refresh', 'Refresh')}
       </Button>
-      <Button variant="filled" size="xs" onClick={openCreate}>
-        {t('changelogs:action.addChangelog')}
-      </Button>
+
+      {canCreate && (
+        <Button variant="filled" size="xs" onClick={openCreate}>
+          {t('changelogs:action.addChangelog')}
+        </Button>
+      )}
     </>
-  ), [openCreate, t, isRefreshLoading, handleRefresh]);
+  ), [canCreate, openCreate, t, isRefreshLoading, handleRefresh]);
 
   useLayoutEffect(() => {
     setActions(headerActions);

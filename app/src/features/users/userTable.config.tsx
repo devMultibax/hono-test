@@ -5,8 +5,7 @@ import { useTranslation } from '@/lib/i18n';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { StatusSwitch } from '@/components/common/StatusSwitch';
 import { UserActionMenu } from './components/UserActionMenu';
-import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
-import { hasRole } from '@/utils/roleUtils';
+import { useUserPermissions } from './hooks/useUserPermissions';
 import type { User, UserQueryParams, Status } from './types';
 
 // === Table Config ===
@@ -30,15 +29,13 @@ interface UseUserColumnsOptions {
   onDelete: (user: User) => void;
   onViewLogs: (user: User) => void;
   onStatusChange: (user: User, status: Status) => void;
-  currentUserRole: RoleId;
   statusPendingId?: number;
   deletePendingId?: number;
 }
 
-export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusChange, currentUserRole, statusPendingId, deletePendingId }: UseUserColumnsOptions) {
+export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusChange, statusPendingId, deletePendingId }: UseUserColumnsOptions) {
   const { t } = useTranslation(['users']);
-
-  const canEdit = hasRole([ROLE_ID.ADMIN], currentUserRole);
+  const { canEdit } = useUserPermissions();
 
   return useMemo(
     () => [
@@ -111,7 +108,6 @@ export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusC
         cell: ({ row }) => (
           <UserActionMenu
             user={row.original}
-            currentUserRole={currentUserRole}
             onView={() => onView(row.original)}
             onViewLogs={() => onViewLogs(row.original)}
             onEdit={() => onEdit(row.original)}
@@ -121,6 +117,6 @@ export function useUserColumns({ onView, onEdit, onDelete, onViewLogs, onStatusC
         ),
       }),
     ],
-    [onView, onEdit, onDelete, onViewLogs, onStatusChange, currentUserRole, canEdit, statusPendingId, deletePendingId, t]
+    [onView, onEdit, onDelete, onViewLogs, onStatusChange, canEdit, statusPendingId, deletePendingId, t]
   );
 }

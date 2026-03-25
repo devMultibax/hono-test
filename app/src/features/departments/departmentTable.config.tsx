@@ -3,8 +3,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { useTranslation } from '@/lib/i18n';
 import { StatusSwitch } from '@/components/common/StatusSwitch';
 import { DepartmentActionMenu } from './components/DepartmentActionMenu';
-import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
-import { hasRole } from '@/utils/roleUtils';
+import { useDepartmentPermissions } from './hooks/useDepartmentPermissions';
 import type { Department, DepartmentQueryParams, Status } from './types';
 
 // === Table Config ===
@@ -27,15 +26,13 @@ interface UseDepartmentColumnsOptions {
   onEdit: (department: Department) => void;
   onDelete: (department: Department) => void;
   onStatusChange: (department: Department, status: Status) => void;
-  currentUserRole: RoleId;
   statusPendingId?: number;
   deletePendingId?: number;
 }
 
-export function useDepartmentColumns({ onView, onEdit, onDelete, onStatusChange, currentUserRole, statusPendingId, deletePendingId }: UseDepartmentColumnsOptions) {
+export function useDepartmentColumns({ onView, onEdit, onDelete, onStatusChange, statusPendingId, deletePendingId }: UseDepartmentColumnsOptions) {
   const { t } = useTranslation(['departments']);
-
-  const canEdit = hasRole([ROLE_ID.ADMIN], currentUserRole);
+  const { canEdit } = useDepartmentPermissions();
 
   return useMemo(
     () => [
@@ -61,7 +58,6 @@ export function useDepartmentColumns({ onView, onEdit, onDelete, onStatusChange,
         cell: ({ row }) => (
           <DepartmentActionMenu
             department={row.original}
-            currentUserRole={currentUserRole}
             onView={() => onView(row.original)}
             onEdit={() => onEdit(row.original)}
             onDelete={() => onDelete(row.original)}
@@ -70,6 +66,6 @@ export function useDepartmentColumns({ onView, onEdit, onDelete, onStatusChange,
         ),
       }),
     ],
-    [onView, onEdit, onDelete, onStatusChange, currentUserRole, canEdit, statusPendingId, deletePendingId, t],
+    [onView, onEdit, onDelete, onStatusChange, canEdit, statusPendingId, deletePendingId, t],
   );
 }

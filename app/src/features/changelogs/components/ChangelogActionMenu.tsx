@@ -1,21 +1,18 @@
 import { Group, Button } from '@mantine/core';
 import { useTranslation } from '@/lib/i18n';
-import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
-import { hasRole } from '@/utils/roleUtils';
+import { useChangelogPermissions } from '../hooks/useChangelogPermissions';
 import type { Changelog } from '@/types';
 
 type Action = 'view' | 'edit' | 'delete';
 
 interface ActionButtonConfig {
   action: Action;
-  allowedRoles: readonly RoleId[];
   color: string;
   labelKey: string;
 }
 
 interface Props {
   changelog: Changelog;
-  currentUserRole: RoleId;
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -23,28 +20,14 @@ interface Props {
 }
 
 const ACTION_BUTTONS: ActionButtonConfig[] = [
-  {
-    action: 'view',
-    allowedRoles: [ROLE_ID.ADMIN],
-    color: 'blue',
-    labelKey: 'changelogs:action.viewDetails',
-  },
-  {
-    action: 'edit',
-    allowedRoles: [ROLE_ID.ADMIN],
-    color: 'yellow',
-    labelKey: 'changelogs:action.edit',
-  },
-  {
-    action: 'delete',
-    allowedRoles: [ROLE_ID.ADMIN],
-    color: 'red',
-    labelKey: 'changelogs:action.delete',
-  },
+  { action: 'view',   color: 'blue',   labelKey: 'changelogs:action.viewDetails' },
+  { action: 'edit',   color: 'yellow', labelKey: 'changelogs:action.edit' },
+  { action: 'delete', color: 'red',    labelKey: 'changelogs:action.delete' },
 ];
 
-export function ChangelogActionMenu({ currentUserRole, onView, onEdit, onDelete, isDeleting }: Props) {
+export function ChangelogActionMenu({ onView, onEdit, onDelete, isDeleting }: Props) {
   const { t } = useTranslation(['changelogs']);
+  const { canView, canEdit, canDelete } = useChangelogPermissions();
 
   const actionHandlers: Record<Action, () => void> = {
     view: onView,
@@ -52,9 +35,13 @@ export function ChangelogActionMenu({ currentUserRole, onView, onEdit, onDelete,
     delete: onDelete,
   };
 
-  const visibleButtons = ACTION_BUTTONS.filter((button) =>
-    hasRole(button.allowedRoles, currentUserRole),
-  );
+  const visibilityMap: Record<Action, boolean> = {
+    view:   canView,
+    edit:   canEdit,
+    delete: canDelete,
+  };
+
+  const visibleButtons = ACTION_BUTTONS.filter((b) => visibilityMap[b.action]);
 
   if (visibleButtons.length === 0) return null;
 

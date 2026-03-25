@@ -4,22 +4,19 @@ import { PasswordDisplay } from '@/components/common/PasswordDisplay';
 import { useTranslation } from '@/lib/i18n';
 import { ConfirmAsync } from '@/utils/mantineAlertUtils';
 import { useResetPassword } from '../hooks/useUsers';
-import { ROLE_ID, type RoleId } from '@/constants/roleConstants';
-import { hasRole } from '@/utils/roleUtils';
+import { useUserPermissions } from '../hooks/useUserPermissions';
 import type { User } from '@/types';
 
 type Action = 'view' | 'edit' | 'viewLogs' | 'resetPassword' | 'delete';
 
 interface ActionButtonConfig {
   action: Action;
-  allowedRoles: readonly RoleId[];
   color: string;
   labelKey: string;
 }
 
 interface Props {
   user: User;
-  currentUserRole: RoleId;
   onEdit: () => void;
   onDelete: () => void;
   onView?: () => void;
@@ -28,42 +25,18 @@ interface Props {
 }
 
 const ACTION_BUTTONS: ActionButtonConfig[] = [
-  {
-    action: 'view',
-    allowedRoles: [ROLE_ID.ADMIN, ROLE_ID.USER],
-    color: 'blue',
-    labelKey: 'users:action.viewDetails',
-  },
-  {
-    action: 'viewLogs',
-    allowedRoles: [ROLE_ID.ADMIN],
-    color: 'cyan',
-    labelKey: 'users:action.viewLogs',
-  },
-  {
-    action: 'edit',
-    allowedRoles: [ROLE_ID.ADMIN],
-    color: 'yellow',
-    labelKey: 'users:action.edit',
-  },
-  {
-    action: 'resetPassword',
-    allowedRoles: [ROLE_ID.ADMIN],
-    color: 'violet',
-    labelKey: 'users:action.resetPassword',
-  },
-  {
-    action: 'delete',
-    allowedRoles: [ROLE_ID.ADMIN],
-    color: 'red',
-    labelKey: 'users:action.delete',
-  },
+  { action: 'view',          color: 'blue',   labelKey: 'users:action.viewDetails' },
+  { action: 'viewLogs',      color: 'cyan',   labelKey: 'users:action.viewLogs' },
+  { action: 'edit',          color: 'yellow', labelKey: 'users:action.edit' },
+  { action: 'resetPassword', color: 'violet', labelKey: 'users:action.resetPassword' },
+  { action: 'delete',        color: 'red',    labelKey: 'users:action.delete' },
 ];
 
-export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView, onViewLogs, isDeleting }: Props) {
+export function UserActionMenu({ user, onEdit, onDelete, onView, onViewLogs, isDeleting }: Props) {
   const { t } = useTranslation(['users', 'common']);
   const resetPassword = useResetPassword();
   const [resetResult, setResetResult] = useState<{ username: string; password: string } | null>(null);
+  const { canView, canEdit, canDelete, canViewLogs, canResetPassword } = useUserPermissions();
 
   const handleResetPassword = () => {
     ConfirmAsync.show({
@@ -85,11 +58,15 @@ export function UserActionMenu({ user, currentUserRole, onEdit, onDelete, onView
     delete: onDelete,
   };
 
-  const visibleButtons = ACTION_BUTTONS.filter((button) => {
-    if (button.action === 'view' && !onView) return false;
-    if (button.action === 'viewLogs' && !onViewLogs) return false;
-    return hasRole(button.allowedRoles, currentUserRole);
-  });
+  const visibilityMap: Record<Action, boolean> = {
+    view:          canView && !!onView,
+    viewLogs:      canViewLogs && !!onViewLogs,
+    edit:          canEdit,
+    resetPassword: canResetPassword,
+    delete:        canDelete,
+  };
+
+  const visibleButtons = ACTION_BUTTONS.filter((b) => visibilityMap[b.action]);
 
   if (visibleButtons.length === 0) return null;
 
