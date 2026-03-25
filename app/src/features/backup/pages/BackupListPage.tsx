@@ -47,6 +47,7 @@ export function BackupListPage() {
   // ─── 3. Header Actions ───
   const headerActions = useMemo(() => (
     <Button
+      size="xs"
       onClick={handleCreate}
       loading={isCreating}
     >

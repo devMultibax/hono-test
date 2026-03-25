@@ -66,6 +66,7 @@ export function DatabasePage() {
   // ─── 4. Header Actions ───
   const headerActions = useMemo(() => (
     <Button
+      size="xs"
       onClick={handleAnalyze}
       loading={isAnalyzing}
     >
