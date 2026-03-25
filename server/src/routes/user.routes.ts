@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs'
 import { authMiddleware } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 import { requireAdmin, requireUser } from '../middleware/permission'
-import { UserService } from '../services/user.service'
+import { UserService, type UserFilters } from '../services/user.service'
 import { registerSchema, updateUserSchema, listUsersQuerySchema, verifyPasswordSchema } from '../schemas/user'
 import { successResponse, createdResponse, noContentResponse } from '../lib/response'
 import { Role, type HonoContext, type UserWithRelations, type UserResponse } from '../types'
@@ -25,6 +25,28 @@ const users = new Hono<HonoContext>()
 
 users.use('/*', authMiddleware)
 users.use('/*', csrfProtection)
+
+// Restrict filters to user's own departments when role is USER
+async function restrictFiltersForUser(
+  userId: number,
+  userRole: Role,
+  filters: UserFilters
+): Promise<UserFilters> {
+  if (userRole !== Role.USER) return filters
+
+  const self = await UserService.getById(userId, true) as UserWithRelations
+  const ownDeptIds = self.departments?.map((d) => d.departmentId) ?? []
+
+  const { departmentId, departmentIds, ...rest } = filters
+  const requested = departmentId !== undefined
+    ? [departmentId]
+    : departmentIds?.length ? departmentIds : null
+  const allowedIds = requested
+    ? requested.filter((id) => ownDeptIds.includes(id))
+    : ownDeptIds
+
+  return { ...rest, departmentIds: allowedIds }
+}
 
 // Create a new User
 users.post('/', requireAdmin, zValidator('json', registerSchema), async (c) => {
@@ -48,12 +70,13 @@ users.post('/', requireAdmin, zValidator('json', registerSchema), async (c) => {
 
 // Get all with Pagination and Filters
 users.get('/', requireUser, zValidator('query', listUsersQuerySchema), async (c) => {
+  const currentUser = c.get('user')
   const { page, limit, sort, order, search, departmentId, departmentIds, sectionId, role, status } = c.req.valid('query')
+  const filters = await restrictFiltersForUser(currentUser.id, currentUser.role, {
+    search, departmentId, departmentIds, sectionId, role: role as Role | undefined, status
+  })
 
-  const userList = await UserService.getAll(
-    { page, limit, sort, order },
-    { search, departmentId, departmentIds, sectionId, role: role as Role | undefined, status }
-  )
+  const userList = await UserService.getAll({ page, limit, sort, order }, filters)
   return successResponse(c, userList)
 })
 
@@ -113,8 +136,11 @@ users.patch('/:id/password/reset', requireAdmin, strictRateLimiter, async (c) =>
 
 // Export to Excel
 users.get('/export/excel', requireUser, zValidator('query', listUsersQuerySchema), async (c) => {
+  const currentUser = c.get('user')
   const { search, departmentId, departmentIds, sectionId, role, status } = c.req.valid('query')
-  const filters = { search, departmentId, departmentIds, sectionId, role: role as Role | undefined, status }
+  const filters = await restrictFiltersForUser(currentUser.id, currentUser.role, {
+    search, departmentId, departmentIds, sectionId, role: role as Role | undefined, status
+  })
 
   const userList = await UserService.getAllSimple(filters)
   const result = await ExportService.exportToExcel(userList as UserWithRelations[], { columns: userExcelColumns })

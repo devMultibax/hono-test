@@ -122,8 +122,10 @@ export class UserService {
     }
     if (filters?.departmentId !== undefined) {
       where.departments = { some: { departmentId: filters.departmentId } }
-    } else if (filters?.departmentIds?.length) {
-      where.departments = { some: { departmentId: { in: filters.departmentIds } } }
+    } else if (filters?.departmentIds !== undefined) {
+      where.departments = filters.departmentIds.length
+        ? { some: { departmentId: { in: filters.departmentIds } } }
+        : { some: { departmentId: { in: [] } } }
     }
     if (filters?.sectionId !== undefined) {
       where.departments = {
