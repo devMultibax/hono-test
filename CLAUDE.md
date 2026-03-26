@@ -249,32 +249,42 @@ npm run seed              # Run seed script (server/prisma/seed.ts)
 
 **Path alias:** `@` → `app/src/`
 
-**i18n:** Internationalization configured in `app/src/lib/i18n/`. Translation files in `locales/` directory.
+**Frontend libraries** (`app/src/lib/`):
+
+- `date.ts` — Date utilities (dayjs)
+- `i18n/` — Internationalization (config, helpers, types, locales)
 
 ### Database (Prisma + PostgreSQL)
 
 Schema at `server/prisma/schema.prisma`. Models:
 
-| Model           | Table            | Description                              |
-| --------------- | ---------------- | ---------------------------------------- |
-| `Department`    | `department`     | Department with sections & users         |
-| `Section`       | `section`        | Section under department                 |
-| `User`          | `user`           | User with auth, role, department/section |
-| `UserLog`       | `user_log`       | User change history (audit trail)        |
-| `Changelog`     | `update_log`     | Update/changelog entries                 |
-| `SystemSetting` | `system_setting` | Key-value system configuration           |
+| Model            | Table             | Description                                        |
+| ---------------- | ----------------- | -------------------------------------------------- |
+| `Department`     | `department`      | Department with sections & users                   |
+| `Section`        | `section`         | Section under department                           |
+| `User`           | `user`            | User with auth, role, multi-department assignments |
+| `UserDepartment` | `user_department` | Junction table for multi-department assignments    |
+| `UserLog`        | `user_log`        | User change history (audit trail)                  |
+| `Changelog`      | `update_log`      | Update/changelog entries                           |
+| `SystemSetting`  | `system_setting`  | Key-value system configuration                     |
 
 **Enums:** `Status` (active/inactive), `Role` (USER/ADMIN), `ActionType` (CREATE/UPDATE/DELETE/RESET_PASSWORD/CHANGE_PASSWORD), `UpdateType` (FEATURE/BUGFIX/IMPROVEMENT/SECURITY/OTHER)
 
 **Key `User` fields:** `username` (Char 6, unique), `isDefaultPassword` (Boolean), `tokenVersion` (Int), `lastLoginAt`
+
+**Key `UserDepartment` fields:** `userId`, `departmentId`, `sectionId` (optional), `isPrimary` (Boolean). Unique constraint: `[userId, departmentId]`.
+
+**Key `UserLog` fields:** includes `additionalDepartments` (String, optional) for tracking multi-department assignment changes.
 
 All models (except SystemSetting) include audit fields: `createdAt`, `createdBy`, `createdByName`, `updatedAt`, `updatedBy`, `updatedByName`.
 
 **Relations:**
 
 - Department → has many Sections (cascade delete)
-- Department → has many Users (restrict delete)
-- Section → has many Users (set null on delete)
+- Department → has many UserDepartments (restrict delete)
+- Section → has many UserDepartments (set null on delete)
+- User → has many UserDepartments (cascade delete)
+- UserDepartment → belongs to User, Department, Section
 
 ### Testing
 
