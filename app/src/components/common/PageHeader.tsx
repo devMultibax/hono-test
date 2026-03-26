@@ -1,4 +1,4 @@
-import { Group, Title } from '@mantine/core';
+import { Title } from '@mantine/core';
 
 interface Props {
   title: string;
@@ -7,9 +7,13 @@ interface Props {
 
 export function PageHeader({ title, children }: Props) {
   return (
-    <Group justify="space-between" align="center" mb="xl">
+    <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <Title order={2}>{title}</Title>
-      {children && <Group gap="sm">{children}</Group>}
-    </Group>
+      {children && (
+        <div className="flex flex-wrap items-center gap-2">
+          {children}
+        </div>
+      )}
+    </div>
   );
 }
